@@ -24,7 +24,7 @@ This code is almost entirely based on knee.py from the standard library.
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
-import __builtin__
+import builtins
 import imp
 import sys
 
@@ -42,10 +42,10 @@ def deep_import_hook(name, globals=None, locals=None, fromlist=None, level=-1):
     return m
 
 def determine_parent(globals):
-    if not globals or  not globals.has_key("__name__"):
+    if not globals or  "__name__" not in globals:
         return None
     pname = globals['__name__']
-    if globals.has_key("__path__"):
+    if "__path__" in globals:
         parent = sys.modules[pname]
         assert globals is parent.__dict__
         return parent
@@ -80,7 +80,7 @@ def find_head_package(parent, name):
         parent = None
         q = import_module(head, qname, parent)
         if q: return q, tail
-    raise ImportError, "No module named " + qname
+    raise ImportError("No module named " + qname)
 
 def load_tail(q, tail):
     m = q
@@ -98,7 +98,7 @@ def load_tail(q, tail):
         #print '** head,tail=|%s|->|%s|, mname=|%s|' % (head,tail,mname)  # dbg
         m = import_module(head, mname, m)
         if not m:
-            raise ImportError, "No module named " + mname
+            raise ImportError("No module named " + mname)
     return m
 
 def ensure_fromlist(m, fromlist, recursive=0):
@@ -116,20 +116,20 @@ def ensure_fromlist(m, fromlist, recursive=0):
             subname = "%s.%s" % (m.__name__, sub)
             submod = import_module(sub, subname, m)
             if not submod:
-                raise ImportError, "No module named " + subname
+                raise ImportError("No module named " + subname)
 
 # Need to keep track of what we've already reloaded to prevent cyclic evil
 found_now = {}
 
 def import_module(partname, fqname, parent):
     global found_now
-    if found_now.has_key(fqname):
+    if fqname in found_now:
         try:
             return sys.modules[fqname]    
         except KeyError:
             pass
     
-    print 'Reloading', fqname #, sys.excepthook is sys.__excepthook__, \
+    print('Reloading', fqname) #, sys.excepthook is sys.__excepthook__, \
             #sys.displayhook is sys.__displayhook__
     
     found_now[fqname] = 1
@@ -159,7 +159,7 @@ def deep_reload_hook(module):
     return import_module(name[i+1:], name, parent)
 
 # Save the original hooks
-original_reload = __builtin__.reload
+original_reload = imp.reload
 
 # Replacement for reload()
 def reload(module, exclude=['sys', '__builtin__', '__main__']):
@@ -171,12 +171,12 @@ def reload(module, exclude=['sys', '__builtin__', '__main__']):
     global found_now
     for i in exclude:
         found_now[i] = 1
-    original_import = __builtin__.__import__
-    __builtin__.__import__ = deep_import_hook    
+    original_import = builtins.__import__
+    builtins.__import__ = deep_import_hook    
     try:
         ret = deep_reload_hook(module)
     finally:
-        __builtin__.__import__ = original_import
+        builtins.__import__ = original_import
         found_now = {}
     return ret
 

@@ -1,6 +1,6 @@
 """Test the various handlers which do the actual rewriting of the line."""
 
-from StringIO import StringIO
+from io import StringIO
 import sys
 sys.path.append('..')
 
@@ -195,8 +195,8 @@ num_f = len(failures)
 #    print
 
 
-print "%s tests run, %s failure%s" % (num_tests,
+print("%s tests run, %s failure%s" % (num_tests,
                                       num_f,
-                                      num_f != 1 and "s" or "")
+                                      num_f != 1 and "s" or ""))
 for f in failures:
-    print f
+    print(f)

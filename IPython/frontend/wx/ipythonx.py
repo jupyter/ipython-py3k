@@ -5,15 +5,15 @@ ipython.
 
 try:
     import wx
-except ImportError, e:
+except ImportError as e:
     e.args[0] = """%s
 ________________________________________________________________________________
 You need wxPython to run this application.
 """ % e.args[0]
     raise e
 
-from wx_frontend import WxController
-import __builtin__
+from .wx_frontend import WxController
+import builtins
 
 
 class IPythonXController(WxController):

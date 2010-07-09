@@ -13,7 +13,7 @@ import IPython.ipapi
 
 
 def test_session(shellclass):
-    print "*****************\nLaunch shell for",shellclass
+    print("*****************\nLaunch shell for",shellclass)
     my_ns = dict(a=10)
     ses = IPython.ipapi.make_session(my_ns, shellclass=shellclass)
     
@@ -24,7 +24,7 @@ def test_session(shellclass):
     
     # let's play with the ipapi a bit, creating a magic function for a soon-to-be-started IPython
     def mymagic_f(self,s):
-        print "mymagic says",s
+        print("mymagic says",s)
     
     ip.expose_magic("mymagic",mymagic_f)
     
@@ -32,9 +32,9 @@ def test_session(shellclass):
     
     ses.mainloop()
     
-    print "IPython session for shell ",shellclass," finished! namespace content:"
-    for k,v in my_ns.items():
-        print k,':',str(v)[:80].rstrip()
+    print("IPython session for shell ",shellclass," finished! namespace content:")
+    for k,v in list(my_ns.items()):
+        print(k,':',str(v)[:80].rstrip())
     
 import  IPython.Shell    
 

@@ -4,3 +4,6 @@ docs/source/api/generated
 *.pyc
 build
 *.egg-info
+*.bak
+*.py~
+*.bak~

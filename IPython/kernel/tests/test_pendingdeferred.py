@@ -59,19 +59,19 @@ class PendingDeferredManagerTest(DeferredTestCase):
             did = self.pdm.save_pending_deferred(d)
             dDict[did] = d
         # Make sure they are begin saved
-        for k in dDict.keys():
+        for k in list(dDict.keys()):
             self.assert_(self.pdm.quick_has_id(k))
         # Get the pending deferred (block=True), then callback with 'foo' and compare
-        for did in dDict.keys()[0:5]:
+        for did in list(dDict.keys())[0:5]:
             d = self.pdm.get_pending_deferred(did,block=True)
             dDict[did].callback('foo')
             d.addCallback(lambda r: self.assert_(r=='foo'))
         # Get the pending deferreds with (block=False) and make sure ResultNotCompleted is raised
-        for did in dDict.keys()[5:10]:
+        for did in list(dDict.keys())[5:10]:
             d = self.pdm.get_pending_deferred(did,block=False)
             d.addErrback(lambda f: self.assertRaises(error.ResultNotCompleted, f.raiseException))
         # Now callback the last 5, get them and compare.
-        for did in dDict.keys()[5:10]:
+        for did in list(dDict.keys())[5:10]:
             dDict[did].callback('foo')
             d = self.pdm.get_pending_deferred(did,block=False)
             d.addCallback(lambda r: self.assert_(r=='foo'))

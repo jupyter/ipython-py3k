@@ -15,7 +15,7 @@
 #-----------------------------------------------------------------------------
 
 import os
-import cPickle as pickle
+import pickle as pickle
 
 from twisted.python import log
 from twisted.internet.defer import inlineCallbacks, returnValue

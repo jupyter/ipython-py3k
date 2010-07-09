@@ -113,12 +113,12 @@ class MetaComponentTracker(type):
             form of this argument is useful for forward declarations.
         """
         if klass is not None:
-            if isinstance(klass, basestring):
+            if isinstance(klass, str):
                 klass = import_item(klass)
             # Limit search to instances of klass for performance
             if issubclass(klass, Component):
                 return klass.get_instances(name=name, root=root)
-        instances = cls.__instance_refs.values()
+        instances = list(cls.__instance_refs.values())
         if name is not None:
             instances = [i for i in instances if i.name == name]
         if klass is not None:
@@ -182,11 +182,8 @@ class MetaComponent(MetaHasTraits, MetaComponentTracker):
 #-----------------------------------------------------------------------------
 
 
-class Component(HasTraits):
+class Component(HasTraits, metaclass=MetaComponent):
 
-    __metaclass__ = MetaComponent
-
-    # Traits are fun!
     config = Instance(Config,(),{})
     parent = This()
     root = This()
@@ -225,7 +222,7 @@ class Component(HasTraits):
         This ensures that the :attr:`parent`, :attr:`name` and :attr:`config`
         attributes are handled properly.
         """
-        super(Component, self).__init__()
+        super(Component, self).__init__("???Comebacktothis")
         self._children = []
         if name is None:
             self.name = ComponentNameGenerator()
@@ -301,7 +298,7 @@ class Component(HasTraits):
             # dynamically create the section with name self.__class__.__name__.
             if new._has_section(sname):
                 my_config = new[sname]
-                for k, v in traits.items():
+                for k, v in list(traits.items()):
                     # Don't allow traitlets with config=True to start with
                     # uppercase.  Otherwise, they are confused with Config
                     # subsections.  But, developers shouldn't have uppercase

@@ -26,7 +26,7 @@ def global_f(self,cmdline):
     if simple:
         parts = [l.split(None,3) for l in lines]
         lines = ['%s [%s]\n%s' % (p[2].rjust(70),p[1],p[3].rstrip()) for p in parts]
-    print "\n".join(lines)
+    print("\n".join(lines))
 
 ip.define_magic('global', global_f)
 

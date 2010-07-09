@@ -40,7 +40,7 @@ __test__ = {}
 
 import copy
 import sys
-import cPickle as pickle
+import pickle as pickle
 
 from twisted.application import service
 from twisted.internet import defer, reactor
@@ -266,7 +266,7 @@ class StrictDict(dict):
             pickle.dumps(key, 2)
             pickle.dumps(value, 2)
             newvalue = copy.deepcopy(value)
-        except Exception, e:
+        except Exception as e:
             raise error.InvalidProperty("can't be a value: %r" % value)
         dict.__setitem__(self, key, newvalue)
         self.modified = True
@@ -276,7 +276,7 @@ class StrictDict(dict):
         self.modified = True
     
     def update(self, dikt):
-        for k,v in dikt.iteritems():
+        for k,v in dikt.items():
             self[k] = v
     
     def pop(self, key):
@@ -334,7 +334,7 @@ def get_engine(id):
 def drop_engine(id):
     """remove an engine"""
     global _apiDict
-    if _apiDict.has_key(id):
+    if id in _apiDict:
         del _apiDict[id]
 
 class EngineService(object, service.Service):
@@ -415,7 +415,7 @@ class EngineService(object, service.Service):
     def push(self, namespace):
         msg = {'engineid':self.id,
                'method':'push',
-               'args':[repr(namespace.keys())]}
+               'args':[repr(list(namespace.keys()))]}
         d = self.executeAndRaise(msg, self.shell.push, namespace)
         return d
     
@@ -429,7 +429,7 @@ class EngineService(object, service.Service):
     def push_function(self, namespace):
         msg = {'engineid':self.id,
                'method':'push_function',
-               'args':[repr(namespace.keys())]}
+               'args':[repr(list(namespace.keys()))]}
         d = self.executeAndRaise(msg, self.shell.push_function, namespace)
         return d
     
@@ -477,7 +477,7 @@ class EngineService(object, service.Service):
         """
         
         remotes = []
-        for k in self.shell.user_ns.iterkeys():
+        for k in self.shell.user_ns.keys():
             if k not in ['__name__', '_ih', '_oh', '__builtins__',
                          'In', 'Out', '_', '__', '___', '__IP', 'input', 'raw_input']:
                 remotes.append(k)
@@ -486,7 +486,7 @@ class EngineService(object, service.Service):
     def set_properties(self, properties):
         msg = {'engineid':self.id,
                'method':'set_properties',
-               'args':[repr(properties.keys())]}
+               'args':[repr(list(properties.keys()))]}
         return self.executeAndRaise(msg, self.properties.update, properties)
     
     def get_properties(self, keys=None):
@@ -494,7 +494,7 @@ class EngineService(object, service.Service):
                'method':'get_properties',
                'args':[repr(keys)]}
         if keys is None:
-            keys = self.properties.keys()
+            keys = list(self.properties.keys())
         return self.executeAndRaise(msg, self.properties.subDict, *keys)
     
     def _doDel(self, keys):
@@ -508,7 +508,7 @@ class EngineService(object, service.Service):
         return self.executeAndRaise(msg, self._doDel, keys)
     
     def _doHas(self, keys):
-        return [self.properties.has_key(key) for key in keys]
+        return [key in self.properties for key in keys]
     
     def has_properties(self, keys):
         msg = {'engineid':self.id,
@@ -525,9 +525,9 @@ class EngineService(object, service.Service):
     def push_serialized(self, sNamespace):
         msg = {'engineid':self.id,
                'method':'push_serialized',
-               'args':[repr(sNamespace.keys())]}       
+               'args':[repr(list(sNamespace.keys()))]}       
         ns = {}
-        for k,v in sNamespace.iteritems():
+        for k,v in sNamespace.items():
             try:
                 unserialized = newserialized.IUnSerialized(v)
                 ns[k] = unserialized.getObject()
@@ -712,7 +712,7 @@ class QueuedEngine(object):
 
     def get_result(self, i=None):
         if i is None:
-            i = max(self.history.keys()+[None])
+            i = max(list(self.history.keys())+[None])
 
         cmd = self.history.get(i, None)
         # Uncomment this line to disable chaching of results
@@ -791,7 +791,7 @@ class QueuedEngine(object):
                 pending = repr(self.currentCommand)
         else:
             pending = repr(None)
-        dikt = {'queue':map(repr,self.queued), 'pending':pending}
+        dikt = {'queue':list(map(repr,self.queued)), 'pending':pending}
         return defer.succeed(dikt)
         
     def register_failure_observer(self, obs):
@@ -833,7 +833,7 @@ class Command(object):
             args = ''
         else:
             args = str(self.args)[1:-2]  #cut off (...,)
-        for k,v in self.kwargs.iteritems():
+        for k,v in self.kwargs.items():
             if args:
                 args += ', '
             args += '%s=%r' %(k,v)
@@ -870,7 +870,7 @@ class ThreadedEngineService(EngineService):
         
         try:
             result = self.shell.execute(lines)
-        except Exception,e:
+        except Exception as e:
             # This gives the following:
             # et=exception class
             # ev=exception class instance

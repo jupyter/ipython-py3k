@@ -85,7 +85,7 @@ class Struct(dict):
         ...     
         this is not allowed
         """
-        if not self._allownew and not self.has_key(key):
+        if not self._allownew and key not in self:
             raise KeyError(
                 "can't create new attribute %s when allow_new_attr(False)" % key)
         dict.__setitem__(self, key, value)
@@ -122,7 +122,7 @@ class Struct(dict):
                 )
         try:
             self.__setitem__(key, value)
-        except KeyError, e:
+        except KeyError as e:
             raise AttributeError(e)
 
     def __getattr__(self, key):
@@ -212,8 +212,8 @@ class Struct(dict):
         >>> s1
         {'b': 30}
         """
-        for k in other.keys():
-            if self.has_key(k):
+        for k in list(other.keys()):
+            if k in self:
                 del self[k]
         return self
 
@@ -224,7 +224,7 @@ class Struct(dict):
         the elements of each list as keys and the original keys as values.
         """
         outdict = {}
-        for k,lst in data.items():
+        for k,lst in list(data.items()):
             if isinstance(lst, str):
                 lst = lst.split()
             for entry in lst:
@@ -265,7 +265,7 @@ class Struct(dict):
         >>> s.hasattr('get')
         False
         """
-        return self.has_key(key)
+        return key in self
 
     def allow_new_attr(self, allow = True):
         """Set whether new attributes can be created in this Struct.
@@ -373,7 +373,7 @@ class Struct(dict):
         add_s    = lambda old,new: old + ' ' + new
 
         # default policy is to keep current keys when there's a conflict
-        conflict_solve = list2dict2(self.keys(), default = preserve)
+        conflict_solve = list2dict2(list(self.keys()), default = preserve)
 
         # the conflict_solve dictionary is given by the user 'inverted': we
         # need a name-function mapping, it comes as a function -> names
@@ -384,7 +384,7 @@ class Struct(dict):
             for name, func in [('preserve',preserve), ('update',update),
                                ('add',add), ('add_flip',add_flip),
                                ('add_s',add_s)]:
-                if name in inv_conflict_solve_user.keys():
+                if name in list(inv_conflict_solve_user.keys()):
                     inv_conflict_solve_user[func] = inv_conflict_solve_user[name]
                     del inv_conflict_solve_user[name]
             conflict_solve.update(self.__dict_invert(inv_conflict_solve_user))

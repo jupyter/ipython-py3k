@@ -21,10 +21,11 @@ import re
 import sys
 import os
 import locale
-from thread_ex import ThreadEx
+from .thread_ex import ThreadEx
 
 from IPython.core import iplib
 from IPython.utils.io import Term
+from functools import reduce
 
 ##############################################################################
 class _Helper(object):
@@ -179,11 +180,11 @@ class NonBlockingIPShell(object):
 
         #we disable cpaste magic... until we found a way to use it properly.
         def bypass_magic(self, arg):
-            print '%this magic is currently disabled.'
+            print('%this magic is currently disabled.')
         ipython0.define_magic('cpaste', bypass_magic)
 
-        import __builtin__
-        __builtin__.raw_input = self._raw_input
+        import builtins
+        builtins.raw_input = self._raw_input
         
         sys.excepthook = excepthook
 
@@ -513,6 +514,6 @@ class NonBlockingIPShell(object):
         #we use print command because the shell command is called
         #inside IPython instance and thus is redirected to thread cout
         #"\x01\x1b[1;36m\x02" <-- add colour to the text...
-        print "\x01\x1b[1;36m\x02"+result
+        print("\x01\x1b[1;36m\x02"+result)
         stdout.close()
         stdin.close()

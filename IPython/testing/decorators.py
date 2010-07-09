@@ -54,15 +54,16 @@ import unittest
 
 # This is Michele Simionato's decorator module, kept verbatim.
 from IPython.external.decorator import decorator, update_wrapper
+import collections
 
 # We already have python3-compliant code for parametric tests
 if sys.version[0]=='2':
-    from _paramtestpy2 import parametric, ParametricTestCase
+    from ._paramtestpy2 import parametric, ParametricTestCase
 else:
-    from _paramtestpy3 import parametric, ParametricTestCase
+    from ._paramtestpy3 import parametric, ParametricTestCase
 
 # Expose the unittest-driven decorators
-from ipunittest import ipdoctest, ipdocstring
+from .ipunittest import ipdoctest, ipdocstring
 
 # Grab the numpy-specific decorators which we keep in a file that we
 # occasionally update from upstream: decorators.py is a copy of
@@ -143,7 +144,7 @@ def make_label_dec(label,ds=None):
     True
     """
 
-    if isinstance(label,basestring):
+    if isinstance(label,str):
         labels = [label]
     else:
         labels = label
@@ -204,7 +205,7 @@ def skipif(skip_condition, msg=None):
         import nose
 
         # Allow for both boolean or callable skip conditions.
-        if callable(skip_condition):
+        if isinstance(skip_condition, collections.Callable):
             skip_val = skip_condition
         else:
             skip_val = lambda : skip_condition
@@ -265,7 +266,7 @@ def skip(msg=None):
 def onlyif(condition, msg):
     """The reverse from skipif, see skipif for details."""
 
-    if callable(condition):
+    if isinstance(condition, collections.Callable):
         skip_condition = lambda : not condition()
     else:
         skip_condition = lambda : not condition

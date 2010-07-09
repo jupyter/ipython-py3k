@@ -30,12 +30,12 @@ from IPython.utils import path
 
 # Platform-dependent imports
 try:
-    import _winreg as wreg
+    import winreg as wreg
 except ImportError:
     #Fake _winreg module on none windows platforms
     import new
     sys.modules["_winreg"] = new.module("_winreg")
-    import _winreg as wreg
+    import winreg as wreg
     #Add entries that needs to be stubbed by the testing code
     (wreg.OpenKey, wreg.QueryValueEx,) = (None, None)
 
@@ -91,7 +91,7 @@ def teardown_environment():
     """
     (oldenv, os.name, get_home_dir, IPython.__file__,) = oldstuff
         
-    for key in env.keys():
+    for key in list(env.keys()):
         if key not in oldenv:
             del env[key]
     env.update(oldenv)
@@ -262,7 +262,7 @@ def test_get_ipython_module_path():
 @dec.skip_if_not_win32
 def test_get_long_path_name_win32():
     p = path.get_long_path_name('c:\\docume~1')
-    nt.assert_equals(p,u'c:\\Documents and Settings') 
+    nt.assert_equals(p,'c:\\Documents and Settings') 
 
 
 @dec.skip_win32

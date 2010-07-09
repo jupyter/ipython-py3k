@@ -27,12 +27,12 @@ Date:    9 Mar 2007
 #   - guess_content_type() method?
 #   - Perhaps support arguments to touch().
 
-from __future__ import generators
+
 
 import sys, warnings, os, fnmatch, glob, shutil, codecs
 # deprecated in python 2.6
 warnings.filterwarnings('ignore', r'.*md5.*')
-import md5
+from hashlib import md5
 
 __version__ = '2.2'
 __all__ = ['path']
@@ -54,28 +54,10 @@ _base = str
 _getcwd = os.getcwd
 try:
     if os.path.supports_unicode_filenames:
-        _base = unicode
-        _getcwd = os.getcwdu
+        _base = str
+        _getcwd = os.getcwd
 except AttributeError:
     pass
-
-# Pre-2.3 workaround for booleans
-try:
-    True, False
-except NameError:
-    True, False = 1, 0
-
-# Pre-2.3 workaround for basestring.
-try:
-    basestring
-except NameError:
-    basestring = (str, unicode)
-
-# Universal newline support
-_textmode = 'r'
-if hasattr(file, 'newlines'):
-    _textmode = 'U'
-
 
 class TreeWalkWarning(Warning):
     pass
@@ -103,7 +85,7 @@ class path(_base):
         return self.__class__(resultStr)
 
     def __radd__(self, other):
-        if isinstance(other, basestring):
+        if isinstance(other, str):
             return self.__class__(other.__add__(self))
         else:
             return NotImplemented
@@ -520,7 +502,7 @@ class path(_base):
 
     def open(self, mode='r'):
         """ Open this file.  Return a file object. """
-        return file(self, mode)
+        return open(self, mode)
 
     def bytes(self):
         """ Open this file, read all bytes, return them as a string. """
@@ -563,7 +545,7 @@ class path(_base):
         """
         if encoding is None:
             # 8-bit
-            f = self.open(_textmode)
+            f = self.open()
             try:
                 return f.read()
             finally:
@@ -577,11 +559,11 @@ class path(_base):
                 t = f.read()
             finally:
                 f.close()
-            return (t.replace(u'\r\n', u'\n')
-                     .replace(u'\r\x85', u'\n')
-                     .replace(u'\r', u'\n')
-                     .replace(u'\x85', u'\n')
-                     .replace(u'\u2028', u'\n'))
+            return (t.replace('\r\n', '\n')
+                     .replace('\r\x85', '\n')
+                     .replace('\r', '\n')
+                     .replace('\x85', '\n')
+                     .replace('\u2028', '\n'))
 
     def write_text(self, text, encoding=None, errors='strict', linesep=os.linesep, append=False):
         r""" Write the given text to this file.
@@ -647,16 +629,16 @@ class path(_base):
         conversion.
 
         """
-        if isinstance(text, unicode):
+        if isinstance(text, str):
             if linesep is not None:
                 # Convert all standard end-of-line sequences to
                 # ordinary newline characters.
-                text = (text.replace(u'\r\n', u'\n')
-                            .replace(u'\r\x85', u'\n')
-                            .replace(u'\r', u'\n')
-                            .replace(u'\x85', u'\n')
-                            .replace(u'\u2028', u'\n'))
-                text = text.replace(u'\n', linesep)
+                text = (text.replace('\r\n', '\n')
+                            .replace('\r\x85', '\n')
+                            .replace('\r', '\n')
+                            .replace('\x85', '\n')
+                            .replace('\u2028', '\n'))
+                text = text.replace('\n', linesep)
             if encoding is None:
                 encoding = sys.getdefaultencoding()
             bytes = text.encode(encoding, errors)
@@ -690,7 +672,7 @@ class path(_base):
         This uses 'U' mode in Python 2.3 and later.
         """
         if encoding is None and retain:
-            f = self.open(_textmode)
+            f = self.open()
             try:
                 return f.readlines()
             finally:
@@ -739,15 +721,15 @@ class path(_base):
         f = self.open(mode)
         try:
             for line in lines:
-                isUnicode = isinstance(line, unicode)
+                isUnicode = isinstance(line, str)
                 if linesep is not None:
                     # Strip off any existing line-end and add the
                     # specified linesep string.
                     if isUnicode:
-                        if line[-2:] in (u'\r\n', u'\x0d\x85'):
+                        if line[-2:] in ('\r\n', '\x0d\x85'):
                             line = line[:-2]
-                        elif line[-1:] in (u'\r', u'\n',
-                                           u'\x85', u'\u2028'):
+                        elif line[-1:] in ('\r', '\n',
+                                           '\x85', '\u2028'):
                             line = line[:-1]
                     else:
                         if line[-2:] == '\r\n':
@@ -770,7 +752,7 @@ class path(_base):
         """
         f = self.open('rb')
         try:
-            m = md5.new()
+            m = md5()
             while True:
                 d = f.read(8192)
                 if not d:
@@ -843,7 +825,7 @@ class path(_base):
                 self, win32security.OWNER_SECURITY_INFORMATION)
             sid = desc.GetSecurityDescriptorOwner()
             account, domain, typecode = win32security.LookupAccountSid(None, sid)
-            return domain + u'\\' + account
+            return domain + '\\' + account
         else:
             if pwd is None:
                 raise NotImplementedError("path.owner is not implemented on this platform.")
@@ -886,10 +868,10 @@ class path(_base):
 
     # --- Create/delete operations on directories
 
-    def mkdir(self, mode=0777):
+    def mkdir(self, mode=0o777):
         os.mkdir(self, mode)
 
-    def makedirs(self, mode=0777):
+    def makedirs(self, mode=0o777):
         os.makedirs(self, mode)
 
     def rmdir(self):
@@ -905,7 +887,7 @@ class path(_base):
         """ Set the access/modified times of this file to the current time.
         Create the file if it does not exist.
         """
-        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0666)
+        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0o666)
         os.close(fd)
         os.utime(self, None)
 

@@ -70,13 +70,7 @@ def split_user_input(line, pattern=None):
     else:
         pre,ifun,the_rest = match.groups()
 
-    # ifun has to be a valid python identifier, so it better be only pure
-    # ascii, no unicode:
-    try:
-        ifun = ifun.encode('ascii')
-    except UnicodeEncodeError:
-        the_rest = ifun + u' ' + the_rest
-        ifun = u''
+    # Python identifiers no longer have to be ASCII (PEP 3131) [Code removed]
 
     #print 'line:<%s>' % line # dbg
     #print 'pre <%s> ifun <%s> rest <%s>' % (pre,ifun.strip(),the_rest) # dbg

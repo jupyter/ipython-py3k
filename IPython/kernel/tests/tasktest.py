@@ -27,7 +27,7 @@ from IPython.kernel import error
 def _raise_it(f):
     try:
         f.raiseException()
-    except CompositeError, e:
+    except CompositeError as e:
         e.raise_exception() 
 
 class TaskTestBase(object):

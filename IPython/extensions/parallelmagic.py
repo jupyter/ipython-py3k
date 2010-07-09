@@ -81,7 +81,7 @@ class ParalleMagicComponent(Component):
             [1] In [6]: a = 10
         """
         if self.active_multiengine_client is None:
-            print NO_ACTIVE_MULTIENGINE_CLIENT
+            print(NO_ACTIVE_MULTIENGINE_CLIENT)
             return
 
         try:
@@ -109,9 +109,9 @@ class ParalleMagicComponent(Component):
         """
 
         if self.active_multiengine_client is None:
-            print NO_ACTIVE_MULTIENGINE_CLIENT
+            print(NO_ACTIVE_MULTIENGINE_CLIENT)
             return
-        print "Parallel execution on engines: %s" % self.active_multiengine_client.targets
+        print("Parallel execution on engines: %s" % self.active_multiengine_client.targets)
         result = self.active_multiengine_client.execute(parameter_s)
         return result
 
@@ -150,7 +150,7 @@ class ParalleMagicComponent(Component):
         pxrunsource.
         """
         if self.active_multiengine_client is None:
-            print NO_ACTIVE_MULTIENGINE_CLIENT
+            print(NO_ACTIVE_MULTIENGINE_CLIENT)
             return
 
         self._original_runsource = self.shell.runsource
@@ -158,14 +158,14 @@ class ParalleMagicComponent(Component):
             self.pxrunsource, self.shell, self.shell.__class__
         )
         self.autopx = True
-        print "%autopx enabled"
+        print("%autopx enabled")
     
     def _disable_autopx(self):
         """Disable %autopx by restoring the original InteractiveShell.runsource."""
         if self.autopx:
             self.shell.runsource = self._original_runsource
             self.autopx = False
-            print "%autopx disabled"
+            print("%autopx disabled")
 
     def pxrunsource(self, ipself, source, filename="<input>", symbol="single"):
         """A parallel replacement for InteractiveShell.runsource."""
@@ -193,7 +193,7 @@ class ParalleMagicComponent(Component):
             except:
                 ipself.showtraceback()
             else:
-                print result.__repr__()
+                print(result.__repr__())
             return False
 
 

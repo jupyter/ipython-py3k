@@ -81,4 +81,4 @@ InteractiveShell.prefilter = prefilter_PQ
 del InteractiveShell,prefilter_PQ
 
 # Just a heads up at the console
-print '*** Simplified input for physical quantities enabled.'
+print('*** Simplified input for physical quantities enabled.')

@@ -77,7 +77,7 @@ if mswindows:
         # something else than cmd.
         skip = True
     else:
-        import winprocess
+        from . import winprocess
 else:
     import signal
 
@@ -113,7 +113,7 @@ else:
                            p2cread, p2cwrite,
                            c2pread, c2pwrite,
                            errread, errwrite):
-            if not isinstance(args, types.StringTypes):
+            if not isinstance(args, str):
                 args = subprocess.list2cmdline(args)
 
             if startupinfo is None:

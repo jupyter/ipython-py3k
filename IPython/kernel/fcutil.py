@@ -15,7 +15,7 @@ Foolscap related utilities.
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
+
 
 import os
 import tempfile
@@ -96,7 +96,7 @@ def is_valid_furl_file(furl_or_file):
     This doesn't try to read the contents because often we have to validate
     FURL files that are created, but don't yet have a FURL written to them.
     """
-    if isinstance(furl_or_file, (str, unicode)):
+    if isinstance(furl_or_file, str):
         path, furl_filename = os.path.split(furl_or_file)
         if os.path.isdir(path) and furl_filename.endswith('.furl'):
             return True
@@ -221,7 +221,7 @@ class FCServiceFactory(AdaptedConfiguredObjectFactory):
             self.location = '127.0.0.1'
 
     def _check_reuse_furls(self):
-        furl_files = [i.furl_file for i in self.interfaces.values()]
+        furl_files = [i.furl_file for i in list(self.interfaces.values())]
         for ff in furl_files:
             fullfile = self._get_security_file(ff)
             if self.reuse_furls:
@@ -269,7 +269,7 @@ class FCServiceFactory(AdaptedConfiguredObjectFactory):
     def adapt_to_interfaces(self, d):
         """Run through the interfaces, adapt and register."""
 
-        for ifname, ifconfig in self.interfaces.iteritems():
+        for ifname, ifconfig in self.interfaces.items():
             ff = self._get_security_file(ifconfig.furl_file)
             log.msg("Adapting [%s] to interface: %s" % \
                 (self.adaptee.__class__.__name__, ifname))

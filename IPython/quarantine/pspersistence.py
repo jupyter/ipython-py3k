@@ -17,7 +17,7 @@ from IPython.core.fakemodule import FakeModule
 def restore_aliases(self):
     ip = self.getapi()
     staliases = ip.db.get('stored_aliases', {})
-    for k,v in staliases.items():
+    for k,v in list(staliases.items()):
         #print "restore alias",k,v # dbg
         #self.alias_table[k] = v
         ip.define_alias(k,v)
@@ -31,8 +31,8 @@ def refresh_variables(ip):
         try:
             obj = db[key]
         except KeyError:
-            print "Unable to restore variable '%s', ignoring (use %%store -d to forget!)" % justkey
-            print "The error was:",sys.exc_info()[0]
+            print("Unable to restore variable '%s', ignoring (use %%store -d to forget!)" % justkey)
+            print("The error was:",sys.exc_info()[0])
         else:
             #print "restored",justkey,"=",obj #dbg
             ip.user_ns[justkey] = obj
@@ -91,7 +91,7 @@ def magic_store(self, parameter_s=''):
     ip = self.getapi()
     db = ip.db
     # delete
-    if opts.has_key('d'):
+    if 'd' in opts:
         try:
             todel = args[0]
         except IndexError:
@@ -102,11 +102,11 @@ def magic_store(self, parameter_s=''):
             except:
                 raise UsageError("Can't delete variable '%s'" % todel)
     # reset
-    elif opts.has_key('z'):
+    elif 'z' in opts:
         for k in db.keys('autorestore/*'):
             del db[k]
 
-    elif opts.has_key('r'):
+    elif 'r' in opts:
         refresh_variables(ip)
 
     
@@ -115,17 +115,17 @@ def magic_store(self, parameter_s=''):
         vars = self.db.keys('autorestore/*')
         vars.sort()            
         if vars:
-            size = max(map(len,vars))
+            size = max(list(map(len,vars)))
         else:
             size = 0
             
-        print 'Stored variables and their in-db values:'
+        print('Stored variables and their in-db values:')
         fmt = '%-'+str(size)+'s -> %s'
         get = db.get
         for var in vars:
             justkey = os.path.basename(var)
             # print 30 first characters from every var
-            print fmt % (justkey,repr(get(var,'<unavailable>'))[:50])
+            print(fmt % (justkey,repr(get(var,'<unavailable>'))[:50]))
     
     # default action - store the variable
     else:
@@ -137,11 +137,11 @@ def magic_store(self, parameter_s=''):
             else:
                 fil = open(fnam,'w')
             obj = ip.ev(args[0])
-            print "Writing '%s' (%s) to file '%s'." % (args[0],
-              obj.__class__.__name__, fnam)
+            print("Writing '%s' (%s) to file '%s'." % (args[0],
+              obj.__class__.__name__, fnam))
 
             
-            if not isinstance (obj,basestring):
+            if not isinstance (obj,str):
                 from pprint import pprint
                 pprint(obj,fil)
             else:
@@ -162,22 +162,22 @@ def magic_store(self, parameter_s=''):
                 staliases = db.get('stored_aliases',{})
                 staliases[ args[0] ] = self.alias_table[ args[0] ]
                 db['stored_aliases'] = staliases                
-                print "Alias stored:", args[0], self.alias_table[ args[0] ]
+                print("Alias stored:", args[0], self.alias_table[ args[0] ])
                 return
             else:
                 raise UsageError("Unknown variable '%s'" % args[0])
             
         else:
             if isinstance(inspect.getmodule(obj), FakeModule):
-                print textwrap.dedent("""\
+                print(textwrap.dedent("""\
                 Warning:%s is %s 
                 Proper storage of interactively declared classes (or instances
                 of those classes) is not possible! Only instances
                 of classes in real modules on file system can be %%store'd.
-                """ % (args[0], obj) ) 
+                """ % (args[0], obj) )) 
                 return
             #pickled = pickle.dumps(obj)
             self.db[ 'autorestore/' + args[0] ] = obj
-            print "Stored '%s' (%s)" % (args[0], obj.__class__.__name__)
+            print("Stored '%s' (%s)" % (args[0], obj.__class__.__name__))
 
 ip.define_magic('store',magic_store)

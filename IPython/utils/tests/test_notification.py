@@ -114,7 +114,7 @@ class NotificationTests(unittest.TestCase):
     def test_remove_all_observers(self):
         """White-box test for remove_all_observers"""
 
-        for i in xrange(10):
+        for i in range(10):
             Observer('TYPE', None, center=shared_center)
 
         self.assert_(len(shared_center.observers[('TYPE',None)]) >= 10, 
@@ -140,7 +140,7 @@ class NotificationTests(unittest.TestCase):
         """Test that post_notification, even with many registered irrelevant
         observers is fast"""
         
-        for i in xrange(10):
+        for i in range(10):
             Observer("UNRELATED_TYPE", None)
 
         o = Observer('EXPECTED_TYPE', None)

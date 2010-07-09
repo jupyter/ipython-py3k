@@ -23,7 +23,7 @@ Notes
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
+
 import __main__
 
 import sys
@@ -56,7 +56,7 @@ def kill_embedded(self,parameter_s=''):
                      "(y/n)? [y/N] ",'n')
     if kill:
         self.embedded_active = False
-        print "This embedded IPython will not reactivate anymore once you exit."
+        print("This embedded IPython will not reactivate anymore once you exit.")
 
 
 class InteractiveShellEmbed(InteractiveShell):
@@ -166,7 +166,7 @@ class InteractiveShellEmbed(InteractiveShell):
         self.banner2 = self.old_banner2
 
         if self.exit_msg is not None:
-            print self.exit_msg
+            print(self.exit_msg)
 
         self.restore_sys_ipcompleter()
 
@@ -213,7 +213,7 @@ class InteractiveShellEmbed(InteractiveShell):
         # one, but will track what got copied so we can delete them at exit.
         # This is so that a later embedded call doesn't see locals from a
         # previous call (which most likely existed in a separate scope).
-        local_varnames = local_ns.keys()
+        local_varnames = list(local_ns.keys())
         self.user_ns.update(local_ns)
         #self.user_ns['local_ns'] = local_ns  # dbg
 

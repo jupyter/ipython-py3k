@@ -34,7 +34,7 @@ __all__ = ['ANSICodeColors','Parser']
 _scheme_default = 'Linux'
 
 # Imports
-import cStringIO
+import io
 import keyword
 import os
 import optparse
@@ -133,13 +133,13 @@ class Parser:
         
         string_output = 0
         if out == 'str' or self.out == 'str' or \
-           isinstance(self.out,cStringIO.OutputType):
+           isinstance(self.out,io.OutputType):
             # XXX - I don't really like this state handling logic, but at this
             # point I don't want to make major changes, so adding the
             # isinstance() check is the simplest I can do to ensure correct
             # behavior.
             out_old = self.out
-            self.out = cStringIO.StringIO()
+            self.out = io.StringIO()
             string_output = 1
         elif out is not None:
             self.out = out
@@ -173,14 +173,14 @@ class Parser:
 
         # parse the source and write it
         self.pos = 0
-        text = cStringIO.StringIO(self.raw)
+        text = io.BytesIO(self.raw.encode())
 
         error = False
         try:
-            tokenize.tokenize(text.readline, self)
-        except tokenize.TokenError, ex:
-            msg = ex[0]
-            line = ex[1][0]
+            [self(*token) for token in tokenize.tokenize(text.readline)]
+        except tokenize.TokenError as ex:
+            msg = ex.args[0]
+            line = ex.args[1][0]
             self.out.write("%s\n\n*** ERROR: %s%s%s\n" %
                            (colors[token.ERRORTOKEN],
                             msg, self.raw[self.lines[line]:],
@@ -194,10 +194,10 @@ class Parser:
             return (output, error)
         return (None, error)
 
-    def __call__(self, toktype, toktext, (srow,scol), (erow,ecol), line):
+    def __call__(self, toktype, toktext, xxx_todo_changeme, xxx_todo_changeme1, line):
         """ Token handler, with syntax highlighting."""
-
-        # local shorthands
+        (srow,scol) = xxx_todo_changeme
+        (erow,ecol) = xxx_todo_changeme1
         colors = self.colors
         owrite = self.out.write
 
@@ -287,7 +287,7 @@ If no filename is given, or if filename is -, read standard input."""
         try:
             # write colorized version to stdout
             parser.format(stream.read(),scheme=opts.scheme_name)
-        except IOError,msg:
+        except IOError as msg:
             # if user reads through a pager and quits, don't print traceback
             if msg.args != (32,'Broken pipe'):
                 raise

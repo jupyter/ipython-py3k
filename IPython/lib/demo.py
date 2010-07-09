@@ -296,7 +296,7 @@ class Demo(object):
         self.src_blocks = src_blocks
 
         # also build syntax-highlighted source
-        self.src_blocks_colored = map(self.ip_colorize,self.src_blocks)
+        self.src_blocks_colored = list(map(self.ip_colorize,self.src_blocks))
 
         # ensure clean namespace and seek offset
         self.reset()
@@ -318,7 +318,7 @@ class Demo(object):
         
         if index is None:
             if self.finished:
-                print >>Term.cout, 'Demo finished.  Use <demo_name>.reset() if you want to rerun it.'
+                print('Demo finished.  Use <demo_name>.reset() if you want to rerun it.', file=Term.cout)
                 return None
             index = self.block_index
         else:
@@ -387,9 +387,9 @@ class Demo(object):
         if index is None:
             return
 
-        print >>Term.cout, self.marquee('<%s> block # %s (%s remaining)' %
-                           (self.title,index,self.nblocks-index-1))
-        print >>Term.cout,(self.src_blocks_colored[index])
+        print(self.marquee('<%s> block # %s (%s remaining)' %
+                           (self.title,index,self.nblocks-index-1)), file=Term.cout)
+        print((self.src_blocks_colored[index]), file=Term.cout)
         sys.stdout.flush()
 
     def show_all(self):
@@ -402,18 +402,18 @@ class Demo(object):
         marquee = self.marquee
         for index,block in enumerate(self.src_blocks_colored):
             if silent[index]:
-                print >>Term.cout, marquee('<%s> SILENT block # %s (%s remaining)' %
-                              (title,index,nblocks-index-1))
+                print(marquee('<%s> SILENT block # %s (%s remaining)' %
+                              (title,index,nblocks-index-1)), file=Term.cout)
             else:
-                print >>Term.cout, marquee('<%s> block # %s (%s remaining)' %
-                              (title,index,nblocks-index-1))
-            print >>Term.cout, block,
+                print(marquee('<%s> block # %s (%s remaining)' %
+                              (title,index,nblocks-index-1)), file=Term.cout)
+            print(block, end=' ', file=Term.cout)
         sys.stdout.flush()
 
     def runlines(self,source):
         """Execute a string with one or more lines of code"""
 
-        exec source in self.user_ns
+        exec(source, self.user_ns)
         
     def __call__(self,index=None):
         """run a block of the demo.
@@ -432,18 +432,18 @@ class Demo(object):
             next_block = self.src_blocks[index]
             self.block_index += 1
             if self._silent[index]:
-                print >>Term.cout, marquee('Executing silent block # %s (%s remaining)' %
-                              (index,self.nblocks-index-1))
+                print(marquee('Executing silent block # %s (%s remaining)' %
+                              (index,self.nblocks-index-1)), file=Term.cout)
             else:
                 self.pre_cmd()
                 self.show(index)
                 if self.auto_all or self._auto[index]:
-                    print >>Term.cout, marquee('output:')
+                    print(marquee('output:'), file=Term.cout)
                 else:
-                    print >>Term.cout, marquee('Press <q> to quit, <Enter> to execute...'),
-                    ans = raw_input().strip()
+                    print(marquee('Press <q> to quit, <Enter> to execute...'), end=' ', file=Term.cout)
+                    ans = input().strip()
                     if ans:
-                        print >>Term.cout, marquee('Block NOT executed')
+                        print(marquee('Block NOT executed'), file=Term.cout)
                         return
             try:
                 save_argv = sys.argv
@@ -462,9 +462,9 @@ class Demo(object):
             mq1 = self.marquee('END OF DEMO')
             if mq1:
                 # avoid spurious print >>Term.cout,s if empty marquees are used
-                print >>Term.cout
-                print >>Term.cout, mq1
-                print >>Term.cout, self.marquee('Use <demo_name>.reset() if you want to rerun it.')
+                print(file=Term.cout)
+                print(mq1, file=Term.cout)
+                print(self.marquee('Use <demo_name>.reset() if you want to rerun it.'), file=Term.cout)
             self.finished = True
 
     # These methods are meant to be overridden by subclasses who may wish to
@@ -529,7 +529,7 @@ class LineDemo(Demo):
         self.src_blocks = src_b
 
         # also build syntax-highlighted source
-        self.src_blocks_colored = map(self.ip_colorize,self.src_blocks)
+        self.src_blocks_colored = list(map(self.ip_colorize,self.src_blocks))
 
         # ensure clean namespace and seek offset
         self.reset()

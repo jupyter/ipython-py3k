@@ -13,7 +13,7 @@ Classes for handling input/output prompts.
 
 #****************************************************************************
 
-import __builtin__
+import builtins
 import os
 import re
 import socket
@@ -84,7 +84,7 @@ def multiple_replace(dict, text):
     # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/81330
 
     # Create a regular expression  from the dictionary keys
-    regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
+    regex = re.compile("(%s)" % "|".join(map(re.escape, list(dict.keys()))))
     # For each match, look-up corresponding value in dictionary
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
 
@@ -212,11 +212,11 @@ def str_safe(arg):
     except UnicodeError:
         try:
             out = arg.encode('utf_8','replace')
-        except Exception,msg:
+        except Exception as msg:
             # let's keep this little duplication here, so that the most common
             # case doesn't suffer from a double try wrapping.
             out = '<ERROR: %s>' % msg
-    except Exception,msg:
+    except Exception as msg:
         out = '<ERROR: %s>' % msg
         #raise  # dbg
     return out
@@ -273,7 +273,7 @@ class BasePrompt(object):
                                                          self.p_template),
                                         self.cache.user_ns,loc)
         except:
-            print "Illegal prompt template (check $ usage!):",self.p_template
+            print("Illegal prompt template (check $ usage!):",self.p_template)
             self.p_str = self.p_template
             self.p_str_nocolor = self.p_template
 
@@ -334,7 +334,7 @@ class BasePrompt(object):
         else:
             return os.sep
 
-    def __nonzero__(self):
+    def __bool__(self):
         """Implement boolean behavior.
 
         Checks whether the p_str attribute is non-empty"""
@@ -490,7 +490,7 @@ class CachedOutput:
         self.output_sep = output_sep
         self.output_sep2 = output_sep2
         self._,self.__,self.___ = '','',''
-        self.pprint_types = map(type,[(),[],{}])
+        self.pprint_types = list(map(type,[(),[],{}]))
         
         # these are deliberately global:
         to_user_ns = {'_':self._,'__':self.__,'___':self.___}
@@ -531,7 +531,7 @@ class CachedOutput:
         # If something injected a '_' variable in __builtin__, delete
         # ipython's automatic one so we don't clobber that.  gettext() in
         # particular uses _, so we need to stay away from it.
-        if '_' in __builtin__.__dict__:
+        if '_' in builtins.__dict__:
             try:
                 del self.user_ns['_']
             except KeyError:
@@ -597,7 +597,7 @@ class CachedOutput:
         #print '***cache_count', self.cache_count # dbg
         if len(self.user_ns['_oh']) >= self.cache_size and self.do_full_cache:
             warn('Output cache limit (currently '+
-                  `self.cache_size`+' entries) hit.\n'
+                  repr(self.cache_size)+' entries) hit.\n'
                  'Flushing cache and resetting history counter...\n'
                  'The only history variables available will be _,__,___ and _1\n'
                  'with the current result.')
@@ -605,7 +605,7 @@ class CachedOutput:
             self.flush()
         # Don't overwrite '_' and friends if '_' is in __builtin__ (otherwise
         # we cause buggy behavior for things like gettext).
-        if '_' not in __builtin__.__dict__:
+        if '_' not in builtins.__dict__:
             self.___ = self.__
             self.__ = self._
             self._ = arg
@@ -614,25 +614,25 @@ class CachedOutput:
         # hackish access to top-level  namespace to create _1,_2... dynamically
         to_main = {}
         if self.do_full_cache:
-            new_result = '_'+`self.prompt_count`
+            new_result = '_'+repr(self.prompt_count)
             to_main[new_result] = arg
             self.user_ns.update(to_main)
             self.user_ns['_oh'][self.prompt_count] = arg
 
     def flush(self):
         if not self.do_full_cache:
-            raise ValueError,"You shouldn't have reached the cache flush "\
-                  "if full caching is not enabled!"
+            raise ValueError("You shouldn't have reached the cache flush "\
+                  "if full caching is not enabled!")
         # delete auto-generated vars from global namespace
         
         for n in range(1,self.prompt_count + 1):
-            key = '_'+`n`
+            key = '_'+repr(n)
             try:
                 del self.user_ns[key]
             except: pass
         self.user_ns['_oh'].clear()
         
-        if '_' not in __builtin__.__dict__:
+        if '_' not in builtins.__dict__:
             self.user_ns.update({'_':None,'__':None, '___':None})
         import gc
         gc.collect() # xxx needed?

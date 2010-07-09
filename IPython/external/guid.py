@@ -87,10 +87,10 @@ import threading
 ###   global module variables
 
 #Makes a hex IP from a decimal dot-separated ip (eg: 127.0.0.1)
-make_hexip = lambda ip: ''.join(["%04x" % long(i) for i in ip.split('.')]) # leave space for ip v6 (65K in each sub)
+make_hexip = lambda ip: ''.join(["%04x" % int(i) for i in ip.split('.')]) # leave space for ip v6 (65K in each sub)
   
 MAX_COUNTER = 0xfffffffe
-counter = 0L
+counter = 0
 firstcounter = MAX_COUNTER
 lasttime = 0
 ip = ''
@@ -121,17 +121,17 @@ def generate(ip=None):
     parts = []
 
     # do we need to wait for the next millisecond (are we out of counters?)
-    now = long(time.time() * 1000)
+    now = int(time.time() * 1000)
     while lasttime == now and counter == firstcounter: 
       time.sleep(.01)
-      now = long(time.time() * 1000)
+      now = int(time.time() * 1000)
 
     # time part
     parts.append("%016x" % now)
 
     # counter part
     if lasttime != now:  # time to start counter over since we have a different millisecond
-      firstcounter = long(random.uniform(1, MAX_COUNTER))  # start at random position
+      firstcounter = int(random.uniform(1, MAX_COUNTER))  # start at random position
       counter = firstcounter
     counter += 1
     if counter > MAX_COUNTER:
@@ -151,7 +151,7 @@ def generate(ip=None):
 def extract_time(guid):
   '''Extracts the time portion out of the guid and returns the 
      number of seconds since the epoch as a float'''
-  return float(long(guid[0:16], 16)) / 1000.0
+  return float(int(guid[0:16], 16)) / 1000.0
 
 
 def extract_counter(guid):

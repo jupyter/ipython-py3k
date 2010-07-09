@@ -55,7 +55,7 @@ class BaseAppConfigLoader(ArgParseConfigLoader):
         """Add the --ipython-dir option to the parser."""
         paa = parser.add_argument
         paa('--ipython-dir', 
-            dest='Global.ipython_dir',type=unicode,
+            dest='Global.ipython_dir',type=str,
             help=
             """Set to override default location of the IPython directory
             IPYTHON_DIR, stored as Global.ipython_dir.  This can also be 
@@ -91,7 +91,7 @@ class Application(object):
     above is the order in which the merge is made.
     """
 
-    name = u'ipython'
+    name = 'ipython'
     description = 'IPython: an enhanced interactive Python shell.'
     #: Usage message printed by argparse. If None, auto-generate
     usage = None
@@ -101,7 +101,7 @@ class Application(object):
     config_file_name = None
     #: The name of the default config file. Track separately from the actual
     #: name because some logic happens only if we aren't using the default.
-    default_config_file_name = u'ipython_config.py'
+    default_config_file_name = 'ipython_config.py'
     default_log_level = logging.WARN
     #: Set by --profile option
     profile_name = None
@@ -293,7 +293,7 @@ class Application(object):
             self.ipython_dir = self.default_config.Global.ipython_dir
         sys.path.append(os.path.abspath(self.ipython_dir))
         if not os.path.isdir(self.ipython_dir):
-            os.makedirs(self.ipython_dir, mode=0777)
+            os.makedirs(self.ipython_dir, mode=0o777)
         self.log.debug("IPYTHON_DIR set to: %s" % self.ipython_dir)
 
     def find_resources(self):
@@ -331,7 +331,7 @@ class Application(object):
             # Use the default config file name and profile name if set
             # to determine the used config file name.
             name_parts = self.default_config_file_name.split('.')
-            name_parts.insert(1, u'_' + self.profile_name + u'.')
+            name_parts.insert(1, '_' + self.profile_name + '.')
             self.config_file_name = ''.join(name_parts)
 
     def find_config_file_paths(self):

@@ -141,7 +141,7 @@ class CommandChainDispatcher:
             #print "prio",prio,"cmd",cmd #dbg
             try:
                 return cmd(*args, **kw)
-            except TryNext, exc:
+            except TryNext as exc:
                 if exc.args or exc.kwargs:
                     args = exc.args
                     kw = exc.kwargs
@@ -176,12 +176,12 @@ def result_display(self,arg):
             # the screen, instead of having the output prompt mess up
             # their first line.                
             Term.cout.write('\n')
-        print >>Term.cout, out
+        print(out, file=Term.cout)
     else:
         # By default, the interactive prompt uses repr() to display results,
         # so we should honor this.  Users who'd rather use a different
         # mechanism can easily override this hook.
-        print >>Term.cout, repr(arg)
+        print(repr(arg), file=Term.cout)
     # the default display hook doesn't manipulate the value to put in history
     return None 
 

@@ -38,4 +38,4 @@ cache.append(f)
 
 def call_f():
     for func in cache:
-        print 'lowercased:',func().lower()
+        print('lowercased:',func().lower())

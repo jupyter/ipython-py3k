@@ -55,7 +55,7 @@ def Parametric(cls):
                     if f.startswith('test')]
     test_generators = [m for m in test_generators if hasattr(m,'_parametric')]
     for test_gen in test_generators:
-        test_name = test_gen.func_name
+        test_name = test_gen.__name__
 
         # Insert a new test for each parameter
         for n,test_and_params in enumerate(test_gen()):
@@ -74,5 +74,5 @@ def Parametric(cls):
             setattr(cls, test_name + '_%s' % n, partial_func)
 
         # rename test generator so it isn't called again by nose
-        test_gen.im_func.func_name = '__done_' + test_name
+        test_gen.__func__.__name__ = '__done_' + test_name
 

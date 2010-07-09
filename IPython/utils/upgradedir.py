@@ -9,9 +9,10 @@ To be used by "upgrade" feature.
 try:
     from IPython.external.path import path
 except ImportError:
-    from path import path
+    from .path import path
 
-import md5, pickle
+import pickle
+from hashlib import md5
 
 def showdiff(old,new):
     import difflib
@@ -19,7 +20,7 @@ def showdiff(old,new):
     lines = d.compare(old.lines(),new.lines())
     realdiff = False
     for l in lines:
-        print l,
+        print(l, end=' ')
         if not realdiff and not l[0].isspace():
             realdiff = True
     return realdiff
@@ -32,7 +33,7 @@ def upgrade_dir(srcdir, tgtdir):
     """
 
     def pr(s):
-        print s
+        print(s)
     junk = ['.svn','ipythonrc*','*.pyc', '*.pyo', '*~', '.hg']
     
     def ignorable(p):
@@ -59,32 +60,32 @@ def upgrade_dir(srcdir, tgtdir):
             pr("Creating %s" % str(tgt))
 
             tgt.write_text(src.text())
-            rpt[str(tgt)] = md5.new(tgt.text()).hexdigest()
+            rpt[str(tgt)] = md5(tgt.text()).hexdigest()
         else:
             cont = tgt.text()
             sum = rpt.get(str(tgt), None)
             #print sum
-            if sum and md5.new(cont).hexdigest() == sum:
+            if sum and md5(cont).hexdigest() == sum:
                 pr("%s: Unedited, installing new version" % tgt)
                 tgt.write_text(src.text())
-                rpt[str(tgt)] = md5.new(tgt.text()).hexdigest()
+                rpt[str(tgt)] = md5(tgt.text()).hexdigest()
             else:
                 pr(' == Modified, skipping %s, diffs below == ' % tgt)
-                #rpt[str(tgt)] = md5.new(tgt.bytes()).hexdigest()
+                #rpt[str(tgt)] = md5(tgt.bytes()).hexdigest()
                 real = showdiff(tgt,src)
                 pr('') # empty line
                 if not real:
                     pr("(Ok, it was identical, only upgrading checksum)")
-                    rpt[str(tgt)] = md5.new(tgt.text()).hexdigest()
+                    rpt[str(tgt)] = md5(tgt.text()).hexdigest()
                 else:
                     modded.append(tgt)
 
         #print rpt
     pickle.dump(rpt, rep.open('w'))
     if modded:
-        print "\n\nDelete the following files manually (and rerun %upgrade)\nif you need a full upgrade:"
+        print("\n\nDelete the following files manually (and rerun %upgrade)\nif you need a full upgrade:")
         for m in modded:
-            print m
+            print(m)
 
 
 import sys

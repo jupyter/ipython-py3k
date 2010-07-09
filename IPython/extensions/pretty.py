@@ -42,6 +42,7 @@ from IPython.utils.traitlets import Bool, List
 from IPython.utils.io import Term
 from IPython.utils.autoattr import auto_attr
 from IPython.utils.importstring import import_item
+import collections
 
 #-----------------------------------------------------------------------------
 # Code
@@ -80,9 +81,9 @@ class PrettyResultDisplay(Component):
             self.for_type_by_name(type_module, type_name, func)
 
     def _resolve_func_name(self, func_name):
-        if callable(func_name):
+        if isinstance(func_name, collections.Callable):
             return func_name
-        elif isinstance(func_name, basestring):
+        elif isinstance(func_name, str):
             return import_item(func_name)
         else:
             raise TypeError('func_name must be a str or callable, got: %r' % func_name)
@@ -110,7 +111,7 @@ class PrettyResultDisplay(Component):
                 # the screen, instead of having the output prompt mess up
                 # their first line.                
                 Term.cout.write('\n')
-            print >>Term.cout, out
+            print(out, file=Term.cout)
         else:
             raise TryNext
 

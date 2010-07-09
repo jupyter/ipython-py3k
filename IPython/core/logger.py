@@ -54,7 +54,7 @@ class Logger(object):
     # logmode is a validated property
     def _set_mode(self,mode):
         if mode not in ['append','backup','global','over','rotate']:
-            raise ValueError,'invalid log mode %s given' % mode
+            raise ValueError('invalid log mode %s given' % mode)
         self._logmode = mode
 
     def _get_mode(self):
@@ -119,7 +119,7 @@ class Logger(object):
                     for f in old:
                         root, ext = os.path.splitext(f)
                         num = int(ext[1:-1])+1
-                        os.rename(f, root+'.'+`num`.zfill(3)+'~')
+                        os.rename(f, root+'.'+repr(num).zfill(3)+'~')
                 os.rename(self.logfname, self.logfname+'.001~')
             self.logfile = open(self.logfname,'w')
             
@@ -132,39 +132,38 @@ class Logger(object):
         """Switch logging on/off. val should be ONLY a boolean."""
 
         if val not in [False,True,0,1]:
-            raise ValueError, \
-                  'Call switch_log ONLY with a boolean argument, not with:',val
+            raise ValueError('Call switch_log ONLY with a boolean argument, not with:').with_traceback(val)
         
         label = {0:'OFF',1:'ON',False:'OFF',True:'ON'}
 
         if self.logfile is None:
-            print """
+            print("""
 Logging hasn't been started yet (use logstart for that).
 
 %logon/%logoff are for temporarily starting and stopping logging for a logfile
 which already exists. But you must first start the logging process with
-%logstart (optionally giving a logfile name)."""
+%logstart (optionally giving a logfile name).""")
             
         else:
             if self.log_active == val:
-                print 'Logging is already',label[val]
+                print('Logging is already',label[val])
             else:
-                print 'Switching logging',label[val]
+                print('Switching logging',label[val])
                 self.log_active = not self.log_active
                 self.log_active_out = self.log_active
 
     def logstate(self):
         """Print a status message about the logger."""
         if self.logfile is None:
-            print 'Logging has not been activated.'
+            print('Logging has not been activated.')
         else:
             state = self.log_active and 'active' or 'temporarily suspended'
-            print 'Filename       :',self.logfname
-            print 'Mode           :',self.logmode
-            print 'Output logging :',self.log_output
-            print 'Raw input log  :',self.log_raw_input
-            print 'Timestamping   :',self.timestamp
-            print 'State          :',state
+            print('Filename       :',self.logfname)
+            print('Mode           :',self.logmode)
+            print('Output logging :',self.log_output)
+            print('Raw input log  :',self.log_raw_input)
+            print('Timestamping   :',self.timestamp)
+            print('State          :',state)
 
     def log(self,line_ori,line_mod,continuation=None):
         """Write the line to a log and create input cache variables _i*.

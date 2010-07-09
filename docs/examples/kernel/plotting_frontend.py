@@ -35,8 +35,8 @@ downy = rc.gather('downy')
 downpx = rc.gather('downpx')
 downpy = rc.gather('downpy')
 
-print "number: ", sum(number)
-print "downsampled number: ", sum(d_number)
+print("number: ", sum(number))
+print("downsampled number: ", sum(d_number))
 
 # Make a scatter plot of the gathered data
 # These calls to matplotlib could be replaced by calls to pygist or

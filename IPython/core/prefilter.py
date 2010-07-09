@@ -25,7 +25,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 import codeop
 import re
 
@@ -39,6 +39,7 @@ from IPython.utils.traitlets import List, Int, Any, Str, CBool, Bool
 from IPython.utils.io import Term
 from IPython.utils.text import make_quoted_expr
 from IPython.utils.autoattr import auto_attr
+import collections
 
 #-----------------------------------------------------------------------------
 # Global utilities, errors and constants
@@ -239,7 +240,7 @@ class PrefilterManager(Component):
         This must be called after the priority of a transformer is changed.
         The :meth:`register_transformer` method calls this automatically.
         """
-        self._transformers.sort(cmp=lambda x,y: x.priority-y.priority)
+        self._transformers.sort(key=lambda x: x.priority)
 
     @property
     def transformers(self):
@@ -273,7 +274,7 @@ class PrefilterManager(Component):
         This must be called after the priority of a checker is changed.
         The :meth:`register_checker` method calls this automatically.
         """
-        self._checkers.sort(cmp=lambda x,y: x.priority-y.priority)
+        self._checkers.sort(key=lambda x: x.priority)
 
     @property
     def checkers(self):
@@ -753,7 +754,7 @@ class AutocallChecker(PrefilterChecker):
         if not oinfo['found']:
             return None
         
-        if callable(oinfo['obj']) \
+        if isinstance(oinfo['obj'], collections.Callable) \
                and (not re_exclude_auto.match(line_info.the_rest)) \
                and re_fun_name.match(line_info.ifun):
             return self.prefilter_manager.get_handler_by_name('auto')
@@ -950,9 +951,9 @@ class AutoHandler(PrefilterHandler):
                 # plain ascii works better w/ pyreadline, on some machines, so
                 # we use it and only print uncolored rewrite if we have unicode
                 rw = str(rw)
-                print >>Term.cout, rw
+                print(rw, file=Term.cout)
             except UnicodeEncodeError:
-                print "-------------->" + newcmd
+                print("-------------->" + newcmd)
             
         # log what is now valid Python, not the actual user input (without the
         # final newline)

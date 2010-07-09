@@ -11,7 +11,7 @@ Things to do:
 * Implement event loop and poll version.
 """
 
-import __builtin__
+import builtins
 import sys
 import time
 import traceback
@@ -20,8 +20,8 @@ from code import CommandCompiler
 
 import zmq
 
-from session import Session, Message, extract_header
-from completer import KernelCompleter
+from .session import Session, Message, extract_header
+from .completer import KernelCompleter
 
 class OutStream(object):
     """A file like object that publishes the stream to a 0MQ PUB socket."""
@@ -43,14 +43,14 @@ class OutStream(object):
 
     def flush(self):
         if self.pub_socket is None:
-            raise ValueError(u'I/O operation on closed file')
+            raise ValueError('I/O operation on closed file')
         else:
             if self._buffer:
                 data = ''.join(self._buffer)
-                content = {u'name':self.name, u'data':data}
-                msg = self.session.msg(u'stream', content=content,
+                content = {'name':self.name, 'data':data}
+                msg = self.session.msg('stream', content=content,
                                        parent=self.parent_header)
-                print>>sys.__stdout__, Message(msg)
+                print(Message(msg), file=sys.__stdout__)
                 self.pub_socket.send_json(msg)
                 self._buffer_len = 0
                 self._buffer = []
@@ -58,7 +58,7 @@ class OutStream(object):
     def isattr(self):
         return False
 
-    def next(self):
+    def __next__(self):
         raise IOError('Read not supported on a write only stream.')
 
     def read(self, size=None):
@@ -99,8 +99,8 @@ class DisplayHook(object):
         if obj is None:
             return
 
-        __builtin__._ = obj
-        msg = self.session.msg(u'pyout', {u'data':repr(obj)},
+        builtins._ = obj
+        msg = self.session.msg('pyout', {'data':repr(obj)},
                                parent=self.parent_header)
         self.pub_socket.send_json(msg)
 
@@ -115,19 +115,19 @@ class RawInput(object):
         self.socket = socket
 
     def __call__(self, prompt=None):
-        msg = self.session.msg(u'raw_input')
+        msg = self.session.msg('raw_input')
         self.socket.send_json(msg)
         while True:
             try:
                 reply = self.socket.recv_json(zmq.NOBLOCK)
-            except zmq.ZMQError, e:
+            except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
                     pass
                 else:
                     raise
             else:
                 break
-        return reply[u'content'][u'data']
+        return reply['content']['data']
 
 
 class Kernel(object):
@@ -150,18 +150,18 @@ class Kernel(object):
         while True:
             try:
                 ident = self.reply_socket.recv(zmq.NOBLOCK)
-            except zmq.ZMQError, e:
+            except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
                     break
             else:
                 assert self.reply_socket.rcvmore(), "Unexpected missing message part."
                 msg = self.reply_socket.recv_json()
-            print>>sys.__stdout__, "Aborting:"
-            print>>sys.__stdout__, Message(msg)
+            print("Aborting:", file=sys.__stdout__)
+            print(Message(msg), file=sys.__stdout__)
             msg_type = msg['msg_type']
             reply_type = msg_type.split('_')[0] + '_reply'
             reply_msg = self.session.msg(reply_type, {'status' : 'aborted'}, msg)
-            print>>sys.__stdout__, Message(reply_msg)
+            print(Message(reply_msg), file=sys.__stdout__)
             self.reply_socket.send(ident,zmq.SNDMORE)
             self.reply_socket.send_json(reply_msg)
             # We need to wait a bit for requests to come in. This can probably
@@ -170,37 +170,37 @@ class Kernel(object):
 
     def execute_request(self, ident, parent):
         try:
-            code = parent[u'content'][u'code']
+            code = parent['content']['code']
         except:
-            print>>sys.__stderr__, "Got bad msg: "
-            print>>sys.__stderr__, Message(parent)
+            print("Got bad msg: ", file=sys.__stderr__)
+            print(Message(parent), file=sys.__stderr__)
             return
-        pyin_msg = self.session.msg(u'pyin',{u'code':code}, parent=parent)
+        pyin_msg = self.session.msg('pyin',{'code':code}, parent=parent)
         self.pub_socket.send_json(pyin_msg)
         try:
             comp_code = self.compiler(code, '<zmq-kernel>')
             sys.displayhook.set_parent(parent)
-            exec comp_code in self.user_ns, self.user_ns
+            exec(comp_code, self.user_ns, self.user_ns)
         except:
-            result = u'error'
+            result = 'error'
             etype, evalue, tb = sys.exc_info()
             tb = traceback.format_exception(etype, evalue, tb)
             exc_content = {
-                u'status' : u'error',
-                u'traceback' : tb,
-                u'etype' : unicode(etype),
-                u'evalue' : unicode(evalue)
+                'status' : 'error',
+                'traceback' : tb,
+                'etype' : str(etype),
+                'evalue' : str(evalue)
             }
-            exc_msg = self.session.msg(u'pyerr', exc_content, parent)
+            exc_msg = self.session.msg('pyerr', exc_content, parent)
             self.pub_socket.send_json(exc_msg)
             reply_content = exc_content
         else:
             reply_content = {'status' : 'ok'}
-        reply_msg = self.session.msg(u'execute_reply', reply_content, parent)
-        print>>sys.__stdout__, Message(reply_msg)
+        reply_msg = self.session.msg('execute_reply', reply_content, parent)
+        print(Message(reply_msg), file=sys.__stdout__)
         self.reply_socket.send(ident, zmq.SNDMORE)
         self.reply_socket.send_json(reply_msg)
-        if reply_msg['content']['status'] == u'error':
+        if reply_msg['content']['status'] == 'error':
             self.abort_queue()
 
     def complete_request(self, ident, parent):
@@ -208,7 +208,7 @@ class Kernel(object):
                    'status' : 'ok'}
         completion_msg = self.session.send(self.reply_socket, 'complete_reply',
                                            matches, parent, ident)
-        print >> sys.__stdout__, completion_msg
+        print(completion_msg, file=sys.__stdout__)
 
     def complete(self, msg):
         return self.completer.complete(msg.content.line, msg.content.text)
@@ -219,10 +219,10 @@ class Kernel(object):
             assert self.reply_socket.rcvmore(), "Unexpected missing message part."
             msg = self.reply_socket.recv_json()
             omsg = Message(msg)
-            print>>sys.__stdout__, omsg
+            print(omsg, file=sys.__stdout__)
             handler = self.handlers.get(omsg.msg_type, None)
             if handler is None:
-                print >> sys.__stderr__, "UNKNOWN MESSAGE TYPE:", omsg
+                print("UNKNOWN MESSAGE TYPE:", omsg, file=sys.__stderr__)
             else:
                 handler(ident, omsg)
 
@@ -236,10 +236,10 @@ def main():
     rep_conn = connection % port_base
     pub_conn = connection % (port_base+1)
 
-    print >>sys.__stdout__, "Starting the kernel..."
-    print >>sys.__stdout__, "On:",rep_conn, pub_conn
+    print("Starting the kernel...", file=sys.__stdout__)
+    print("On:",rep_conn, pub_conn, file=sys.__stdout__)
 
-    session = Session(username=u'kernel')
+    session = Session(username='kernel')
 
     reply_socket = c.socket(zmq.XREP)
     reply_socket.bind(rep_conn)
@@ -247,8 +247,8 @@ def main():
     pub_socket = c.socket(zmq.PUB)
     pub_socket.bind(pub_conn)
 
-    stdout = OutStream(session, pub_socket, u'stdout')
-    stderr = OutStream(session, pub_socket, u'stderr')
+    stdout = OutStream(session, pub_socket, 'stdout')
+    stderr = OutStream(session, pub_socket, 'stderr')
     sys.stdout = stdout
     sys.stderr = stderr
 
@@ -262,7 +262,7 @@ def main():
     kernel.user_ns['sleep'] = time.sleep
     kernel.user_ns['s'] = 'Test string'
     
-    print >>sys.__stdout__, "Use Ctrl-\\ (NOT Ctrl-C!) to terminate."
+    print("Use Ctrl-\\ (NOT Ctrl-C!) to terminate.", file=sys.__stdout__)
     kernel.start()
 
 

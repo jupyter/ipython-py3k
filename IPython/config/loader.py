@@ -18,7 +18,6 @@ Authors
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
 import os
 import sys
 
@@ -73,8 +72,8 @@ class Config(dict):
 
     def _merge(self, other):
         to_update = {}
-        for k, v in other.items():
-            if not self.has_key(k):
+        for k, v in list(other.items()):
+            if k not in self:
                 to_update[k] = v
             else: # I have this key
                 if isinstance(v, Config):
@@ -96,11 +95,11 @@ class Config(dict):
         if self._is_section_key(key):
             return True
         else:
-            return dict.has_key(self, key)
+            return key in self
 
     def _has_section(self, key):
         if self._is_section_key(key):
-            if dict.has_key(self, key):
+            if key in self:
                 return True
         return False
 
@@ -112,15 +111,15 @@ class Config(dict):
 
     def __deepcopy__(self, memo):
         import copy
-        return type(self)(copy.deepcopy(self.items()))
+        return type(self)(copy.deepcopy(list(self.items())))
 
     def __getitem__(self, key):
         # Because we use this for an exec namespace, we need to delegate
-        # the lookup of names in __builtin__ to itself.  This means
+        # the lookup of names in __builtins__ to itself.  This means
         # that you can't have section or attribute names that are 
         # builtins.
         try:
-            return getattr(__builtin__, key)
+            return getattr(__builtins__, key)
         except AttributeError:
             pass
         if self._is_section_key(key):
@@ -134,8 +133,8 @@ class Config(dict):
             return dict.__getitem__(self, key)
 
     def __setitem__(self, key, value):
-        # Don't allow names in __builtin__ to be modified.
-        if hasattr(__builtin__, key):
+        # Don't allow names in __builtins__ to be modified.
+        if hasattr(__builtins__, key):
             raise ConfigError('Config variable names cannot have the same name '
                               'as a Python builtin: %s' % key)
         if self._is_section_key(key):
@@ -148,19 +147,19 @@ class Config(dict):
     def __getattr__(self, key):
         try:
             return self.__getitem__(key)
-        except KeyError, e:
+        except KeyError as e:
             raise AttributeError(e)
 
     def __setattr__(self, key, value):
         try:
             self.__setitem__(key, value)
-        except KeyError, e:
+        except KeyError as e:
             raise AttributeError(e)
 
     def __delattr__(self, key):
         try:
             dict.__delitem__(self, key)
-        except KeyError, e:
+        except KeyError as e:
             raise AttributeError(e)
 
 
@@ -282,7 +281,7 @@ class PyFileConfigLoader(FileConfigLoader):
             return self.config
 
         namespace = dict(load_subconfig=load_subconfig, get_config=get_config)
-        execfile(self.full_filename, namespace)
+        exec(compile(open(self.full_filename).read(), self.full_filename, 'exec'), namespace)
 
     def _convert_to_config(self):
         if self.data is None:
@@ -363,8 +362,8 @@ class ArgParseConfigLoader(CommandLineConfigLoader):
 
     def _convert_to_config(self):
         """self.parsed_data->self.config"""
-        for k, v in vars(self.parsed_data).items():
+        for k, v in list(vars(self.parsed_data).items()):
             exec_str = 'self.config.' + k + '= v'
-            exec exec_str in locals(), globals()
+            exec(exec_str, locals(), globals())
 
 

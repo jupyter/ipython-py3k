@@ -69,7 +69,7 @@ possible inclusion in future releases.
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
-from __future__ import with_statement
+
 
 import inspect
 import keyword
@@ -174,9 +174,9 @@ def findsource(object):
             raise IOError('could not find class definition')
 
     if ismethod(object):
-        object = object.im_func
+        object = object.__func__
     if isfunction(object):
-        object = object.func_code
+        object = object.__code__
     if istraceback(object):
         object = object.tb_frame
     if isframe(object):
@@ -239,7 +239,7 @@ def _fixed_getinnerframes(etb, context=1,tb_offset=0):
 
     aux = traceback.extract_tb(etb)
     assert len(records) == len(aux)
-    for i, (file, lnum, _, _) in zip(range(len(records)), aux):
+    for i, (file, lnum, _, _) in zip(list(range(len(records))), aux):
         maybeStart = lnum-1 - context//2
         start =  max(maybeStart, 0)
         end   = start + context
@@ -635,8 +635,7 @@ class VerboseTB(TBTools):
         else:
             # Simplified header
             head = '%s%s%s\n%s%s' % (Colors.topline, '-'*75, ColorsNormal,exc,
-                                     string.rjust('Traceback (most recent call last)',
-                                                  75 - len(str(etype)) ) )
+                        'Traceback (most recent call last)'.rjust( 75 - len(str(etype)) ) )
         frames = []
         # Flush cache before calling inspect.  This helps alleviate some of the
         # problems with python 2.3's inspect.py.
@@ -765,18 +764,18 @@ class VerboseTB(TBTools):
             def linereader(file=file, lnum=[lnum], getline=linecache.getline):
                 line = getline(file, lnum[0])
                 lnum[0] += 1
-                return line
+                return line.encode()
 
             # Build the list of names on this line of code where the exception
             # occurred.
             try:
                 # This builds the names list in-place by capturing it from the
                 # enclosing scope.
-                tokenize.tokenize(linereader, tokeneater)
+                [tokeneater(*token) for token in tokenize.tokenize(linereader)]
             except IndexError:
                 # signals exit of tokenizer
                 pass
-            except tokenize.TokenError,msg:
+            except tokenize.TokenError as msg:
                 _m = ("An unexpected error occurred while tokenizing input\n"
                       "The following traceback may be corrupted or invalid\n"
                       "The error message is: %s\n" % msg)
@@ -791,7 +790,7 @@ class VerboseTB(TBTools):
                 for name_full in unique_names:
                     name_base = name_full.split('.',1)[0]
                     if name_base in frame.f_code.co_varnames:
-                        if locals.has_key(name_base):
+                        if name_base in locals:
                             try:
                                 value = repr(eval(name_full,locals))
                             except:
@@ -800,7 +799,7 @@ class VerboseTB(TBTools):
                             value = undefined
                         name = tpl_local_var % name_full
                     else:
-                        if frame.f_globals.has_key(name_base):
+                        if name_base in frame.f_globals:
                             try:
                                 value = repr(eval(name_full,frame.f_globals))
                             except:
@@ -825,30 +824,14 @@ class VerboseTB(TBTools):
 
         # Get (safely) a string form of the exception info
         try:
-            etype_str,evalue_str = map(str,(etype,evalue))
+            etype_str,evalue_str = list(map(str,(etype,evalue)))
         except:
             # User exception is improperly defined.
             etype,evalue = str,sys.exc_info()[:2]
-            etype_str,evalue_str = map(str,(etype,evalue))
+            etype_str,evalue_str = list(map(str,(etype,evalue)))
         # ... and format it
         exception = ['%s%s%s: %s' % (Colors.excName, etype_str,
                                      ColorsNormal, evalue_str)]
-        if type(evalue) is types.InstanceType:
-            try:
-                names = [w for w in dir(evalue) if isinstance(w, basestring)]
-            except:
-                # Every now and then, an object with funny inernals blows up
-                # when dir() is called on it.  We do the best we can to report
-                # the problem and continue
-                _m = '%sException reporting error (object with broken dir())%s:'
-                exception.append(_m % (Colors.excName,ColorsNormal))
-                etype_str,evalue_str = map(str,sys.exc_info()[:2])
-                exception.append('%s%s%s: %s' % (Colors.excName,etype_str,
-                                     ColorsNormal, evalue_str))
-                names = []
-            for name in names:
-                value = text_repr(getattr(evalue, name))
-                exception.append('\n%s%s = %s' % (indent, name, value))
 
         # vds: >>
         if records:
@@ -925,7 +908,7 @@ class VerboseTB(TBTools):
         try:
             self.debugger()
         except KeyboardInterrupt:
-            print "\nKeyboardInterrupt"
+            print("\nKeyboardInterrupt")
 
 #----------------------------------------------------------------------------
 class FormattedTB(VerboseTB,ListTB):
@@ -988,8 +971,8 @@ class FormattedTB(VerboseTB,ListTB):
                       len(self.valid_modes)
             self.mode = self.valid_modes[new_idx]
         elif mode not in self.valid_modes:
-            raise ValueError, 'Unrecognized mode in FormattedTB: <'+mode+'>\n'\
-                  'Valid modes: '+str(self.valid_modes)
+            raise ValueError('Unrecognized mode in FormattedTB: <'+mode+'>\n'\
+                  'Valid modes: '+str(self.valid_modes))
         else:
             self.mode = mode
         # include variable details only in 'Verbose' mode
@@ -1046,7 +1029,7 @@ class AutoFormattedTB(FormattedTB):
         try:
             self.debugger()
         except KeyboardInterrupt:
-            print "\nKeyboardInterrupt"
+            print("\nKeyboardInterrupt")
 
     def text(self,etype=None,value=None,tb=None,context=5,mode=None):
         if etype is None:
@@ -1065,7 +1048,8 @@ class ColorTB(FormattedTB):
 #----------------------------------------------------------------------------
 # module testing (minimal)
 if __name__ == "__main__":
-    def spam(c, (d, e)):
+    def spam(c, xxx_todo_changeme):
+        (d, e) = xxx_todo_changeme
         x = c + d
         y = c * d
         foo(x, y)
@@ -1078,27 +1062,27 @@ if __name__ == "__main__":
         i = f - g
         return h / i
 
-    print ''
-    print '*** Before ***'
+    print('')
+    print('*** Before ***')
     try:
-        print spam(1, (2, 3))
+        print(spam(1, (2, 3)))
     except:
         traceback.print_exc()
-    print ''
+    print('')
     
     handler = ColorTB()
-    print '*** ColorTB ***'
+    print('*** ColorTB ***')
     try:
-        print spam(1, (2, 3))
+        print(spam(1, (2, 3)))
     except:
-        apply(handler, sys.exc_info() )
-    print ''
+        handler(*sys.exc_info())
+    print('')
     
     handler = VerboseTB()
-    print '*** VerboseTB ***'
+    print('*** VerboseTB ***')
     try:
-        print spam(1, (2, 3))
+        print(spam(1, (2, 3)))
     except:
-        apply(handler, sys.exc_info() )
-    print ''
+        handler(*sys.exc_info())
+    print('')
     

@@ -19,7 +19,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 
 from IPython.core.component import Component
 from IPython.core.quitter import Quitter
@@ -66,9 +66,9 @@ class BuiltinTrap(Component):
 
     def add_builtin(self, key, value):
         """Add a builtin and save the original."""
-        orig = __builtin__.__dict__.get(key, BuiltinUndefined)
+        orig = builtins.__dict__.get(key, BuiltinUndefined)
         self._orig_builtins[key] = orig
-        __builtin__.__dict__[key] = value
+        builtins.__dict__[key] = value
 
     def remove_builtin(self, key):
         """Remove an added builtin and re-set the original."""
@@ -78,9 +78,9 @@ class BuiltinTrap(Component):
             pass
         else:
             if orig is BuiltinUndefined:
-                del __builtin__.__dict__[key]
+                del builtins.__dict__[key]
             else:
-                __builtin__.__dict__[key] = orig
+                builtins.__dict__[key] = orig
 
     def set(self):
         """Store ipython references in the __builtin__ namespace."""
@@ -103,16 +103,16 @@ class BuiltinTrap(Component):
         # with setdefault so that multiple nested IPythons don't clobber one
         # another.  Each will increase its value by one upon being activated,
         # which also gives us a way to determine the nesting level.
-        __builtin__.__dict__.setdefault('__IPYTHON__active',0)
+        builtins.__dict__.setdefault('__IPYTHON__active',0)
 
     def unset(self):
         """Remove any builtins which might have been added by add_builtins, or
         restore overwritten ones to their previous values."""
-        for key in self._orig_builtins.keys():
+        for key in list(self._orig_builtins.keys()):
             self.remove_builtin(key)
         self._orig_builtins.clear()
         self._builtins_added = False
         try:
-            del __builtin__.__dict__['__IPYTHON__active']
+            del builtins.__dict__['__IPYTHON__active']
         except KeyError:
             pass

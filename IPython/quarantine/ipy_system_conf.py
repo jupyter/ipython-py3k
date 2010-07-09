@@ -15,10 +15,10 @@ ip = ipapi.get()
 
 import sys
 
-import ext_rescapture # var = !ls and var = %magic
-import pspersistence # %store magic
-import clearcmd # %clear
+from . import ext_rescapture # var = !ls and var = %magic
+from . import pspersistence # %store magic
+from . import clearcmd # %clear
 
-import ipy_stock_completers
+from . import ipy_stock_completers
 
 ip.load('IPython.core.history')
