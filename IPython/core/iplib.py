@@ -16,9 +16,6 @@ Main IPython Component
 # Imports
 #-----------------------------------------------------------------------------
 
-
-
-
 import builtins
 import bdb
 import codeop
@@ -1766,7 +1763,7 @@ class InteractiveShell(Component, Magic):
         internally created default banner.
         """
         
-        with nested(self.builtin_trap, self.display_trap):
+        with self.builtin_trap, self.display_trap:
 
             # if you run stuff with -c <cmd>, raw hist is not updated
             # ensure that it's in sync
