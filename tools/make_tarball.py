@@ -10,7 +10,7 @@ from  toollib import *
 
 c('python update_revnum.py')
 
-execfile('../IPython/core/release.py')  # defines version_base
+exec(compile(open('../IPython/core/release.py').read(), '../IPython/core/release.py', 'exec'))  # defines version_base
 
 ver = version_info()
 

@@ -8,7 +8,7 @@ from twisted.internet import reactor, defer
 from IPython.kernel import asyncclient
 
 def printer(r):
-    print r
+    print(r)
     return r
 
 def submit(client):

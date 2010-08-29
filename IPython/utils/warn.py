@@ -41,9 +41,9 @@ def warn(msg,level=2,exit_val=1):
 
     if level>0:
         header = ['','','WARNING: ','ERROR: ','FATAL ERROR: ']
-        print >> Term.cerr, '%s%s' % (header[level],msg)
+        print('%s%s' % (header[level],msg), file=Term.cerr)
         if level == 4:
-            print >> Term.cerr,'Exiting.\n'
+            print('Exiting.\n', file=Term.cerr)
             sys.exit(exit_val)
 
             

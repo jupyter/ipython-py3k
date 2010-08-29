@@ -246,7 +246,7 @@ class InteractiveRunner(object):
         if end_normal:
             if interact:
                 c.send('\n')
-                print '<< Starting interactive mode >>',
+                print('<< Starting interactive mode >>', end=' ')
                 try:
                     c.interact()
                 except OSError:
@@ -259,7 +259,7 @@ class InteractiveRunner(object):
         else:
             if interact:
                 e="Further interaction is not possible: child process is dead."
-                print >> sys.stderr, e
+                print(e, file=sys.stderr)
 
         # Leave the child ready for more input later on, otherwise select just
         # hangs on the second invocation.
@@ -280,7 +280,7 @@ class InteractiveRunner(object):
         opts,args = parser.parse_args(argv)
 
         if len(args) != 1:
-            print >> sys.stderr,"You must supply exactly one file to run."
+            print("You must supply exactly one file to run.", file=sys.stderr)
             sys.exit(1)
 
         self.run_file(args[0],opts.interact)

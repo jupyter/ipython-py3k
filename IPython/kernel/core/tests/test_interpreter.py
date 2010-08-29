@@ -28,7 +28,7 @@ class TestInterpreter(unittest.TestCase):
     def test_unicode(self):
         """ Test unicode handling with the interpreter."""
         i = Interpreter()
-        i.execute_python(u'print "ù"')
+        i.execute_python('print "ù"')
         i.execute_python('print "ù"')
 
     def test_ticket266993(self):
@@ -53,8 +53,8 @@ class TestInterpreter(unittest.TestCase):
 
     def test_long_lines(self):
         """ Test for spurious syntax error created by the interpreter."""
-        test_strings = [u'( 1 +\n 1\n )\n\n',
-                        u'(1 \n + 1\n )\n\n',
+        test_strings = ['( 1 +\n 1\n )\n\n',
+                        '(1 \n + 1\n )\n\n',
                        ]
         i = Interpreter()
         for s in test_strings:

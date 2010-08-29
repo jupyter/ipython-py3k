@@ -92,7 +92,7 @@ class Style(object):
 
         return "<%s fg=%s bg=%s attrs=%s>" % (
             self.__class__.__name__, color2name[self.fg], color2name[self.bg],
-            "|".join([attrs2name[b] for b in xrange(6) if self.attrs&(1<<b)]) or 0)
+            "|".join([attrs2name[b] for b in range(6) if self.attrs&(1<<b)]) or 0)
 
     def fromstr(cls, value):
         """
@@ -196,7 +196,7 @@ class Text(list):
                 self.extend(arg)
             elif isinstance(arg, tuple): # must be (style, string)
                 list.append(self, arg)
-            elif isinstance(arg, unicode):
+            elif isinstance(arg, str):
                 list.append(self, (style_default, arg))
             else:
                 list.append(self, (style_default, str(arg)))
@@ -222,7 +222,7 @@ class Text(list):
         if styled:
             oldstyle = style_default
             for (style, string) in self:
-                if not isinstance(style, (int, long)):
+                if not isinstance(style, int):
                     switch = switchstyle(oldstyle, style)
                     if switch:
                         yield switch
@@ -234,7 +234,7 @@ class Text(list):
                 yield switch
         else:
             for (style, string) in self:
-                if not isinstance(style, (int, long)):
+                if not isinstance(style, int):
                     yield string
 
     def string(self, styled=True):
@@ -260,7 +260,7 @@ class Text(list):
 
 
 try:
-    import ipipe
+    from . import ipipe
 except ImportError:
     pass
 else:

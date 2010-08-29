@@ -30,7 +30,7 @@ def new_ipsystem_posix(cmd):
     pid,status = os.waitpid(p.pid,0)
     signal.signal(signal.SIGINT, old_handler)
     if status and ip.options.verbose:
-        print "[exit status: %d]" % status
+        print("[exit status: %d]" % status)
     
 def new_ipsystem_win32(cmd):    
     """ ctrl+c ignoring replacement for system() command in iplib.
@@ -44,7 +44,7 @@ def new_ipsystem_win32(cmd):
     status = os.system(cmd)
     signal.signal(signal.SIGINT, old_handler)
     if status and ip.options.verbose:
-        print "[exit status: %d]" % status
+        print("[exit status: %d]" % status)
     
     
 def init():

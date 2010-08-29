@@ -15,7 +15,7 @@ IPython is a set of tools for interactive and exploratory computing in Python.
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
-from __future__ import absolute_import
+
 
 import os
 import sys
@@ -59,7 +59,7 @@ from .lib import (
 
 # Release data
 __author__ = ''
-for author, email in release.authors.values():
+for author, email in list(release.authors.values()):
     __author__ += author + ' <' + email + '>\n'
 __license__  = release.license
 __version__  = release.version

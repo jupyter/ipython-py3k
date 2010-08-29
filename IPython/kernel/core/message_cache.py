@@ -85,7 +85,7 @@ class SimpleMessageCache(object):
         IndexError if the message does not exist in the cache.
         """
         if i is None:
-            keys = self.cache.keys()
+            keys = list(self.cache.keys())
             if len(keys) == 0:
                 raise IndexError("index %r out of range" % i)
             else:

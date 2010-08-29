@@ -19,7 +19,7 @@ def main():
     ip.IP.set_custom_exc((Exception,), exchook)
     startdir = os.getcwd()
     for test in all:
-        print test
+        print(test)
         res_exc[0] = 'ok'
         os.chdir(startdir)
         ip.runlines(test.text())

@@ -15,7 +15,7 @@ Authors
 - Fernando Perez <Fernando.Perez@berkeley.edu>
 """
 
-from __future__ import absolute_import
+
 
 #-----------------------------------------------------------------------------
 #  Copyright (C) 2009  The IPython Development Team
@@ -46,7 +46,7 @@ from IPython.utils.process import find_cmd, getoutputerror
 from IPython.utils.text import list_strings
 from IPython.utils.io import temp_pyfile
 
-from . import decorators as dec
+from .. import decorators as dec
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -62,7 +62,7 @@ def %(name)s(*a,**kw):
 
 if has_nose:
     for _x in [a for a in dir(nt) if a.startswith('assert')]:
-        exec _tpl % dict(name=_x)
+        exec(_tpl % dict(name=_x))
 
 #-----------------------------------------------------------------------------
 # Functions and classes

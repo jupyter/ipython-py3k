@@ -43,7 +43,7 @@ Now launch a new IPython prompt and kill the process:
 
 from subprocess import *
 import os,shlex,sys,time
-import threading,Queue
+import threading,queue
 
 from IPython.core import ipapi
 from IPython.core.error import TryNext
@@ -60,7 +60,7 @@ else:
 
 class IpyPopen(Popen):
     def go(self):
-        print self.communicate()[0]
+        print(self.communicate()[0])
     def __repr__(self):
         return '<IPython job "%s" PID=%d>' % (self.line, self.pid)
 
@@ -75,7 +75,7 @@ def startjob(job):
 class AsyncJobQ(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        self.q = Queue.Queue()
+        self.q = queue.Queue()
         self.output = []
         self.stop = False
     def run(self):
@@ -97,7 +97,7 @@ class AsyncJobQ(threading.Thread):
     def dumpoutput(self):
         while self.output:
             item = self.output.pop(0)
-            print item            
+            print(item)            
 
 _jobq = None
 
@@ -105,14 +105,14 @@ def jobqueue_f(self, line):
      
     global _jobq
     if not _jobq:
-        print "Starting jobqueue - do '&some_long_lasting_system_command' to enqueue"
+        print("Starting jobqueue - do '&some_long_lasting_system_command' to enqueue")
         _jobq = AsyncJobQ()
         _jobq.setDaemon(True)
         _jobq.start()
         ip.jobq = _jobq.add
         return
     if line.strip() == 'stop':
-        print "Stopping and clearing jobqueue, %jobqueue start to start again"
+        print("Stopping and clearing jobqueue, %jobqueue start to start again")
         _jobq.stop = True
         return
     if line.strip() == 'start':
@@ -153,16 +153,16 @@ def magic_tasks(self,line):
     ip = self.getapi()
     if line.strip() == 'clear':
         for k in ip.db.keys('tasks/*'):
-            print "Clearing",ip.db[k]
+            print("Clearing",ip.db[k])
             del ip.db[k]
         return
         
     ents = job_list(ip)
     if not ents:
-        print "No tasks running"
+        print("No tasks running")
     for pid,cmd,cwd,t in ents:
         dur = int(time.time()-t)
-        print "%d: '%s' (%s) %d:%02d" % (pid,cmd,cwd, dur / 60,dur%60)
+        print("%d: '%s' (%s) %d:%02d" % (pid,cmd,cwd, dur / 60,dur%60))
 
 def magic_kill(self,line):
     """ Kill a task

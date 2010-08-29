@@ -121,7 +121,7 @@ def report():
     avail = []
     not_avail = []
     
-    for k, is_avail in have.items():
+    for k, is_avail in list(have.items()):
         if is_avail:
             avail.append(k)
         else:
@@ -299,7 +299,7 @@ class IPTester(object):
         
         for pid in self.pids:
             try:
-                print 'Cleaning stale PID:', pid
+                print('Cleaning stale PID:', pid)
                 os.kill(pid, signal.SIGKILL)
             except OSError:
                 # This is just a best effort, if we fail or the process was
@@ -420,8 +420,8 @@ def run_iptestall():
     t_start = time.time()
     try:
         for (name, runner) in runners:
-            print '*'*70
-            print 'IPython test group:',name
+            print('*'*70)
+            print('IPython test group:',name)
             res = runner.run()
             if res:
                 failed.append( (name, runner) )
@@ -432,25 +432,25 @@ def run_iptestall():
     nrunners = len(runners)
     nfail = len(failed)
     # summarize results
-    print
-    print '*'*70
-    print 'Test suite completed for system with the following information:'
-    print report()
-    print 'Ran %s test groups in %.3fs' % (nrunners, t_tests)
-    print
-    print 'Status:'
+    print()
+    print('*'*70)
+    print('Test suite completed for system with the following information:')
+    print(report())
+    print('Ran %s test groups in %.3fs' % (nrunners, t_tests))
+    print()
+    print('Status:')
     if not failed:
-        print 'OK'
+        print('OK')
     else:
         # If anything went wrong, point out what command to rerun manually to
         # see the actual errors and individual summary
-        print 'ERROR - %s out of %s test groups failed.' % (nfail, nrunners)
+        print('ERROR - %s out of %s test groups failed.' % (nfail, nrunners))
         for name, failed_runner in failed:
-            print '-'*40
-            print 'Runner failed:',name
-            print 'You may wish to rerun this one individually, with:'
-            print ' '.join(failed_runner.call_args)
-            print
+            print('-'*40)
+            print('Runner failed:',name)
+            print('You may wish to rerun this one individually, with:')
+            print(' '.join(failed_runner.call_args))
+            print()
 
 
 def main():

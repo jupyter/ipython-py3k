@@ -164,7 +164,7 @@ def system(cmd, verbose=0, debug=0, header=''):
     SystemExec class."""
 
     stat = 0
-    if verbose or debug: print header+cmd
+    if verbose or debug: print(header+cmd)
     sys.stdout.flush()
     if not debug: stat = os.system(cmd)
     return stat
@@ -210,7 +210,7 @@ def shell(cmd, verbose=0, debug=0, header=''):
     (typically 0) printed many times."""
 
     stat = 0
-    if verbose or debug: print header+cmd
+    if verbose or debug: print(header+cmd)
     # flush stdout so we don't mangle python's buffering
     sys.stdout.flush()
 
@@ -258,7 +258,7 @@ def getoutput(cmd, verbose=0, debug=0, header='', split=0):
 
     """
 
-    if verbose or debug: print header+cmd
+    if verbose or debug: print(header+cmd)
     if not debug:
         pipe = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout
         output = pipe.read()
@@ -286,7 +286,7 @@ def getoutputerror(cmd, verbose=0, debug=0, header='', split=0):
     Note: a stateful version of this function is available through the
     SystemExec class."""
 
-    if verbose or debug: print header+cmd
+    if verbose or debug: print(header+cmd)
     if not cmd:
         if split:
             return [],[]

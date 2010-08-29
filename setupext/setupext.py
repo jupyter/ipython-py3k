@@ -20,23 +20,23 @@ display_status=True
 
 if display_status:
     def print_line(char='='):
-        print char * 76
+        print(char * 76)
 
     def print_status(package, status):
         initial_indent = "%22s: " % package
         indent = ' ' * 24
-        print fill(str(status), width=76,
+        print(fill(str(status), width=76,
                    initial_indent=initial_indent,
-                   subsequent_indent=indent)
+                   subsequent_indent=indent))
 
     def print_message(message):
         indent = ' ' * 24 + "* "
-        print fill(str(message), width=76,
+        print(fill(str(message), width=76,
                    initial_indent=indent,
-                   subsequent_indent=indent)
+                   subsequent_indent=indent))
 
     def print_raw(section):
-        print section
+        print(section)
 else:
     def print_line(*args, **kwargs):
         pass

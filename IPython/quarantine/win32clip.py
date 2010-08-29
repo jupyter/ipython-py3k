@@ -39,7 +39,7 @@ def clip_f( self, parameter_s = '' ):
     cl.EmptyClipboard()
     cl.SetClipboardText( val )
     cl.CloseClipboard()
-    print 'The following text was written to the clipboard'
-    print val
+    print('The following text was written to the clipboard')
+    print(val)
     
 ip.define_magic( "clip", clip_f )

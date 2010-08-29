@@ -23,17 +23,17 @@ class ExtUtil:
         for n,mod in self._active():
             doc = inspect.getdoc(mod)
             if doc:
-                print '== %s ==' % n
-                print indent(doc)
+                print('== %s ==' % n)
+                print(indent(doc))
             
             
     def ls(self):
         """ Show list of installed extensions. """
         for n,m in self._active():
-            print '%-20s %s' % (n,m.__file__.replace('\\','/'))
+            print('%-20s %s' % (n,m.__file__.replace('\\','/')))
     def _active(self):
         act = []
-        for mname,m in sys.modules.items():
+        for mname,m in list(sys.modules.items()):
             o = getattr(m, 'ip', None)
             if isinstance(o, InteractiveShell):
                 act.append((mname,m))

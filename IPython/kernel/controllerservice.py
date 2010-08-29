@@ -50,6 +50,7 @@ from IPython.kernel.engineservice import \
     
 from IPython.utils.path import get_ipython_dir
 from IPython.kernel import codeutil
+import collections
 
 #-------------------------------------------------------------------------------
 # Interfaces for the Controller
@@ -143,7 +144,7 @@ class ControllerService(object, service.Service):
     def __init__(self, maxEngines=511, saveIDs=False):
         self.saveIDs = saveIDs
         self.engines = {}
-        self.availableIDs = range(maxEngines,-1,-1)   # [511,...,0]
+        self.availableIDs = list(list(range(maxEngines,-1,-1)))   # [511,...,0]
         self._onRegister = []
         self._onUnregister = []
         self._onNRegistered = []
@@ -228,7 +229,7 @@ class ControllerService(object, service.Service):
             "pid to register_engine must be an integer or None"
             
         desiredID = id
-        if desiredID in self.engines.keys():
+        if desiredID in list(list(self.engines.keys())):
             desiredID = None
             
         if desiredID in self.availableIDs:
@@ -258,7 +259,7 @@ class ControllerService(object, service.Service):
         
         # Call functions when the nth engine is registered and them remove them
         for i, (n, f, args, kwargs) in enumerate(self._onNRegistered):
-            if len(self.engines.keys()) == n:
+            if len(list(list(self.engines.keys()))) == n:
                 try:
                     try:
                         f(*args, **kwargs)
@@ -300,11 +301,11 @@ class ControllerService(object, service.Service):
                     self._onUnregister.pop(i)
     
     def on_register_engine_do(self, f, includeID, *args, **kwargs):
-        assert callable(f), "f must be callable"
+        assert isinstance(f, collections.Callable), "f must be callable"
         self._onRegister.append((f,args,kwargs,includeID))
 
     def on_unregister_engine_do(self, f, includeID, *args, **kwargs):
-        assert callable(f), "f must be callable"
+        assert isinstance(f, collections.Callable), "f must be callable"
         self._onUnregister.append((f,args,kwargs,includeID))
     
     def on_register_engine_do_not(self, f):
@@ -322,7 +323,7 @@ class ControllerService(object, service.Service):
                 return
 
     def on_n_engines_registered_do(self, n, f, *args, **kwargs):
-        if len(self.engines.keys()) >= n:
+        if len(list(list(self.engines.keys()))) >= n:
             f(*args, **kwargs)
         else:
             self._onNRegistered.append((n,f,args,kwargs))

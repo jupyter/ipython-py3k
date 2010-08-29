@@ -15,4 +15,4 @@ t1 = client.StringTask(cmd1, clear_before=False, clear_after=True, pull=['a','b'
 tid1 = tc.run(t1)
 tr1 = tc.get_task_result(tid1,block=True)
 tr1.raise_exception()
-print "a, b: ", tr1.ns.a, tr1.ns.b
+print("a, b: ", tr1.ns.a, tr1.ns.b)

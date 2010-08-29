@@ -15,7 +15,7 @@ The IPython controller application.
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
+
 
 import copy
 import sys
@@ -40,7 +40,7 @@ from IPython.utils.traitlets import Instance, Unicode
 
 
 #: The default config file name for this application
-default_config_file_name = u'ipcontroller_config.py'
+default_config_file_name = 'ipcontroller_config.py'
 
 
 _description = """Start the IPython controller for parallel computing.
@@ -71,10 +71,10 @@ default_client_interfaces.MultiEngine.interface_chain = [
     'IPython.kernel.multienginefc.IFCSynchronousMultiEngine'
 ]
 
-default_client_interfaces.MultiEngine.furl_file = u'ipcontroller-mec.furl'
+default_client_interfaces.MultiEngine.furl_file = 'ipcontroller-mec.furl'
 
 # Make this a dict we can pass to Config.__init__ for the default
-default_client_interfaces = dict(copy.deepcopy(default_client_interfaces.items()))
+default_client_interfaces = dict(copy.deepcopy(list(default_client_interfaces.items())))
 
 
 
@@ -84,10 +84,10 @@ default_engine_interfaces.Default.interface_chain = [
     'IPython.kernel.enginefc.IFCControllerBase'
 ]
 
-default_engine_interfaces.Default.furl_file = u'ipcontroller-engine.furl'
+default_engine_interfaces.Default.furl_file = 'ipcontroller-engine.furl'
 
 # Make this a dict we can pass to Config.__init__ for the default
-default_engine_interfaces = dict(copy.deepcopy(default_engine_interfaces.items()))
+default_engine_interfaces = dict(copy.deepcopy(list(default_engine_interfaces.items())))
 
 
 #-----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ default_engine_interfaces = dict(copy.deepcopy(default_engine_interfaces.items()
 class FCClientServiceFactory(FCServiceFactory):
     """A Foolscap implementation of the client services."""
 
-    cert_file = Unicode(u'ipcontroller-client.pem', config=True)
+    cert_file = Unicode('ipcontroller-client.pem', config=True)
     interfaces = Instance(klass=Config, kw=default_client_interfaces,
                           allow_none=False, config=True)
 
@@ -106,7 +106,7 @@ class FCClientServiceFactory(FCServiceFactory):
 class FCEngineServiceFactory(FCServiceFactory):
     """A Foolscap implementation of the engine services."""
 
-    cert_file = Unicode(u'ipcontroller-engine.pem', config=True)
+    cert_file = Unicode('ipcontroller-engine.pem', config=True)
     interfaces = Instance(klass=dict, kw=default_engine_interfaces,
                           allow_none=False, config=True)
 
@@ -183,7 +183,7 @@ class IPControllerAppConfigLoader(ClusterDirConfigLoader):
 
 class IPControllerApp(ApplicationWithClusterDir):
 
-    name = u'ipcontroller'
+    name = 'ipcontroller'
     description = _description
     command_line_loader = IPControllerAppConfigLoader
     default_config_file_name = default_config_file_name
@@ -226,7 +226,7 @@ class IPControllerApp(ApplicationWithClusterDir):
         # The client tub and all its refereceables
         try:
             csfactory = FCClientServiceFactory(self.master_config, controller_service)
-        except FURLError, e:
+        except FURLError as e:
             log.err(e)
             self.exit(0)
         client_service = csfactory.create()
@@ -234,7 +234,7 @@ class IPControllerApp(ApplicationWithClusterDir):
         # The engine tub
         try:
             esfactory = FCEngineServiceFactory(self.master_config, controller_service)
-        except FURLError, e:
+        except FURLError as e:
             log.err(e)
             self.exit(0)
         engine_service = esfactory.create()
@@ -245,7 +245,7 @@ class IPControllerApp(ApplicationWithClusterDir):
         for s in statements:
             try:
                 log.msg("Executing statement: '%s'" % s)
-                exec s in globals(), locals()
+                exec(s, globals(), locals())
             except:
                 log.msg("Error running statement: %s" % s)
 

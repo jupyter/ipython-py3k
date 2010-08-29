@@ -43,11 +43,11 @@ def tarModule(mod):
     """
      
     if not isinstance(mod, types.ModuleType):
-        raise TypeError, "Pass an imported module to push_module"
+        raise TypeError("Pass an imported module to push_module")
     module_dir, module_file = os.path.split(mod.__file__)
     
     # Figure out what the module is called and where it is
-    print "Locating the module..."
+    print("Locating the module...")
     if "__init__.py" in module_file:  # package
         module_name = module_dir.split("/")[-1]
         module_dir = "/".join(module_dir.split("/")[:-1])
@@ -55,7 +55,7 @@ def tarModule(mod):
     else:                             # Simple module
         module_name = module_file.split(".")[0]
         module_dir = module_dir
-    print "Module (%s) found in:\n%s" % (module_name, module_dir)
+    print("Module (%s) found in:\n%s" % (module_name, module_dir))
         
     # Make a tarball of the module in the cwd
     if module_dir:
@@ -94,7 +94,7 @@ def catcher(r):
     pass
 
 def printer(r, msg=''):
-    print "%s\n%r" % (msg, r)
+    print("%s\n%r" % (msg, r))
     return r
 
 

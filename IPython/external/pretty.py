@@ -106,7 +106,7 @@ import sys
 import types
 import re
 import datetime
-from StringIO import StringIO
+from io import StringIO
 from collections import deque
 
 
@@ -140,7 +140,7 @@ def pprint(obj, verbose=False, max_width=79, newline='\n'):
 
 
 # add python2.5 context managers if we have the with statement feature
-if hasattr(__future__, 'with_statement'): exec '''
+if hasattr(__future__, 'with_statement'): exec('''
 from __future__ import with_statement
 from contextlib import contextmanager
 
@@ -164,7 +164,7 @@ class _PrettyPrinterBase(object):
                 yield
         finally:
             self.end_group(indent, close)
-'''
+''')
 else:
     class _PrettyPrinterBase(object):
 
@@ -529,10 +529,10 @@ def _dict_pprinter_factory(start, end):
         if cycle:
             return p.text('{...}')
         p.begin_group(1, start)
-        keys = obj.keys()
+        keys = list(obj.keys())
         try:
             keys.sort()
-        except Exception, e:
+        except Exception as e:
             # Sometimes the keys don't sort.
             pass
         for idx, key in enumerate(keys):
@@ -633,10 +633,10 @@ except NameError:
 #: printers for builtin types
 _type_pprinters = {
     int:                        _repr_pprint,
-    long:                       _repr_pprint,
+    int:                       _repr_pprint,
     float:                      _repr_pprint,
     str:                        _repr_pprint,
-    unicode:                    _repr_pprint,
+    str:                    _repr_pprint,
     tuple:                      _seq_pprinter_factory('(', ')'),
     list:                       _seq_pprinter_factory('[', ']'),
     dict:                       _dict_pprinter_factory('{', '}'),
@@ -646,10 +646,10 @@ _type_pprinters = {
     super:                      _super_pprint,
     _re_pattern_type:           _re_pattern_pprint,
     type:                       _type_pprint,
-    types.ClassType:            _type_pprint,
+    type:            _type_pprint,
     types.FunctionType:         _function_pprint,
     types.BuiltinFunctionType:  _function_pprint,
-    types.SliceType:            _repr_pprint,
+    slice:            _repr_pprint,
     types.MethodType:           _repr_pprint,
     xrange:                     _repr_pprint,
     datetime.datetime:          _repr_pprint,
@@ -685,8 +685,8 @@ def for_type_by_name(type_module, type_name, func):
 
 
 #: printers for the default singletons
-_singleton_pprinters = dict.fromkeys(map(id, [None, True, False, Ellipsis,
-                                      NotImplemented]), _repr_pprint)
+_singleton_pprinters = dict.fromkeys(list(map(id, [None, True, False, Ellipsis,
+                                      NotImplemented])), _repr_pprint)
 
 
 if __name__ == '__main__':
@@ -695,11 +695,11 @@ if __name__ == '__main__':
         def __init__(self):
             self.foo = 1
             self.bar = re.compile(r'\s+')
-            self.blub = dict.fromkeys(range(30), randrange(1, 40))
+            self.blub = dict.fromkeys(list(range(30)), randrange(1, 40))
             self.hehe = 23424.234234
             self.list = ["blub", "blah", self]
 
         def get_foo(self):
-            print "foo"
+            print("foo")
 
     pprint(Foo(), verbose=True)

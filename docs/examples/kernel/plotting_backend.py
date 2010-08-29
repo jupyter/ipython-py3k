@@ -34,7 +34,7 @@ def compute_particles(number):
 def downsample(array, k):
     """Choose k random elements of array."""
     length = array.shape[0]
-    indices = random.sample(xrange(length), k)
+    indices = random.sample(range(length), k)
     return array[indices]
 
 # Parameters of the run
@@ -51,7 +51,7 @@ downy = downsample(x, d_number)
 downpx = downsample(px, d_number)
 downpy = downsample(py, d_number)
 
-print "downx: ", downx[:10]
-print "downy: ", downy[:10]
-print "downpx: ", downpx[:10]
-print "downpy: ", downpy[:10]
+print("downx: ", downx[:10])
+print("downy: ", downy[:10])
+print("downpx: ", downpx[:10])
+print("downpy: ", downpy[:10])

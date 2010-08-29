@@ -24,7 +24,7 @@ class CannedFunction(CannedObject):
     
     def __init__(self, f):
         self._checkType(f)    
-        self.code = f.func_code
+        self.code = f.__code__
     
     def _checkType(self, obj):
         assert isinstance(obj, FunctionType), "Not a function type"
@@ -43,7 +43,7 @@ def can(obj):
 
 def canDict(obj):
     if isinstance(obj, dict):
-        for k, v in obj.iteritems():
+        for k, v in obj.items():
             obj[k] = can(v)
         return obj
     else:
@@ -64,7 +64,7 @@ def uncan(obj, g=None):
 
 def uncanDict(obj, g=None):
     if isinstance(obj, dict):
-        for k, v in obj.iteritems():
+        for k, v in obj.items():
             obj[k] = uncan(v,g)
         return obj
     else:
@@ -79,4 +79,4 @@ def uncanSequence(obj, g=None):
 
 
 def rebindFunctionGlobals(f, glbls):
-    return FunctionType(f.func_code, glbls)
+    return FunctionType(f.__code__, glbls)

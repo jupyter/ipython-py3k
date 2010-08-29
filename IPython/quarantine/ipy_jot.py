@@ -28,22 +28,22 @@ def refresh_variables(ip, key=None):
     for key in keys:
         # strip autorestore
         justkey = os.path.basename(key)
-        print "Restoring from", justkey, "..."
+        print("Restoring from", justkey, "...")
         try:
             obj = db[key]
         except KeyError:
-            print "Unable to restore variable '%s', ignoring (use %%jot -d to forget!)" % justkey
-            print "The error was:",sys.exc_info()[0]
+            print("Unable to restore variable '%s', ignoring (use %%jot -d to forget!)" % justkey)
+            print("The error was:",sys.exc_info()[0])
         else:
             #print "restored",justkey,"=",obj #dbg
             try:
                 origname = obj.name
             except:
                 ip.user_ns[justkey] = obj
-                print "Restored", justkey
+                print("Restored", justkey)
             else:
                 ip.user_ns[origname] = obj['val']
-                print "Restored", origname 
+                print("Restored", origname) 
 
 def read_variables(ip, key=None):
     db = ip.db
@@ -54,12 +54,12 @@ def read_variables(ip, key=None):
     for key in keys:
         # strip autorestore
         justkey = os.path.basename(key)
-        print "restoring from ", justkey 
+        print("restoring from ", justkey) 
         try:
             obj = db[key]
         except KeyError:
-            print "Unable to read variable '%s', ignoring (use %%jot -d to forget!)" % justkey
-            print "The error was:",sys.exc_info()[0]
+            print("Unable to read variable '%s', ignoring (use %%jot -d to forget!)" % justkey)
+            print("The error was:",sys.exc_info()[0])
         else:
             return obj
 
@@ -72,7 +72,7 @@ def detail_variables(ip, key=None):
     else:
         keys = db.keys('jot/'+key)
     if keys:
-        size = max(map(len,keys))
+        size = max(list(map(len,keys)))
     else:
         size = 0
 
@@ -83,15 +83,15 @@ def detail_variables(ip, key=None):
         v = get(key,'<unavailable>')
         justkey = os.path.basename(key)
         try: 
-            print fmthead % (justkey, datetime.ctime(v.get('time','<unavailable>')))
-            print fmtbody % (v.get('comment','<unavailable>'))
+            print(fmthead % (justkey, datetime.ctime(v.get('time','<unavailable>'))))
+            print(fmtbody % (v.get('comment','<unavailable>')))
             d = v.get('val','unavailable')
-            print fmtdata % (repr(type(d)), '')
-            print repr(d)[0:200]
-            print
-            print
+            print(fmtdata % (repr(type(d)), ''))
+            print(repr(d)[0:200])
+            print()
+            print()
         except AttributeError:
-            print fmt % (justkey, '<unavailable>', '<unavailable>', repr(v)[:50])
+            print(fmt % (justkey, '<unavailable>', '<unavailable>', repr(v)[:50]))
 
 
 def intm(n):
@@ -111,7 +111,7 @@ def jot_obj(self, obj, name, comment=''):
     if len(had)>0:
         pre = os.path.commonprefix(had)
         suf = [n.split(pre)[1] for n in had]
-        versions = map(intm, suf)
+        versions = list(map(intm, suf))
         suffix = str(max(versions)+1)
 
     uname = 'jot/'+name+suffix
@@ -126,7 +126,7 @@ def jot_obj(self, obj, name, comment=''):
     try:
         comment = ip.magic_edit('-x').strip()
     except:
-        print "No comment is recorded."
+        print("No comment is recorded.")
         comment = ''
 
     self.db[uname] = Struct({'val':obj, 
@@ -135,7 +135,7 @@ def jot_obj(self, obj, name, comment=''):
                 'name'  :   name,
                 'comment' : comment,})
 
-    print "Jotted down notes for '%s' (%s)" % (uname, obj.__class__.__name__)
+    print("Jotted down notes for '%s' (%s)" % (uname, obj.__class__.__name__))
 
     
 
@@ -180,7 +180,7 @@ def magic_jot(self, parameter_s=''):
     ip = self.getapi()
     db = ip.db
     # delete
-    if opts.has_key('d'):
+    if 'd' in opts:
         try:
             todel = args[0]
         except IndexError:
@@ -191,28 +191,28 @@ def magic_jot(self, parameter_s=''):
             except:
                 error("Can't delete variable '%s'" % todel)
     # reset the whole database
-    elif opts.has_key('z'):
-        print "reseting the whole database has been disabled."
+    elif 'z' in opts:
+        print("reseting the whole database has been disabled.")
         #for k in db.keys('autorestore/*'):
         #    del db[k]
 
-    elif opts.has_key('r'):
+    elif 'r' in opts:
         try:
             toret = args[0]
         except:
-            print "restoring all the variables jotted down..."
+            print("restoring all the variables jotted down...")
             refresh_variables(ip)
         else:
             refresh_variables(ip, toret)
 
-    elif opts.has_key('l'):
+    elif 'l' in opts:
         try:
             tolist = args[0]
         except:
-            print "List details for all the items."
+            print("List details for all the items.")
             detail_variables(ip)
         else:
-            print "Details for", tolist, ":"
+            print("Details for", tolist, ":")
             detail_variables(ip, tolist)
     
     # run without arguments -> list noted variables & notes 
@@ -220,22 +220,22 @@ def magic_jot(self, parameter_s=''):
         vars = self.db.keys('jot/*')
         vars.sort()            
         if vars:
-            size = max(map(len,vars)) - 4 
+            size = max(list(map(len,vars))) - 4 
         else:
             size = 0
             
-        print 'Variables and their in-db values:'
+        print('Variables and their in-db values:')
         fmt = '%-'+str(size)+'s [%s] -> %s'
         get = db.get
         for var in vars:
             justkey = os.path.basename(var)
             v = get(var,'<unavailable>')
             try: 
-                print fmt % (justkey,\
+                print(fmt % (justkey,\
                     datetime.ctime(v.get('time','<unavailable>')),\
-                    v.get('comment','<unavailable>')[:70].replace('\n',' '),)
+                    v.get('comment','<unavailable>')[:70].replace('\n',' '),))
             except AttributeError:
-                print fmt % (justkey, '<unavailable>', '<unavailable>', repr(v)[:50])
+                print(fmt % (justkey, '<unavailable>', '<unavailable>', repr(v)[:50]))
 
     
     # default action - store the variable
@@ -248,11 +248,11 @@ def magic_jot(self, parameter_s=''):
             else:
                 fil = open(fnam,'w')
             obj = ip.ev(args[0])
-            print "Writing '%s' (%s) to file '%s'." % (args[0],
-              obj.__class__.__name__, fnam)
+            print("Writing '%s' (%s) to file '%s'." % (args[0],
+              obj.__class__.__name__, fnam))
 
             
-            if not isinstance (obj,basestring):
+            if not isinstance (obj,str):
                 from pprint import pprint
                 pprint(obj,fil)
             else:
@@ -268,20 +268,20 @@ def magic_jot(self, parameter_s=''):
             obj = ip.user_ns[args[0]]
         except KeyError:
             # this should not be alias, for aliases, use %store
-            print
-            print "Error: %s doesn't exist." % args[0]
-            print 
-            print "Use %note -r <var> to retrieve variables. This should not be used " +\
-                  "to store alias, for saving aliases, use %store" 
+            print()
+            print("Error: %s doesn't exist." % args[0])
+            print() 
+            print("Use %note -r <var> to retrieve variables. This should not be used " +\
+                  "to store alias, for saving aliases, use %store") 
             return
         else:
             if isinstance(inspect.getmodule(obj), FakeModule):
-                print textwrap.dedent("""\
+                print(textwrap.dedent("""\
                 Warning:%s is %s 
                 Proper storage of interactively declared classes (or instances
                 of those classes) is not possible! Only instances
                 of classes in real modules on file system can be %%store'd.
-                """ % (args[0], obj) ) 
+                """ % (args[0], obj) )) 
                 return
             #pickled = pickle.dumps(obj)
             #self.db[ 'jot/' + args[0] ] = obj
@@ -302,7 +302,7 @@ def magic_read(self, parameter_s=''):
     try:
         toret = args[0]
     except:
-        print "which record do you want to read out?"
+        print("which record do you want to read out?")
         return
     else:
         return read_variables(ip, toret)

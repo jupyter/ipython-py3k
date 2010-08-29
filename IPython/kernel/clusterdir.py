@@ -15,7 +15,7 @@ The IPython cluster directory
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
+
 
 import os
 import shutil
@@ -77,10 +77,10 @@ class ClusterDir(Component):
     security_dir_name = Unicode('security')
     log_dir_name = Unicode('log')
     pid_dir_name = Unicode('pid')
-    security_dir = Unicode(u'')
-    log_dir = Unicode(u'')
-    pid_dir = Unicode(u'')
-    location = Unicode(u'')
+    security_dir = Unicode('')
+    log_dir = Unicode('')
+    pid_dir = Unicode('')
+    location = Unicode('')
 
     def __init__(self, location):
         super(ClusterDir, self).__init__(None)
@@ -106,16 +106,16 @@ class ClusterDir(Component):
 
     def check_security_dir(self):
         if not os.path.isdir(self.security_dir):
-            os.mkdir(self.security_dir, 0700)
-        os.chmod(self.security_dir, 0700)
+            os.mkdir(self.security_dir, 0o700)
+        os.chmod(self.security_dir, 0o700)
 
     def _pid_dir_changed(self, name, old, new):
         self.check_pid_dir()
 
     def check_pid_dir(self):
         if not os.path.isdir(self.pid_dir):
-            os.mkdir(self.pid_dir, 0700)
-        os.chmod(self.pid_dir, 0700)
+            os.mkdir(self.pid_dir, 0o700)
+        os.chmod(self.pid_dir, 0o700)
 
     def check_dirs(self):
         self.check_security_dir()
@@ -152,8 +152,8 @@ class ClusterDir(Component):
 
     def copy_all_config_files(self, path=None, overwrite=False):
         """Copy all config files into the active cluster directory."""
-        for f in [u'ipcontroller_config.py', u'ipengine_config.py',
-                  u'ipcluster_config.py']:
+        for f in ['ipcontroller_config.py', 'ipengine_config.py',
+                  'ipcluster_config.py']:
             self.copy_config_file(f, path=path, overwrite=overwrite)
 
     @classmethod
@@ -169,7 +169,7 @@ class ClusterDir(Component):
         return ClusterDir(cluster_dir)
 
     @classmethod
-    def create_cluster_dir_by_profile(cls, path, profile=u'default'):
+    def create_cluster_dir_by_profile(cls, path, profile='default'):
         """Create a cluster dir by profile name and path.
 
         Parameters
@@ -182,11 +182,11 @@ class ClusterDir(Component):
         """
         if not os.path.isdir(path):
             raise ClusterDirError('Directory not found: %s' % path)
-        cluster_dir = os.path.join(path, u'cluster_' + profile)
+        cluster_dir = os.path.join(path, 'cluster_' + profile)
         return ClusterDir(cluster_dir)
 
     @classmethod
-    def find_cluster_dir_by_profile(cls, ipython_dir, profile=u'default'):
+    def find_cluster_dir_by_profile(cls, ipython_dir, profile='default'):
         """Find an existing cluster dir by profile name, return its ClusterDir.
 
         This searches through a sequence of paths for a cluster dir.  If it
@@ -206,7 +206,7 @@ class ClusterDir(Component):
             The name of the profile.  The name of the cluster directory
             will be "cluster_<profile>".
         """
-        dirname = u'cluster_' + profile
+        dirname = 'cluster_' + profile
         cluster_dir_paths = os.environ.get('IPCLUSTER_DIR_PATH','')
         if cluster_dir_paths:
             cluster_dir_paths = cluster_dir_paths.split(':')
@@ -247,7 +247,7 @@ class ClusterDirConfigLoader(BaseAppConfigLoader):
     def _add_cluster_profile(self, parser):
         paa = parser.add_argument
         paa('-p', '--profile',
-            dest='Global.profile',type=unicode,
+            dest='Global.profile',type=str,
             help=
             """The string name of the profile to be used. This determines the name
             of the cluster dir as: cluster_<profile>. The default profile is named
@@ -258,7 +258,7 @@ class ClusterDirConfigLoader(BaseAppConfigLoader):
     def _add_cluster_dir(self, parser):
         paa = parser.add_argument
         paa('--cluster-dir',
-            dest='Global.cluster_dir',type=unicode,
+            dest='Global.cluster_dir',type=str,
             help="""Set the cluster dir. This overrides the logic used by the
             --profile option.""",
             metavar='Global.cluster_dir')
@@ -266,7 +266,7 @@ class ClusterDirConfigLoader(BaseAppConfigLoader):
     def _add_work_dir(self, parser):
         paa = parser.add_argument
         paa('--work-dir',
-            dest='Global.work_dir',type=unicode,
+            dest='Global.work_dir',type=str,
             help='Set the working dir for the process.',
             metavar='Global.work_dir')
 
@@ -361,8 +361,8 @@ class ApplicationWithClusterDir(Application):
 
     def create_default_config(self):
         super(ApplicationWithClusterDir, self).create_default_config()
-        self.default_config.Global.profile = u'default'
-        self.default_config.Global.cluster_dir = u''
+        self.default_config.Global.profile = 'default'
+        self.default_config.Global.cluster_dir = ''
         self.default_config.Global.work_dir = os.getcwd()
         self.default_config.Global.log_to_file = False
         self.default_config.Global.clean_logs = False
@@ -464,14 +464,14 @@ class ApplicationWithClusterDir(Application):
         pdir = self.cluster_dir_obj.pid_dir
         self.pid_dir = config.Global.pid_dir = pdir
         self.log.info("Cluster directory set to: %s" % self.cluster_dir)
-        config.Global.work_dir = unicode(expand_path(config.Global.work_dir))
+        config.Global.work_dir = str(expand_path(config.Global.work_dir))
         # Change to the working directory. We do this just before construct
         # is called so all the components there have the right working dir.
         self.to_work_dir()
 
     def to_work_dir(self):
         wd = self.master_config.Global.work_dir
-        if unicode(wd) != unicode(os.getcwd()):
+        if str(wd) != str(os.getcwd()):
             os.chdir(wd)
             self.log.info("Changing to working dir: %s" % wd)
 
@@ -480,11 +480,11 @@ class ApplicationWithClusterDir(Application):
         if self.master_config.Global.clean_logs:
             log_dir = self.master_config.Global.log_dir
             for f in os.listdir(log_dir):
-                if f.startswith(self.name + u'-') and f.endswith('.log'):
+                if f.startswith(self.name + '-') and f.endswith('.log'):
                     os.remove(os.path.join(log_dir, f))
         # Start logging to the new log file
         if self.master_config.Global.log_to_file:
-            log_filename = self.name + u'-' + str(os.getpid()) + u'.log'
+            log_filename = self.name + '-' + str(os.getpid()) + '.log'
             logfile = os.path.join(self.log_dir, log_filename)
             open_log_file = open(logfile, 'w')
         else:
@@ -497,7 +497,7 @@ class ApplicationWithClusterDir(Application):
         This must be called after pre_construct, which sets `self.pid_dir`.
         This raises :exc:`PIDFileError` if the pid file exists already.
         """
-        pid_file = os.path.join(self.pid_dir, self.name + u'.pid')
+        pid_file = os.path.join(self.pid_dir, self.name + '.pid')
         if os.path.isfile(pid_file):
             pid = self.get_pid_from_file()
             if not overwrite:
@@ -516,7 +516,7 @@ class ApplicationWithClusterDir(Application):
         :func:`reactor.addSystemEventTrigger`. This needs to return
         ``None``.
         """
-        pid_file = os.path.join(self.pid_dir, self.name + u'.pid')
+        pid_file = os.path.join(self.pid_dir, self.name + '.pid')
         if os.path.isfile(pid_file):
             try:
                 self.log.info("Removing pid file: %s" % pid_file)
@@ -529,7 +529,7 @@ class ApplicationWithClusterDir(Application):
 
         If the  pid file doesn't exist a :exc:`PIDFileError` is raised.
         """
-        pid_file = os.path.join(self.pid_dir, self.name + u'.pid')
+        pid_file = os.path.join(self.pid_dir, self.name + '.pid')
         if os.path.isfile(pid_file):
             with open(pid_file, 'r') as f:
                 pid = int(f.read().strip())

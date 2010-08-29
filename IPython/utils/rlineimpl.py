@@ -27,22 +27,23 @@ if sys.platform == 'win32' and have_readline:
     try:
         _outputfile=_rl.GetOutputFile()
     except AttributeError:
-        print "Failed GetOutputFile"
+        print("Failed GetOutputFile")
         have_readline = False
 
 # Test to see if libedit is being used instead of GNU readline.
 # Thanks to Boyd Waters for this patch.
 uses_libedit = False
 if sys.platform == 'darwin' and have_readline:
-    import commands
+    import subprocess
     # Boyd's patch had a 'while True' here, I'm always a little worried about
     # infinite loops with such code, so for now I'm taking a more conservative
     # approach. See https://bugs.launchpad.net/ipython/+bug/411599.
     for i in range(10):
         try:
-            (status, result) = commands.getstatusoutput( "otool -L %s | grep libedit" % _rl.__file__ )
+            (status, result) = subprocess.getstatusoutput( "otool -L %s | grep libedit" % _rl.__file__ )
             break
-        except IOError, (errno, strerror):
+        except IOError as xxx_todo_changeme:
+            (errno, strerror) = xxx_todo_changeme.args
             if errno == 4:
                 continue
             else:
@@ -51,7 +52,7 @@ if sys.platform == 'darwin' and have_readline:
     if status == 0 and len(result) > 0:
         # we are bound to libedit - new in Leopard
         _rl.parse_and_bind("bind ^I rl_complete")
-        print "Leopard libedit detected."
+        print("Leopard libedit detected.")
         uses_libedit = True
 
 

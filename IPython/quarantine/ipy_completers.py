@@ -38,7 +38,7 @@ def quick_completer(cmd, completions):
         bar baz                                                                     
         [d:\ipython]|3> foo ba
     """
-    if isinstance(completions, basestring):
+    if isinstance(completions, str):
         
         completions = completions.split()
     def do_complete(self,event):
@@ -52,7 +52,7 @@ def getRootModules():
     folders of the pythonpath.
     """
     modules = []
-    if ip.db.has_key('rootmodules'):
+    if 'rootmodules' in ip.db:
         return ip.db['rootmodules']
     t = time()
     store = False
@@ -60,13 +60,13 @@ def getRootModules():
         modules += moduleList(path)        
         if time() - t >= TIMEOUT_STORAGE and not store:
             store = True
-            print "\nCaching the list of root modules, please wait!" 
-            print "(This will only be done once - type '%rehashx' to " + \
-            "reset cache!)"
-            print
+            print("\nCaching the list of root modules, please wait!") 
+            print("(This will only be done once - type '%rehashx' to " + \
+            "reset cache!)")
+            print()
         if time() - t > TIMEOUT_GIVEUP:
-            print "This is taking too long, we give up."
-            print
+            print("This is taking too long, we give up.")
+            print()
             ip.db['rootmodules'] = []
             return []
     
@@ -290,8 +290,8 @@ def runlistpy(self, event):
     # should complete on all files, since after the first one other files may
     # be arguments to the input script.
     #filter(
-    if filter(lambda f: f.endswith('.py') or f.endswith('.ipy') or
-              f.endswith('.pyw'),comps):
+    if [f for f in comps if f.endswith('.py') or f.endswith('.ipy') or
+              f.endswith('.pyw')]:
         pys =  [f.replace('\\','/') for f in lglob('*')]
     else:
         pys =  [f.replace('\\','/')
@@ -308,7 +308,7 @@ def cd_completer(self, event):
     if '-b' in event.line:
         # return only bookmark completions
         bkms = self.db.get('bookmarks',{})
-        return bkms.keys()
+        return list(bkms.keys())
 
     
     if event.symbol == '-':
@@ -338,7 +338,7 @@ def cd_completer(self, event):
         if os.path.isdir(relpath):
             return [relpath]
         # if no completions so far, try bookmarks
-        bks = self.db.get('bookmarks',{}).keys()
+        bks = list(self.db.get('bookmarks',{}).keys())
         bkmatches = [s for s in bks if s.startswith(event.symbol)]
         if bkmatches:
             return bkmatches

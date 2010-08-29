@@ -593,7 +593,7 @@ class AnyTraitTest(TraitTestBase):
     obj = AnyTrait()
 
     _default_value = None
-    _good_values   = [10.0, 'ten', u'ten', [10], {'ten': 10},(10,), None, 1j]
+    _good_values   = [10.0, 'ten', 'ten', [10], {'ten': 10},(10,), None, 1j]
     _bad_values    = []
 
 
@@ -606,25 +606,25 @@ class TestInt(TraitTestBase):
     obj = IntTrait()
     _default_value = 99
     _good_values   = [10, -10]
-    _bad_values    = ['ten', u'ten', [10], {'ten': 10},(10,), None, 1j, 10L,
-                      -10L, 10.1, -10.1, '10L', '-10L', '10.1', '-10.1', u'10L',
-                      u'-10L', u'10.1', u'-10.1',  '10', '-10', u'10', u'-10']
+    _bad_values    = ['ten', 'ten', [10], {'ten': 10},(10,), None, 1j, 10,
+                      -10, 10.1, -10.1, '10L', '-10L', '10.1', '-10.1', '10L',
+                      '-10L', '10.1', '-10.1',  '10', '-10', '10', '-10']
 
 
 class LongTrait(HasTraits):
 
-    value = Long(99L)
+    value = Long(99)
 
 class TestLong(TraitTestBase):
 
     obj = LongTrait()
 
-    _default_value = 99L
-    _good_values   = [10, -10, 10L, -10L]
-    _bad_values    = ['ten', u'ten', [10], [10l], {'ten': 10},(10,),(10L,),
+    _default_value = 99
+    _good_values   = [10, -10, 10, -10]
+    _bad_values    = ['ten', 'ten', [10], [10], {'ten': 10},(10,),(10,),
                       None, 1j, 10.1, -10.1, '10', '-10', '10L', '-10L', '10.1',
-                      '-10.1', u'10', u'-10', u'10L', u'-10L', u'10.1',
-                      u'-10.1']
+                      '-10.1', '10', '-10', '10L', '-10L', '10.1',
+                      '-10.1']
 
 
 class FloatTrait(HasTraits):
@@ -637,9 +637,9 @@ class TestFloat(TraitTestBase):
 
     _default_value = 99.0
     _good_values   = [10, -10, 10.1, -10.1]
-    _bad_values    = [10L, -10L, 'ten', u'ten', [10], {'ten': 10},(10,), None,
-                      1j, '10', '-10', '10L', '-10L', '10.1', '-10.1', u'10',
-                      u'-10', u'10L', u'-10L', u'10.1', u'-10.1']
+    _bad_values    = [10, -10, 'ten', 'ten', [10], {'ten': 10},(10,), None,
+                      1j, '10', '-10', '10L', '-10L', '10.1', '-10.1', '10',
+                      '-10', '10L', '-10L', '10.1', '-10.1']
 
 
 class ComplexTrait(HasTraits):
@@ -653,7 +653,7 @@ class TestComplex(TraitTestBase):
     _default_value = 99.0-99.0j
     _good_values   = [10, -10, 10.1, -10.1, 10j, 10+10j, 10-10j, 
                       10.1j, 10.1+10.1j, 10.1-10.1j]
-    _bad_values    = [10L, -10L, u'10L', u'-10L', 'ten', [10], {'ten': 10},(10,), None]
+    _bad_values    = [10, -10, '10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
 
 
 class StringTrait(HasTraits):
@@ -667,20 +667,20 @@ class TestString(TraitTestBase):
     _default_value = 'string'
     _good_values   = ['10', '-10', '10L',
                       '-10L', '10.1', '-10.1', 'string']
-    _bad_values    = [10, -10, 10L, -10L, 10.1, -10.1, 1j, [10],
-                      ['ten'],{'ten': 10},(10,), None,  u'string']
+    _bad_values    = [10, -10, 10, -10, 10.1, -10.1, 1j, [10],
+                      ['ten'],{'ten': 10},(10,), None,  'string']
 
 
 class UnicodeTrait(HasTraits):
 
-    value = Unicode(u'unicode')
+    value = Unicode('unicode')
 
 class TestUnicode(TraitTestBase):
 
     obj = UnicodeTrait()
 
-    _default_value = u'unicode'
+    _default_value = 'unicode'
     _good_values   = ['10', '-10', '10L', '-10L', '10.1', 
-                      '-10.1', '', u'', 'string', u'string', ]
-    _bad_values    = [10, -10, 10L, -10L, 10.1, -10.1, 1j,
-                      [10], ['ten'], [u'ten'], {'ten': 10},(10,), None]
+                      '-10.1', '', '', 'string', 'string', ]
+    _bad_values    = [10, -10, 10, -10, 10.1, -10.1, 1j,
+                      [10], ['ten'], ['ten'], {'ten': 10},(10,), None]

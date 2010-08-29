@@ -25,7 +25,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 import codeop
 import re
 
@@ -39,6 +39,7 @@ from IPython.utils.traitlets import List, Int, Any, Str, CBool, Bool
 from IPython.utils.io import Term
 from IPython.utils.text import make_quoted_expr
 from IPython.utils.autoattr import auto_attr
+import collections
 
 #-----------------------------------------------------------------------------
 # Global utilities, errors and constants
@@ -753,7 +754,7 @@ class AutocallChecker(PrefilterChecker):
         if not oinfo['found']:
             return None
         
-        if callable(oinfo['obj']) \
+        if isinstance(oinfo['obj'], collections.Callable) \
                and (not re_exclude_auto.match(line_info.the_rest)) \
                and re_fun_name.match(line_info.ifun):
             return self.prefilter_manager.get_handler_by_name('auto')
@@ -950,9 +951,9 @@ class AutoHandler(PrefilterHandler):
                 # plain ascii works better w/ pyreadline, on some machines, so
                 # we use it and only print uncolored rewrite if we have unicode
                 rw = str(rw)
-                print >>Term.cout, rw
+                print(rw, file=Term.cout)
             except UnicodeEncodeError:
-                print "-------------->" + newcmd
+                print("-------------->" + newcmd)
             
         # log what is now valid Python, not the actual user input (without the
         # final newline)

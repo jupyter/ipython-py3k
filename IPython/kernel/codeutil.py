@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 # Imports
 #-------------------------------------------------------------------------------
 
-import new, types, copy_reg
+import new, types, copyreg
 
 def code_ctor(*args):
     return new.code(*args)
@@ -36,4 +36,4 @@ def reduce_code(co):
         co.co_varnames, co.co_filename, co.co_name, co.co_firstlineno,
         co.co_lnotab)
 
-copy_reg.pickle(types.CodeType, reduce_code)
+copyreg.pickle(types.CodeType, reduce_code)

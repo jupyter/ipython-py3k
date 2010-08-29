@@ -9,7 +9,7 @@ from IPython.core import ipapi
 
 ip = ipapi.get()
 
-from ipy_completers import *
+from .ipy_completers import *
 
 ip.set_hook('complete_command', module_completer, str_key = 'import')
 ip.set_hook('complete_command', module_completer, str_key = 'from')

@@ -9,7 +9,7 @@ tests = {'pass': ["> > > run()",
          'fail': ["+ + run()",
                   " ++ run()"]}
 
-from StringIO import StringIO
+from io import StringIO
 import sys
 
 stdin_save = sys.stdin

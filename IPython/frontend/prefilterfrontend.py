@@ -24,7 +24,7 @@ import sys
 import pydoc
 import os
 import re
-import __builtin__
+import builtins
 
 from IPython.core.iplib import InteractiveShell
 from IPython.kernel.core.redirector_output_trap import RedirectorOutputTrap
@@ -33,7 +33,7 @@ from IPython.kernel.core.sync_traceback_trap import SyncTracebackTrap
 
 from IPython.utils.io import Term
 
-from linefrontendbase import LineFrontEndBase, common_prefix
+from .linefrontendbase import LineFrontEndBase, common_prefix
 
 #-----------------------------------------------------------------------------
 # Utility functions
@@ -90,13 +90,13 @@ class PrefilterFrontEnd(LineFrontEndBase):
             # Suppress all key input, to avoid waiting
             def my_rawinput(x=None):
                 return '\n'
-            old_rawinput = __builtin__.raw_input
-            __builtin__.raw_input = my_rawinput
+            old_rawinput = builtins.raw_input
+            builtins.raw_input = my_rawinput
             ipython0 = InteractiveShell(
                 parent=None, user_ns=self.shell.user_ns,
                 user_global_ns=self.shell.user_global_ns
             )
-            __builtin__.raw_input = old_rawinput
+            builtins.raw_input = old_rawinput
         self.ipython0 = ipython0
         # Set the pager:
         self.ipython0.set_hook('show_in_pager', 
@@ -138,7 +138,7 @@ class PrefilterFrontEnd(LineFrontEndBase):
 
     def execute(self, python_string, raw_string=None):
         if self.debug:
-            print 'Executing Python code:', repr(python_string)
+            print('Executing Python code:', repr(python_string))
         self.capture_output()
         LineFrontEndBase.execute(self, python_string,
                                     raw_string=raw_string)

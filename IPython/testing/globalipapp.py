@@ -6,7 +6,7 @@ into a fit.  This code should be considered a gross hack, but it gets the job
 done.
 """
 
-from __future__ import absolute_import
+
 
 #-----------------------------------------------------------------------------
 #  Copyright (C) 2009  The IPython Development Team
@@ -19,12 +19,12 @@ from __future__ import absolute_import
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
-import commands
+import builtins
+import subprocess
 import os
 import sys
 
-from . import tools
+from .. import tools
 
 #-----------------------------------------------------------------------------
 # Functions
@@ -124,7 +124,7 @@ def start_ipython():
         with one that is more doctest-friendly.
         """
         cmd = _ip.var_expand(cmd,depth=1)
-        sys.stdout.write(commands.getoutput(cmd))
+        sys.stdout.write(subprocess.getoutput(cmd))
         sys.stdout.flush()
 
     # Store certain global objects that IPython modifies
@@ -168,7 +168,7 @@ def start_ipython():
     # now return this without recursively calling here again.
     _ip = shell
     get_ipython = _ip.get_ipython
-    __builtin__._ip = _ip
-    __builtin__.get_ipython = get_ipython
+    builtins._ip = _ip
+    builtins.get_ipython = get_ipython
 
     return _ip

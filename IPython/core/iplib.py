@@ -16,10 +16,10 @@ Main IPython Component
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
-from __future__ import absolute_import
 
-import __builtin__
+
+
+import builtins
 import bdb
 import codeop
 import exceptions
@@ -352,9 +352,9 @@ class InteractiveShell(Component, Magic):
 
     def _ipython_dir_changed(self, name, new):
         if not os.path.isdir(new):
-            os.makedirs(new, mode = 0777)
+            os.makedirs(new, mode = 0o777)
         if not os.path.isdir(self.ipython_extension_dir):
-            os.makedirs(self.ipython_extension_dir, mode = 0777)
+            os.makedirs(self.ipython_extension_dir, mode = 0o777)
 
     @property
     def ipython_extension_dir(self):
@@ -475,7 +475,7 @@ class InteractiveShell(Component, Magic):
         # for pushd/popd management
         try:
             self.home_dir = get_home_dir()
-        except HomeDirError, msg:
+        except HomeDirError as msg:
             fatal(msg)
 
         self.dir_stack = []
@@ -580,7 +580,7 @@ class InteractiveShell(Component, Magic):
     def restore_sys_module_state(self):
         """Restore the state of the sys module."""
         try:
-            for k, v in self._orig_sys_module_state.items():
+            for k, v in list(self._orig_sys_module_state.items()):
                 setattr(sys, k, v)
         except AttributeError:
             pass
@@ -638,7 +638,7 @@ class InteractiveShell(Component, Magic):
             
         dp = getattr(self.hooks, name, None)
         if name not in IPython.core.hooks.__all__:
-            print "Warning! Hook '%s' is not one of %s" % (name, IPython.core.hooks.__all__ )
+            print("Warning! Hook '%s' is not one of %s" % (name, IPython.core.hooks.__all__ ))
         if not dp:
             dp = IPython.core.hooks.CommandChainDispatcher()
         
@@ -739,7 +739,7 @@ class InteractiveShell(Component, Magic):
     def _set_call_pdb(self,val):
 
         if val not in (0,1,False,True):
-            raise ValueError,'new call_pdb value must be boolean'
+            raise ValueError('new call_pdb value must be boolean')
 
         # store value in instance
         self._call_pdb = val
@@ -873,7 +873,7 @@ class InteractiveShell(Component, Magic):
         self.ns_table = {'user':user_ns,
                          'user_global':user_global_ns,
                          'internal':self.internal_ns,
-                         'builtin':__builtin__.__dict__
+                         'builtin':builtins.__dict__
                          }
 
         # Similarly, track all namespaces where references can be held and that
@@ -1094,8 +1094,8 @@ class InteractiveShell(Component, Magic):
         # We need a dict of name/value pairs to do namespace updates.
         if isinstance(variables, dict):
             vdict = variables
-        elif isinstance(variables, (basestring, list, tuple)):
-            if isinstance(variables, basestring):
+        elif isinstance(variables, (str, list, tuple)):
+            if isinstance(variables, str):
                 vlist = variables.split()
             else:
                 vlist = variables
@@ -1105,8 +1105,8 @@ class InteractiveShell(Component, Magic):
                 try:
                     vdict[name] = eval(name, cf.f_globals, cf.f_locals)
                 except:
-                    print ('Could not get variable %s from %s' %
-                           (name,cf.f_code.co_name))
+                    print(('Could not get variable %s from %s' %
+                           (name,cf.f_code.co_name)))
         else:
             raise ValueError('variables must be a dict/str/list/tuple')
             
@@ -1116,10 +1116,10 @@ class InteractiveShell(Component, Magic):
         # And configure interactive visibility
         config_ns = self.user_ns_hidden
         if interactive:
-            for name, val in vdict.iteritems():
+            for name, val in vdict.items():
                 config_ns.pop(name, None)
         else:
-            for name,val in vdict.iteritems():
+            for name,val in vdict.items():
                 config_ns[name] = val
 
     #-------------------------------------------------------------------------
@@ -1158,10 +1158,10 @@ class InteractiveShell(Component, Magic):
         try:
             self.db = pickleshare.PickleShareDB(self.ipython_dir + "/db")
         except exceptions.UnicodeDecodeError:
-            print "Your ipython_dir can't be decoded to unicode!"
-            print "Please set HOME environment variable to something that"
-            print r"only has ASCII characters, e.g. c:\home"
-            print "Now it is", self.ipython_dir
+            print("Your ipython_dir can't be decoded to unicode!")
+            print("Please set HOME environment variable to something that")
+            print(r"only has ASCII characters, e.g. c:\home")
+            print("Now it is", self.ipython_dir)
             sys.exit()
         self.shadowhist = ipcorehist.ShadowHist(self.db)
 
@@ -1171,8 +1171,8 @@ class InteractiveShell(Component, Magic):
         try:
             self.readline.write_history_file(self.histfile)
         except:
-            print 'Unable to save IPython command history to file: ' + \
-                  `self.histfile`
+            print('Unable to save IPython command history to file: ' + \
+                  repr(self.histfile))
 
     def reloadhist(self):
         """Reload the input history from disk file."""
@@ -1260,11 +1260,11 @@ class InteractiveShell(Component, Magic):
                "The custom exceptions must be given AS A TUPLE."
 
         def dummy_handler(self,etype,value,tb):
-            print '*** Simple custom exception handler ***'
-            print 'Exception type :',etype
-            print 'Exception value:',value
-            print 'Traceback      :',tb
-            print 'Source code    :','\n'.join(self.buffer)
+            print('*** Simple custom exception handler ***')
+            print('Exception type :',etype)
+            print('Exception value:',value)
+            print('Traceback      :',tb)
+            print('Source code    :','\n'.join(self.buffer))
 
         if handler is None: handler = dummy_handler
 
@@ -1327,7 +1327,7 @@ class InteractiveShell(Component, Magic):
                 # line, there may be SyntaxError cases whith imported code.
                 self.showsyntaxerror(filename)
             elif etype is UsageError:
-                print "UsageError:", value
+                print("UsageError:", value)
             else:
                 # WARNING: these variables are somewhat deprecated and not
                 # necessarily safe to use in a threaded environment, but tools
@@ -1343,7 +1343,7 @@ class InteractiveShell(Component, Magic):
                     if exception_only:
                         m = ('An exception has occurred, use %tb to see the '
                              'full traceback.')
-                        print m
+                        print(m)
                         self.InteractiveTB.show_exception_only(etype, value)
                     else:
                         self.InteractiveTB(etype,value,tb,tb_offset=tb_offset)
@@ -1490,7 +1490,7 @@ class InteractiveShell(Component, Magic):
                     break
                 comps[newcomp] = 1
                 state += 1
-            outcomps = comps.keys()
+            outcomps = list(comps.keys())
             outcomps.sort()
             #print "T:",text,"OC:",outcomps  # dbg
             #print "vars:",self.user_ns.keys()
@@ -1651,7 +1651,7 @@ class InteractiveShell(Component, Magic):
         # doesn't crash if colors option is invalid)
         self.magic_colors(self.colors)
         # History was moved to a separate module
-        from . import history
+        from .. import history
         history.init_ipython(self)
 
     def magic(self,arg_s):
@@ -1724,7 +1724,7 @@ class InteractiveShell(Component, Magic):
         
         from IPython.core import macro
 
-        if isinstance(themacro, basestring):
+        if isinstance(themacro, str):
             themacro = macro.Macro(themacro)
         if not isinstance(themacro, macro.Macro):
             raise ValueError('A macro must be a string or a Macro instance.')
@@ -1753,7 +1753,7 @@ class InteractiveShell(Component, Magic):
     def ex(self, cmd):
         """Execute a normal python statement in user namespace."""
         with nested(self.builtin_trap,):
-            exec cmd in self.user_global_ns, self.user_ns
+            exec(cmd, self.user_global_ns, self.user_ns)
 
     def ev(self, expr):
         """Evaluate python expression expr in user namespace.
@@ -1863,7 +1863,7 @@ class InteractiveShell(Component, Magic):
         more = 0
         
         # Mark activity in the builtins
-        __builtin__.__dict__['__IPYTHON__active'] += 1
+        builtins.__dict__['__IPYTHON__active'] += 1
         
         if self.has_readline:
             self.readline_startup_hook(self.pre_readline)
@@ -1929,7 +1929,7 @@ class InteractiveShell(Component, Magic):
                     self.edit_syntax_error()
 
         # We are off again...
-        __builtin__.__dict__['__IPYTHON__active'] -= 1
+        builtins.__dict__['__IPYTHON__active'] -= 1
 
         # Turn off the exit flag, so the mainloop can be restarted if desired
         self.exit_now = False
@@ -1975,8 +1975,8 @@ class InteractiveShell(Component, Magic):
 
         with prepended_to_syspath(dname):
             try:
-                execfile(fname,*where)
-            except SystemExit, status:
+                exec(compile(open(fname,*where).read(), fname,*where, 'exec'))
+            except SystemExit as status:
                 # If the call was made with 0 or None exit status (sys.exit(0)
                 # or sys.exit() ), don't bother showing a traceback, as both of
                 # these are considered normal by the OS:
@@ -2197,7 +2197,7 @@ class InteractiveShell(Component, Magic):
         try:
             try:
                 self.hooks.pre_runcode_hook()
-                exec code_obj in self.user_global_ns, self.user_ns
+                exec(code_obj, self.user_global_ns, self.user_ns)
             finally:
                 # Reset our crash handler in place
                 sys.excepthook = old_excepthook
@@ -2213,7 +2213,7 @@ class InteractiveShell(Component, Magic):
         else:
             outflag = 0
             if softspace(sys.stdout, 0):
-                print
+                print()
         # Flush out code object which has been run (and source)
         self.code_to_run = None
         return outflag

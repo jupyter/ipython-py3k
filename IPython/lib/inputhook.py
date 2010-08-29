@@ -240,11 +240,11 @@ class InputHookManager(object):
         We are not currently using this as it breaks GUI code that calls a 
         mainloop at anytime but startup.
         """
-        import Tkinter
+        import tkinter
         orig_mainloop = gtk.main
         dumb_ml = _DummyMainloop(orig_mainloop, self, GUI_TK)
-        Tkinter.Misc.mainloop = dumb_ml
-        Tkinter.mainloop = dumb_ml
+        tkinter.Misc.mainloop = dumb_ml
+        tkinter.mainloop = dumb_ml
 
     def _spin_qt4(self):
         """Process all pending events in the qt4 event loop.
@@ -361,7 +361,7 @@ class InputHookManager(object):
         """
         if gui is None:
             self._apps = {}
-        elif self._apps.has_key(gui):
+        elif gui in self._apps:
             del self._apps[gui]
 
     def enable_wx(self, app=False):
@@ -501,8 +501,8 @@ class InputHookManager(object):
         """
         self._current_gui = GUI_TK
         if app:
-            import Tkinter
-            app = Tkinter.Tk()
+            import tkinter
+            app = tkinter.Tk()
             app.withdraw()
             self._apps[GUI_TK] = app
             return app
@@ -566,6 +566,6 @@ def enable_gui(gui=None, app=True):
     try:
         gui_hook = guis[gui]
     except KeyError:
-        e="Invalid GUI request %r, valid ones are:%s" % (gui, guis.keys())
+        e="Invalid GUI request %r, valid ones are:%s" % (gui, list(guis.keys()))
         raise ValueError(e)
     return gui_hook(app)

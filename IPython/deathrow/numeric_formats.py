@@ -15,9 +15,9 @@ def num_display(self,arg):
         return
     # Otherwise, we do work.
     format = __IPYTHON__.runtime_rc.numarray_print_format
-    print 'NumPy array, format:',format
+    print('NumPy array, format:',format)
     # Here is where all the printing logic needs to be implemented
-    print arg # nothing yet :)
+    print(arg) # nothing yet :)
 
 
 def magic_format(self,parameter_s=''):
@@ -30,10 +30,10 @@ def magic_format(self,parameter_s=''):
     
     if parameter_s in valid_formats:
         self.runtime_rc.numarray_print_format = parameter_s
-        print 'Numeric output format is now:',parameter_s
+        print('Numeric output format is now:',parameter_s)
     else:
-        print 'Invalid format:',parameter_s
-        print 'Valid formats:',valid_formats
+        print('Invalid format:',parameter_s)
+        print('Valid formats:',valid_formats)
 
 # setup default format
 __IPYTHON__.runtime_rc.numarray_print_format = 'long'
