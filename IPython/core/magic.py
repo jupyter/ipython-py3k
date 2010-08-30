@@ -737,7 +737,7 @@ Currently the magic system has the following functions:\n"""
         #oname = oname.strip()
         #print '1- oname: <%r>' % oname  # dbg
         try:
-            oname = oname.strip().encode('ascii')
+            oname = oname.strip()
             #print '2- oname: <%r>' % oname  # dbg
         except UnicodeEncodeError:
             print('Python identifiers can only contain ascii characters.')

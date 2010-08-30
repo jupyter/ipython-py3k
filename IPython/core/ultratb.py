@@ -635,8 +635,7 @@ class VerboseTB(TBTools):
         else:
             # Simplified header
             head = '%s%s%s\n%s%s' % (Colors.topline, '-'*75, ColorsNormal,exc,
-                                     string.rjust('Traceback (most recent call last)',
-                                                  75 - len(str(etype)) ) )
+                        'Traceback (most recent call last)'.rjust( 75 - len(str(etype)) ) )
         frames = []
         # Flush cache before calling inspect.  This helps alleviate some of the
         # problems with python 2.3's inspect.py.
@@ -765,14 +764,14 @@ class VerboseTB(TBTools):
             def linereader(file=file, lnum=[lnum], getline=linecache.getline):
                 line = getline(file, lnum[0])
                 lnum[0] += 1
-                return line
+                return line.encode()
 
             # Build the list of names on this line of code where the exception
             # occurred.
             try:
                 # This builds the names list in-place by capturing it from the
                 # enclosing scope.
-                tokenize.tokenize(linereader, tokeneater)
+                [tokeneater(*token) for token in tokenize.tokenize(linereader)]
             except IndexError:
                 # signals exit of tokenizer
                 pass
@@ -833,22 +832,6 @@ class VerboseTB(TBTools):
         # ... and format it
         exception = ['%s%s%s: %s' % (Colors.excName, etype_str,
                                      ColorsNormal, evalue_str)]
-        if type(evalue) is types.InstanceType:
-            try:
-                names = [w for w in dir(evalue) if isinstance(w, str)]
-            except:
-                # Every now and then, an object with funny inernals blows up
-                # when dir() is called on it.  We do the best we can to report
-                # the problem and continue
-                _m = '%sException reporting error (object with broken dir())%s:'
-                exception.append(_m % (Colors.excName,ColorsNormal))
-                etype_str,evalue_str = list(map(str,sys.exc_info()[:2]))
-                exception.append('%s%s%s: %s' % (Colors.excName,etype_str,
-                                     ColorsNormal, evalue_str))
-                names = []
-            for name in names:
-                value = text_repr(getattr(evalue, name))
-                exception.append('\n%s%s = %s' % (indent, name, value))
 
         # vds: >>
         if records:

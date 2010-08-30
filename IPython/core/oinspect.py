@@ -493,8 +493,7 @@ class Inspector:
                 if init_ds:
                     out.writeln(header('Docstring:\n') + indent(init_ds))
         # and class docstring for instances:
-        elif obj_type is types.InstanceType or \
-                 isinstance(obj,object):
+        elif isinstance(obj,object):
 
             # First, check whether the instance docstring is identical to the
             # class one, and print it separately if they don't coincide.  In

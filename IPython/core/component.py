@@ -222,7 +222,7 @@ class Component(HasTraits, metaclass=MetaComponent):
         This ensures that the :attr:`parent`, :attr:`name` and :attr:`config`
         attributes are handled properly.
         """
-        super(Component, self).__init__()
+        super(Component, self).__init__("???Comebacktothis")
         self._children = []
         if name is None:
             self.name = ComponentNameGenerator()

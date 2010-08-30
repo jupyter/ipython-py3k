@@ -179,7 +179,7 @@ def get_home_dir():
         except KeyError:
             raise HomeDirError('Undefined $HOME, IPython cannot proceed.')
         else:
-            return homedir.decode(sys.getfilesystemencoding())
+            return homedir
     elif os.name == 'nt':
         # Now for win9x, XP, Vista, 7?
         # For some strange reason all of these return 'nt' for os.name.
@@ -193,7 +193,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return homedir
 
         # Now look for a local home directory
         try:
@@ -202,7 +202,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return homedir
 
         # Now the users profile directory
         try:
@@ -211,7 +211,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return homedir
 
         # Use the registry to get the 'My Documents' folder.
         try:
@@ -226,7 +226,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return homedir
 
         # A user with a lot of unix tools in win32 may have defined $HOME.
         # Try this as a last ditch option.
@@ -236,13 +236,13 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return homedir
 
         # If all else fails, raise HomeDirError
         raise HomeDirError('No valid home directory could be found')
     elif os.name == 'dos':
         # Desperate, may do absurd things in classic MacOS. May work under DOS.
-        return 'C:\\'.decode(sys.getfilesystemencoding())
+        return 'C:\\'
     else:
         raise HomeDirError('No valid home directory could be found for your OS')
 
@@ -261,13 +261,13 @@ def get_ipython_dir():
             'IPYTHONDIR', os.path.join(home_dir, ipdir_def)
         )
     )
-    return ipdir.decode(sys.getfilesystemencoding())
+    return ipdir
 
 
 def get_ipython_package_dir():
     """Get the base directory where IPython itself is installed."""
     ipdir = os.path.dirname(IPython.__file__)
-    return ipdir.decode(sys.getfilesystemencoding())
+    return ipdir
 
 
 def get_ipython_module_path(module_str):

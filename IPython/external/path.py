@@ -32,7 +32,7 @@ Date:    9 Mar 2007
 import sys, warnings, os, fnmatch, glob, shutil, codecs
 # deprecated in python 2.6
 warnings.filterwarnings('ignore', r'.*md5.*')
-import md5
+from hashlib import md5
 
 __version__ = '2.2'
 __all__ = ['path']
@@ -58,24 +58,6 @@ try:
         _getcwd = os.getcwd
 except AttributeError:
     pass
-
-# Pre-2.3 workaround for booleans
-try:
-    True, False
-except NameError:
-    True, False = 1, 0
-
-# Pre-2.3 workaround for basestring.
-try:
-    str
-except NameError:
-    str = (str, str)
-
-# Universal newline support
-_textmode = 'r'
-if hasattr(file, 'newlines'):
-    _textmode = 'U'
-
 
 class TreeWalkWarning(Warning):
     pass
@@ -520,7 +502,7 @@ class path(_base):
 
     def open(self, mode='r'):
         """ Open this file.  Return a file object. """
-        return file(self, mode)
+        return open(self, mode)
 
     def bytes(self):
         """ Open this file, read all bytes, return them as a string. """
@@ -563,7 +545,7 @@ class path(_base):
         """
         if encoding is None:
             # 8-bit
-            f = self.open(_textmode)
+            f = self.open()
             try:
                 return f.read()
             finally:
@@ -690,7 +672,7 @@ class path(_base):
         This uses 'U' mode in Python 2.3 and later.
         """
         if encoding is None and retain:
-            f = self.open(_textmode)
+            f = self.open()
             try:
                 return f.readlines()
             finally:
@@ -770,7 +752,7 @@ class path(_base):
         """
         f = self.open('rb')
         try:
-            m = md5.new()
+            m = md5()
             while True:
                 d = f.read(8192)
                 if not d:
