@@ -1645,7 +1645,7 @@ class InteractiveShell(Component, Magic):
         # doesn't crash if colors option is invalid)
         self.magic_colors(self.colors)
         # History was moved to a separate module
-        from .. import history
+        from . import history
         history.init_ipython(self)
 
     def magic(self,arg_s):

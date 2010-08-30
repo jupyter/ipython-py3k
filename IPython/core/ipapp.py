@@ -38,7 +38,7 @@ from IPython.config.loader import (
 )
 from IPython.lib import inputhook
 from IPython.utils.path import filefind, get_ipython_dir
-from .. import usage
+from . import usage
 
 #-----------------------------------------------------------------------------
 # Globals, utilities and helpers
