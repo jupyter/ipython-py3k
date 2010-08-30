@@ -195,8 +195,8 @@ num_f = len(failures)
 #    print
 
 
-print("%s tests run, %s failure%s" % (num_tests,
+print(("%s tests run, %s failure%s" % (num_tests,
                                       num_f,
-                                      num_f != 1 and "s" or ""))
+                                      num_f != 1 and "s" or "")))
 for f in failures:
     print(f)

@@ -219,6 +219,7 @@ class Kernel(object):
             assert self.reply_socket.rcvmore(), "Unexpected missing message part."
             msg = self.reply_socket.recv_json()
             omsg = Message(msg)
+            print(file=sys.__stdout__)
             print(omsg, file=sys.__stdout__)
             handler = self.handlers.get(omsg.msg_type, None)
             if handler is None:
@@ -237,7 +238,8 @@ def main():
     pub_conn = connection % (port_base+1)
 
     print("Starting the kernel...", file=sys.__stdout__)
-    print("On:",rep_conn, pub_conn, file=sys.__stdout__)
+    print("XREP Channel:", rep_conn, file=sys.__stdout__)
+    print("PUB Channel:", pub_conn, file=sys.__stdout__)
 
     session = Session(username='kernel')
 

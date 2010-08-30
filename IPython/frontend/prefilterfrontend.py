@@ -138,7 +138,7 @@ class PrefilterFrontEnd(LineFrontEndBase):
 
     def execute(self, python_string, raw_string=None):
         if self.debug:
-            print('Executing Python code:', repr(python_string))
+            print(('Executing Python code:', repr(python_string)))
         self.capture_output()
         LineFrontEndBase.execute(self, python_string,
                                     raw_string=raw_string)

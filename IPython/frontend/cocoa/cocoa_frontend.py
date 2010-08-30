@@ -293,7 +293,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
     
     
     def update_cell_prompt(self, result, blockID=None):
-        print(self.blockRanges)
+        print((self.blockRanges))
         if(isinstance(result, Failure)):
             prompt = self.input_prompt()
             
@@ -405,7 +405,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
         self.textView.replaceCharactersInRange_withString_(
             textRange, string)
             
-        for r in self.blockRanges.values():
+        for r in list(self.blockRanges.values()):
             r.update_ranges_for_insertion(string, textRange)
         
         self.textView.setSelectedRange_(textRange)
@@ -515,7 +515,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
                 self.current_block_range().inputRange.location):
                 return True
             else:
-                for r in self.blockRanges.values():
+                for r in list(self.blockRanges.values()):
                     deleteRange = textView.selectedRange
                     if(deleteRange.length == 0):
                         deleteRange.location -= 1
