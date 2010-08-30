@@ -514,6 +514,6 @@ class NonBlockingIPShell(object):
         #we use print command because the shell command is called
         #inside IPython instance and thus is redirected to thread cout
         #"\x01\x1b[1;36m\x02" <-- add colour to the text...
-        print("\x01\x1b[1;36m\x02"+result)
+        print(("\x01\x1b[1;36m\x02"+result))
         stdout.close()
         stdin.close()

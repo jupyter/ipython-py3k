@@ -191,9 +191,9 @@ class FCServiceFactory(AdaptedConfiguredObjectFactory):
     """This class creates a tub with various services running in it.
 
     The basic idea is that :meth:`create` returns a running :class:`Tub`
-    instance that has a number of Foolscap references registered in it.
-    This class is a subclass of :class:`IPython.core.component.Component`
-    so the IPython configuration and component system are used.
+    instance that has a number of Foolscap references registered in it. This
+    class is a subclass of :class:`IPython.config.configurable.Configurable`
+    so the IPython configuration system is used.
 
     Attributes
     ----------
@@ -212,8 +212,8 @@ class FCServiceFactory(AdaptedConfiguredObjectFactory):
     reuse_furls = Bool(False, config=True)
     interfaces = Instance(klass=Config, kw={}, allow_none=False, config=True)
 
-    def __init__(self, config, adaptee):
-        super(FCServiceFactory, self).__init__(config, adaptee)
+    def __init__(self, config=None, adaptee=None):
+        super(FCServiceFactory, self).__init__(config=config, adaptee=adaptee)
         self._check_reuse_furls()
 
     def _ip_changed(self, name, old, new):

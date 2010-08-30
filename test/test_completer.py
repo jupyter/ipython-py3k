@@ -21,10 +21,10 @@ print(completer)
 def do_test(text, line):
     def get_endix():
         idx = len(line)
-        print("Call endidx =>",idx)        
+        print(("Call endidx =>",idx))        
         return idx
     def get_line_buffer():
-        print("Lbuf =>",line)
+        print(("Lbuf =>",line))
         return line
     completer.get_line_buffer = get_line_buffer
     completer.get_endidx = get_endix
