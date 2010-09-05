@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # encoding: utf-8
 """
 A lightweight Traits like module.
@@ -54,18 +55,7 @@ import sys
 import types
 from types import FunctionType
 import collections
-
-def import_item(name):
-    """Import and return bar given the string foo.bar."""
-    package = '.'.join(name.split('.')[0:-1])
-    obj = name.split('.')[-1]
-    execString = 'from %s import %s' % (package, obj)
-    try:
-        exec(execString)
-    except SyntaxError:
-        raise ImportError("Invalid class specification: %s" % name)
-    exec('temp = %s' % obj)
-    return temp
+from .importstring import import_item
 
 SequenceTypes = (list, tuple)
 
