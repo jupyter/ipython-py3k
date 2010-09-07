@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Standard library imports
 from collections import namedtuple
 import signal
@@ -15,7 +16,7 @@ from IPython.utils.traitlets import Bool
 from .bracket_matcher import BracketMatcher
 from .call_tip_widget import CallTipWidget
 from .completion_lexer import CompletionLexer
-from .console_widget import HistoryConsoleWidget
+from .history_console_widget import HistoryConsoleWidget
 from .pygments_highlighter import PygmentsHighlighter
 
 

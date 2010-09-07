@@ -57,7 +57,6 @@ from types import FunctionType
 import collections
 from .importstring import import_item
 
-
 ClassTypes = (type)
 
 SequenceTypes = (list, tuple)
