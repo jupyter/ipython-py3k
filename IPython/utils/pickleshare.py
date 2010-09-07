@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """ PickleShare - a small 'shelve' like datastore with concurrency support
 
@@ -36,7 +37,6 @@ License: MIT open source license.
 from IPython.external.path import path as Path
 import os,stat,time
 import pickle as pickle
-import UserDict
 import glob
 
 def gethashfile(key):
@@ -44,7 +44,7 @@ def gethashfile(key):
 
 _sentinel = object()
 
-class PickleShareDB(UserDict.DictMixin):
+class PickleShareDB(dict):
     """ The main 'connection' object for PickleShare database """
     def __init__(self,root):
         """ Return a db object that will manage the specied directory"""

@@ -52,7 +52,7 @@ def get_default_editor():
 
 # store the builtin raw_input globally, and use this always, in case user code
 # overwrites it (like wx.py.PyShell does)
-raw_input_original = raw_input
+raw_input_original = input
 
 
 #-----------------------------------------------------------------------------

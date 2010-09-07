@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # coding: utf-8
 """A simple configuration system.
 
@@ -96,11 +97,11 @@ class Config(dict):
         if self._is_section_key(key):
             return True
         else:
-            return dict.has_key(self, key)
+            return key in self
 
     def _has_section(self, key):
         if self._is_section_key(key):
-            if dict.has_key(self, key):
+            if key in self:
                 return True
         return False
 
@@ -120,7 +121,7 @@ class Config(dict):
         # that you can't have section or attribute names that are 
         # builtins.
         try:
-            return getattr(__builtin__, key)
+            return getattr(__builtins__, key)
         except AttributeError:
             pass
         if self._is_section_key(key):
@@ -135,7 +136,7 @@ class Config(dict):
 
     def __setitem__(self, key, value):
         # Don't allow names in __builtin__ to be modified.
-        if hasattr(__builtin__, key):
+        if hasattr(__builtins__, key):
             raise ConfigError('Config variable names cannot have the same name '
                               'as a Python builtin: %s' % key)
         if self._is_section_key(key):

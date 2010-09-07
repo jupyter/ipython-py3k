@@ -26,7 +26,7 @@ import string
 import sys
 import types
 from collections import namedtuple
-from itertools import izip_longest
+from itertools import zip_longest
 
 # IPython's own
 from IPython.core import page
@@ -86,7 +86,7 @@ ObjectInfo = namedtuple('ObjectInfo', info_fields)
 
 def mk_object_info(kw):
     """Make a f"""
-    infodict = dict(izip_longest(info_fields, [None]))
+    infodict = dict(zip_longest(info_fields, [None]))
     infodict.update(kw)
     return ObjectInfo(**infodict)
 
