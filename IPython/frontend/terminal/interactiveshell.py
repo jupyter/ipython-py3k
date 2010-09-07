@@ -165,7 +165,7 @@ class TerminalInteractiveShell(InteractiveShell):
         internally created default banner.
         """
         
-        with nested(self.builtin_trap, self.display_trap):
+        with self.builtin_trap, self.display_trap:
 
             # if you run stuff with -c <cmd>, raw hist is not updated
             # ensure that it's in sync
@@ -292,7 +292,7 @@ class TerminalInteractiveShell(InteractiveShell):
             self.set_readline_completer()
         
         try:
-            line = raw_input_original(prompt).decode(self.stdin_encoding)
+            line = raw_input_original(prompt)
         except ValueError:
             warn("\n********\nYou or a %run:ed script called sys.stdin.close()"
                  " or sys.stdout.close()!\nExiting IPython!")

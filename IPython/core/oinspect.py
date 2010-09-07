@@ -231,8 +231,6 @@ class Inspector:
         if inspect.isclass(obj):
             header = self.__head('Class constructor information:\n')
             obj = obj.__init__
-        elif type(obj) is types.InstanceType:
-            obj = obj.__call__
 
         output = self._getdef(obj,oname)
         if output is None:
@@ -257,8 +255,7 @@ class Inspector:
                           '$indent(ds)\n'
                           '$head("Constructor Docstring"):\n'
                           '$indent(init_ds)')
-        elif (type(obj) is types.InstanceType or isinstance(obj,object)) \
-                 and hasattr(obj,'__call__'):
+        elif isinstance(obj,object) and hasattr(obj,'__call__'):
             call_ds = getdoc(obj.__call__)
             if call_ds:
                 output = itpl('$head("Class Docstring:")\n$indent(ds)\n'
@@ -481,8 +478,7 @@ class Inspector:
                 if init_ds:
                     out.writeln(header('Docstring:\n') + indent(init_ds))
         # and class docstring for instances:
-        elif obj_type is types.InstanceType or \
-                 isinstance(obj,object):
+        elif isinstance(obj,object):
 
             # First, check whether the instance docstring is identical to the
             # class one, and print it separately if they don't coincide.  In
@@ -703,8 +699,7 @@ class Inspector:
                 if init_ds:
                     out['init_docstring'] = indent(init_ds)
         # and class docstring for instances:
-        elif obj_type is types.InstanceType or \
-                 isinstance(obj,object):
+        elif isinstance(obj,object):
 
             # First, check whether the instance docstring is identical to the
             # class one, and print it separately if they don't coincide.  In

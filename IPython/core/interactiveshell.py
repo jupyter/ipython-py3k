@@ -1051,7 +1051,7 @@ class InteractiveShell(Configurable, Magic):
         #oname = oname.strip()
         #print '1- oname: <%r>' % oname  # dbg
         try:
-            oname = oname.strip().encode('ascii')
+            oname = oname.strip()
             #print '2- oname: <%r>' % oname  # dbg
         except UnicodeEncodeError:
             print('Python identifiers can only contain ascii characters.')
@@ -1076,10 +1076,12 @@ class InteractiveShell(Configurable, Magic):
         # We need to special-case 'print', which as of python2.6 registers as a
         # function but should only be treated as one if print_function was
         # loaded with a future import.  In this case, just bail.
-        if (oname == 'print' and not (self.compile.compiler.flags &
-                                      __future__.CO_FUTURE_PRINT_FUNCTION)):
-            return {'found':found, 'obj':obj, 'namespace':ospace,
-                    'ismagic':ismagic, 'isalias':isalias, 'parent':parent}
+
+        # In Python 3, print is always a function. Commented out to allow introspection.
+        #if (oname == 'print' and not (self.compile.compiler.flags &
+                                      #__future__.CO_FUTURE_PRINT_FUNCTION)):
+            #return {'found':found, 'obj':obj, 'namespace':ospace,
+                    #'ismagic':ismagic, 'isalias':isalias, 'parent':parent}
 
         # Look for the given name by splitting it in parts.  If the head is
         # found, then we look for all the remaining parts as members, and only
@@ -2190,7 +2192,7 @@ class InteractiveShell(Configurable, Magic):
         # this allows execution of indented pasted code. It is tempting
         # to add '\n' at the end of source to run commands like ' a=1'
         # directly, but this fails for more complicated scenarios
-        source=source.encode(self.stdin_encoding)
+        
         if source[:1] in [' ', '\t']:
             source = 'if 1:\n%s' % source
 
