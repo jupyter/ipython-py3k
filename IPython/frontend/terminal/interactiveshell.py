@@ -321,7 +321,7 @@ class TerminalInteractiveShell(InteractiveShell):
                             newhist = self.input_hist_raw[-1].rstrip()
                             self.readline.remove_history_item(histlen-1)
                             self.readline.replace_history_item(histlen-2,
-                                            newhist.encode(self.stdin_encoding))
+                                            newhist)
                     except AttributeError:
                         pass # re{move,place}_history_item are new in 2.4.                
             else:
