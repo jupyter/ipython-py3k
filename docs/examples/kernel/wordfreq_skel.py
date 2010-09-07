@@ -6,11 +6,11 @@ def wordfreq(text):
 
 def print_wordfreq(freqs, n=10):
     """Print the n most common words and counts in the freqs dict."""
-    words, counts = freqs.keys(), freqs.values()
-    items = zip(counts, words)
+    words, counts = list(freqs.keys()), list(freqs.values())
+    items = list(zip(counts, words))
     items.sort(reverse=True)
     for (count, word) in items[:n]:
-        print word, count
+        print(word, count)
 
 if __name__ == '__main__':
     import gzip

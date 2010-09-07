@@ -15,7 +15,7 @@ __docformat__ = "restructuredtext en"
 # Imports
 #-------------------------------------------------------------------------------
 
-import cPickle as pickle
+import pickle as pickle
 
 from twisted.internet import defer, reactor
 from twisted.python import failure
@@ -102,7 +102,7 @@ class IEngineCoreTestCase(object):
         d = self.engine.execute('a=5')
         d.addCallback(lambda _: self.engine.pull('a'))
         d.addCallback(lambda _: self.engine.get_result())
-        d.addCallback(lambda _: self.engine.keys())
+        d.addCallback(lambda _: list(self.engine.keys()))
         d.addCallback(lambda _: self.engine.push(dict(a=10)))
         return d
     
@@ -230,7 +230,7 @@ class IEngineCoreTestCase(object):
         return d
 
     def testKeys(self):
-        d = self.engine.keys()
+        d = list(self.engine.keys())
         d.addCallback(lambda s: isinstance(s, list))
         d.addCallback(lambda r: self.assertEquals(r, True))
         return d
@@ -331,7 +331,7 @@ class IEnginePropertiesTestCase(object):
             self.assert_(hasattr(self.engine, m))
     
     def testGetSetProperties(self):
-        dikt = dict(a=5, b='asdf', c=True, d=None, e=range(5))
+        dikt = dict(a=5, b='asdf', c=True, d=None, e=list(range(5)))
         d = self.engine.set_properties(dikt)
         d.addCallback(lambda r: self.engine.get_properties())
         d = self.assertDeferredEquals(d, dikt)
@@ -343,7 +343,7 @@ class IEnginePropertiesTestCase(object):
         return d
     
     def testClearProperties(self):
-        dikt = dict(a=5, b='asdf', c=True, d=None, e=range(5))
+        dikt = dict(a=5, b='asdf', c=True, d=None, e=list(range(5)))
         d = self.engine.set_properties(dikt)
         d.addCallback(lambda r: self.engine.clear_properties())
         d.addCallback(lambda r: self.engine.get_properties())
@@ -351,7 +351,7 @@ class IEnginePropertiesTestCase(object):
         return d
     
     def testDelHasProperties(self):
-        dikt = dict(a=5, b='asdf', c=True, d=None, e=range(5))
+        dikt = dict(a=5, b='asdf', c=True, d=None, e=list(range(5)))
         d = self.engine.set_properties(dikt)
         d.addCallback(lambda r: self.engine.del_properties(('b','e')))
         d.addCallback(lambda r: self.engine.has_properties(('a','b','c','d','e')))
@@ -371,7 +371,7 @@ class IEnginePropertiesTestCase(object):
         d.addCallback(lambda r: self.engine.execute("p['a'] = range(5)"))
         d.addCallback(lambda r: self.engine.execute("p['a'].append(5)"))
         d.addCallback(lambda r: self.engine.get_properties('a'))
-        d = self.assertDeferredEquals(d, dict(a=range(5)))
+        d = self.assertDeferredEquals(d, dict(a=list(range(5))))
         return d
         
 Parametric(IEnginePropertiesTestCase)

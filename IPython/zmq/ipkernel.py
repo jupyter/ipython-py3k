@@ -13,10 +13,10 @@ Things to do:
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
-from __future__ import print_function
+
 
 # Standard library imports.
-import __builtin__
+import builtins
 import atexit
 import sys
 import time
@@ -31,11 +31,11 @@ from IPython.utils import io
 from IPython.utils.jsonutil import json_clean
 from IPython.lib import pylabtools
 from IPython.utils.traitlets import Instance, Float
-from entry_point import (base_launch_kernel, make_argument_parser, make_kernel,
+from .entry_point import (base_launch_kernel, make_argument_parser, make_kernel,
                          start_kernel)
-from iostream import OutStream
-from session import Session, Message
-from zmqshell import ZMQInteractiveShell
+from .iostream import OutStream
+from .session import Session, Message
+from .zmqshell import ZMQInteractiveShell
 
 #-----------------------------------------------------------------------------
 # Main kernel class
@@ -104,7 +104,7 @@ class Kernel(Configurable):
         """
         try:
             ident = self.reply_socket.recv(zmq.NOBLOCK)
-        except zmq.ZMQError, e:
+        except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 return
             else:
@@ -151,14 +151,14 @@ class Kernel(Configurable):
     def _publish_pyin(self, code, parent):
         """Publish the code request on the pyin stream."""
 
-        pyin_msg = self.session.msg(u'pyin',{u'code':code}, parent=parent)
+        pyin_msg = self.session.msg('pyin',{'code':code}, parent=parent)
         self.pub_socket.send_json(pyin_msg)
 
     def execute_request(self, ident, parent):
         try:
-            content = parent[u'content']
-            code = content[u'code']
-            silent = content[u'silent'] 
+            content = parent['content']
+            code = content['code']
+            silent = content['silent'] 
         except:
             io.raw_print_err("Got bad msg: ")
             io.raw_print_err(Message(parent))
@@ -169,7 +169,7 @@ class Kernel(Configurable):
         # Replace raw_input. Note that is not sufficient to replace 
         # raw_input in the user namespace.
         raw_input = lambda prompt='': self._raw_input(prompt, ident, parent)
-        __builtin__.raw_input = raw_input
+        builtins.raw_input = raw_input
 
         # Set the parent message of the display hook and out streams.
         shell.displayhook.set_parent(parent)
@@ -198,7 +198,7 @@ class Kernel(Configurable):
                 # For now leave this here until we're sure we can stop using it
                 #shell.runlines(code)
         except:
-            status = u'error'
+            status = 'error'
             # FIXME: this code right now isn't being used yet by default,
             # because the runlines() call above directly fires off exception
             # reporting.  This code, therefore, is only active in the scenario
@@ -209,13 +209,13 @@ class Kernel(Configurable):
             tb_list = traceback.format_exception(etype, evalue, tb)
             reply_content.update(shell._showtraceback(etype, evalue, tb_list))
         else:
-            status = u'ok'
-            reply_content[u'payload'] = shell.payload_manager.read_payload()
+            status = 'ok'
+            reply_content['payload'] = shell.payload_manager.read_payload()
             # Be agressive about clearing the payload because we don't want
             # it to sit in memory until the next execute_request comes in.
             shell.payload_manager.clear_payload()
 
-        reply_content[u'status'] = status
+        reply_content['status'] = status
         # Compute the execution counter so clients can display prompts
         reply_content['execution_count'] = shell.displayhook.prompt_count
 
@@ -227,18 +227,18 @@ class Kernel(Configurable):
         # At this point, we can tell whether the main code execution succeeded
         # or not.  If it did, we proceed to evaluate user_variables/expressions
         if reply_content['status'] == 'ok':
-            reply_content[u'user_variables'] = \
-                         shell.get_user_variables(content[u'user_variables'])
-            reply_content[u'user_expressions'] = \
-                         shell.eval_expressions(content[u'user_expressions'])
+            reply_content['user_variables'] = \
+                         shell.get_user_variables(content['user_variables'])
+            reply_content['user_expressions'] = \
+                         shell.eval_expressions(content['user_expressions'])
         else:
             # If there was an error, don't even try to compute variables or
             # expressions
-            reply_content[u'user_variables'] = {}
-            reply_content[u'user_expressions'] = {}
+            reply_content['user_variables'] = {}
+            reply_content['user_expressions'] = {}
             
         # Send the reply.
-        reply_msg = self.session.msg(u'execute_reply', reply_content, parent)
+        reply_msg = self.session.msg('execute_reply', reply_content, parent)
         io.raw_print(reply_msg)
 
         # Flush output before sending the reply.
@@ -252,7 +252,7 @@ class Kernel(Configurable):
         
         self.reply_socket.send(ident, zmq.SNDMORE)
         self.reply_socket.send_json(reply_msg)
-        if reply_msg['content']['status'] == u'error':
+        if reply_msg['content']['status'] == 'error':
             self._abort_queue()
 
     def complete_request(self, ident, parent):
@@ -285,7 +285,7 @@ class Kernel(Configurable):
         
     def shutdown_request(self, ident, parent):
         self.shell.exit_now = True
-        self._shutdown_message = self.session.msg(u'shutdown_reply', {}, parent)
+        self._shutdown_message = self.session.msg('shutdown_reply', {}, parent)
         sys.exit(0)
         
     #---------------------------------------------------------------------------
@@ -296,7 +296,7 @@ class Kernel(Configurable):
         while True:
             try:
                 ident = self.reply_socket.recv(zmq.NOBLOCK)
-            except zmq.ZMQError, e:
+            except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
                     break
             else:
@@ -321,7 +321,7 @@ class Kernel(Configurable):
 
         # Send the input request.
         content = dict(prompt=prompt)
-        msg = self.session.msg(u'input_request', content, parent)
+        msg = self.session.msg('input_request', content, parent)
         self.req_socket.send_json(msg)
 
         # Await a response.
@@ -363,7 +363,7 @@ class Kernel(Configurable):
         base_symbol_string = context[0]
         symbol = self.shell.user_ns.get(base_symbol_string, None)
         if symbol is None:
-            symbol = __builtin__.__dict__.get(base_symbol_string, None)
+            symbol = builtins.__dict__.get(base_symbol_string, None)
         if symbol is None:
             return None, context
 
@@ -454,14 +454,14 @@ class TkKernel(Kernel):
     def start(self):
         """Start a Tk enabled event loop."""
 
-        import Tkinter
+        import tkinter
         doi = self.do_one_iteration
         # Tk uses milliseconds
         poll_interval = int(1000*self._poll_interval)
         # For Tkinter, we create a Tk object and call its withdraw method.
         class Timer(object):
             def __init__(self, func):
-                self.app = Tkinter.Tk()
+                self.app = tkinter.Tk()
                 self.app.withdraw()
                 self.func = func
                 
@@ -530,7 +530,7 @@ def launch_kernel(xrep_port=0, pub_port=0, req_port=0, hb_port=0,
     extra_arguments = []
     if pylab:
         extra_arguments.append('--pylab')
-        if isinstance(pylab, basestring):
+        if isinstance(pylab, str):
             extra_arguments.append(pylab)
     return base_launch_kernel('from IPython.zmq.ipkernel import main; main()',
                               xrep_port, pub_port, req_port, hb_port, 

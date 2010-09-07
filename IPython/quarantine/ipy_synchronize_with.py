@@ -58,7 +58,7 @@ def run_command(path, command, arguments, asynchronous = True):
     try:
         line += win32api.GetShortPathName(os.path.join(path, command) + ".exe") + " "
     except:
-        print 'could not find: "%s"' % (os.path.join(path, command) + ".exe")
+        print('could not find: "%s"' % (os.path.join(path, command) + ".exe"))
         return -1
         
     line += arguments

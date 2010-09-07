@@ -2,7 +2,7 @@
 from PyQt4 import QtGui
 
 # Local imports
-from console_widget import ConsoleWidget
+from .console_widget import ConsoleWidget
 
 
 class HistoryConsoleWidget(ConsoleWidget):

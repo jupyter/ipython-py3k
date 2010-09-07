@@ -9,7 +9,7 @@ To be used by "upgrade" feature.
 try:
     from IPython.external.path import path
 except ImportError:
-    from path import path
+    from .path import path
 
 import md5, pickle
 
@@ -19,7 +19,7 @@ def showdiff(old,new):
     lines = d.compare(old.lines(),new.lines())
     realdiff = False
     for l in lines:
-        print l,
+        print(l, end=' ')
         if not realdiff and not l[0].isspace():
             realdiff = True
     return realdiff
@@ -32,7 +32,7 @@ def upgrade_dir(srcdir, tgtdir):
     """
 
     def pr(s):
-        print s
+        print(s)
     junk = ['.svn','ipythonrc*','*.pyc', '*.pyo', '*~', '.hg']
     
     def ignorable(p):
@@ -82,9 +82,9 @@ def upgrade_dir(srcdir, tgtdir):
         #print rpt
     pickle.dump(rpt, rep.open('w'))
     if modded:
-        print "\n\nDelete the following files manually (and rerun %upgrade)\nif you need a full upgrade:"
+        print("\n\nDelete the following files manually (and rerun %upgrade)\nif you need a full upgrade:")
         for m in modded:
-            print m
+            print(m)
 
 
 import sys

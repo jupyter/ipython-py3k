@@ -23,7 +23,7 @@ from IPython.core.inputsplitter import IPythonInputSplitter, \
     transform_ipy_prompt
 from IPython.core.usage import default_banner
 from IPython.utils.traitlets import Bool, Str
-from frontend_widget import FrontendWidget
+from .frontend_widget import FrontendWidget
 
 #-----------------------------------------------------------------------------
 # Constants
@@ -209,7 +209,7 @@ class IPythonWidget(FrontendWidget):
         text = str(self._control.textCursor().selection().toPlainText())
         if text:
             # Remove prompts.
-            lines = map(transform_ipy_prompt, text.splitlines())
+            lines = list(map(transform_ipy_prompt, text.splitlines()))
             text = '\n'.join(lines)
             # Expand tabs so that we respect PEP-8.
             QtGui.QApplication.clipboard().setText(text.expandtabs(4))

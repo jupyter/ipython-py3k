@@ -6,7 +6,7 @@ will be kept in this separate file.  This makes it easier to aggregate in one
 place the tricks needed to handle it; most other magics are much easier to test
 and we do so in a common test_magic file.
 """
-from __future__ import absolute_import
+
 
 #-----------------------------------------------------------------------------
 # Imports

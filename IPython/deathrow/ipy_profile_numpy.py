@@ -6,7 +6,7 @@ It exposes numpy via the 'np' shorthand as well for convenience.
 """
 
 from IPython.core import ipapi
-import ipy_defaults
+from . import ipy_defaults
 
 def main():
     ip = ipapi.get()
@@ -19,6 +19,6 @@ def main():
         ip.ex("from numpy import *")
 
     except ImportError:
-        print "Unable to start NumPy profile, is numpy installed?"
+        print("Unable to start NumPy profile, is numpy installed?")
     
 main()

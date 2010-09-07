@@ -18,7 +18,7 @@ __docformat__ = "restructuredtext en"
 # Imports
 #-------------------------------------------------------------------------------
 
-from fd_redirector import FDRedirector, STDOUT, STDERR
+from .fd_redirector import FDRedirector, STDOUT, STDERR
 
 from IPython.kernel.core.file_like import FileLike
 from IPython.kernel.core.output_trap import OutputTrap

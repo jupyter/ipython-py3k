@@ -48,7 +48,7 @@ def main():
     
     rc = client.MultiEngineClient()
     tc = client.TaskClient()
-    print tc.task_controller
+    print(tc.task_controller)
     rc.block=True
     nengines = len(rc.get_ids())
     rc.execute('from IPython.utils.timing import time')
@@ -58,7 +58,7 @@ def main():
     tasks = [client.StringTask("time.sleep(%f)"%t) for t in times]
     stime = sum(times)
     
-    print "executing %i tasks, totalling %.1f secs on %i engines"%(opts.n, stime, nengines)
+    print("executing %i tasks, totalling %.1f secs on %i engines"%(opts.n, stime, nengines))
     time.sleep(1)
     start = time.time()
     taskids = [tc.run(t) for t in tasks]
@@ -68,9 +68,9 @@ def main():
     ptime = stop-start
     scale = stime/ptime
     
-    print "executed %.1f secs in %.1f secs"%(stime, ptime)
-    print "%.3fx parallel performance on %i engines"%(scale, nengines)
-    print "%.1f%% of theoretical max"%(100*scale/nengines)
+    print("executed %.1f secs in %.1f secs"%(stime, ptime))
+    print("%.3fx parallel performance on %i engines"%(scale, nengines))
+    print("%.1f%% of theoretical max"%(100*scale/nengines))
 
 
 if __name__ == '__main__':

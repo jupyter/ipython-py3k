@@ -12,11 +12,11 @@ from IPython.core.inputsplitter import InputSplitter, transform_classic_prompt
 from IPython.frontend.qt.base_frontend_mixin import BaseFrontendMixin
 from IPython.utils.io import raw_print
 from IPython.utils.traitlets import Bool
-from bracket_matcher import BracketMatcher
-from call_tip_widget import CallTipWidget
-from completion_lexer import CompletionLexer
-from history_console_widget import HistoryConsoleWidget
-from pygments_highlighter import PygmentsHighlighter
+from .bracket_matcher import BracketMatcher
+from .call_tip_widget import CallTipWidget
+from .completion_lexer import CompletionLexer
+from .history_console_widget import HistoryConsoleWidget
+from .pygments_highlighter import PygmentsHighlighter
 
 
 class FrontendHighlighter(PygmentsHighlighter):
@@ -136,7 +136,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         text = str(self._control.textCursor().selection().toPlainText())
         if text:
             # Remove prompts.
-            lines = map(transform_classic_prompt, text.splitlines())
+            lines = list(map(transform_classic_prompt, text.splitlines()))
             text = '\n'.join(lines)
             # Expand tabs so that we respect PEP-8.
             QtGui.QApplication.clipboard().setText(text.expandtabs(4))

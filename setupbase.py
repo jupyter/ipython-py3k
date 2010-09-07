@@ -38,7 +38,7 @@ isfile = os.path.isfile
 pjoin = os.path.join
 
 def oscmd(s):
-    print ">", s
+    print(">", s)
     os.system(s)
 
 # A little utility we'll need below, since glob() does NOT allow you to do
@@ -58,7 +58,7 @@ def file_doesnt_endwith(test,endings):
 #---------------------------------------------------------------------------
 
 # release.py contains version, authors, license, url, keywords, etc.
-execfile(pjoin('IPython','core','release.py'))
+exec(compile(open(pjoin('IPython','core','release.py')).read(), pjoin('IPython','core','release.py'), 'exec'))
 
 # Create a dict with the basic information
 # This dict is eventually passed to setup after additional keys are added.
@@ -193,8 +193,8 @@ def find_data_files():
     manpagebase = pjoin('share', 'man', 'man1')
     
     # Simple file lists can be made by hand
-    manpages  = filter(isfile, glob(pjoin('docs','man','*.1.gz')))
-    igridhelpfiles = filter(isfile, glob(pjoin('IPython','extensions','igrid_help.*')))
+    manpages  = list(filter(isfile, glob(pjoin('docs','man','*.1.gz'))))
+    igridhelpfiles = list(filter(isfile, glob(pjoin('IPython','extensions','igrid_help.*'))))
 
     # For nested structures, use the utility above
     example_files = make_dir_struct(
@@ -274,7 +274,7 @@ def find_scripts():
     # doesn't find them.
     if 'bdist_wininst' in sys.argv:
         if len(sys.argv) > 2 and ('sdist' in sys.argv or 'bdist_rpm' in sys.argv):
-            print >> sys.stderr,"ERROR: bdist_wininst must be run alone. Exiting."
+            print("ERROR: bdist_wininst must be run alone. Exiting.", file=sys.stderr)
             sys.exit(1)
         scripts.append(pjoin('scripts','ipython_win_post_install.py'))
     

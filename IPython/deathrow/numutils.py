@@ -61,7 +61,7 @@ def amap(fn,*args):
 
     Works like map(), but it returns an array.  This is just a convenient
     shorthand for Numeric.array(map(...))"""
-    return array(map(fn,*args))
+    return array(list(map(fn,*args)))
 
 def amin(m,axis=0):
     """amin(m,axis=0) returns the minimum of m along dimension axis.
@@ -236,7 +236,7 @@ def base_repr (number, base = 2, padding = 0):
     if number < base: \
        return (padding - 1) * chars [0] + chars [int (number)]
     max_exponent = int (math.log (number)/math.log (base))
-    max_power = long (base) ** max_exponent
+    max_power = int (base) ** max_exponent
     lead_digit = int (number/max_power)
     return chars [lead_digit] + \
            base_repr (number - max_power * lead_digit, base, \
@@ -251,10 +251,10 @@ def binary_repr(number, max_length = 1025):
     32-bit machines, 2**1023 is the largest integer power of 2 which can be
     converted to a Python float."""
     
-    assert number < 2L << max_length
-    shifts = map (operator.rshift, max_length * [number], \
-                  range (max_length - 1, -1, -1))
-    digits = map (operator.mod, shifts, max_length * [2])
+    assert number < 2 << max_length
+    shifts = list(map (operator.rshift, max_length * [number], \
+                  list(range(max_length - 1, -1, -1))))
+    digits = list(map (operator.mod, shifts, max_length * [2]))
     if not digits.count (1): return 0
     digits = digits [digits.index (1):]
     return ''.join (map (repr, digits)).replace('L','')

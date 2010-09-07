@@ -54,7 +54,7 @@ def get_tokens_unprocessed(self, text, stack=('root',)):
                     pos += 1
                     statestack = ['root']
                     statetokens = tokendefs['root']
-                    yield pos, Text, u'\n'
+                    yield pos, Text, '\n'
                     continue
                 yield pos, Error, text[pos]
                 pos += 1
@@ -73,7 +73,7 @@ class PygmentsBlockUserData(QtGui.QTextBlockUserData):
     syntax_stack = ('root',)
 
     def __init__(self, **kwds):
-        for key, value in kwds.iteritems():
+        for key, value in kwds.items():
             setattr(self, key, value)
         QtGui.QTextBlockUserData.__init__(self)
 
@@ -102,7 +102,7 @@ class PygmentsHighlighter(QtGui.QSyntaxHighlighter):
     def highlightBlock(self, qstring):
         """ Highlight a block of text.
         """
-        qstring = unicode(qstring)
+        qstring = str(qstring)
         prev_data = self.currentBlock().previous().userData()
 
         if prev_data is not None:
@@ -131,7 +131,7 @@ class PygmentsHighlighter(QtGui.QSyntaxHighlighter):
     def set_style(self, style):
         """ Sets the style to the specified Pygments style.
         """
-        if isinstance(style, basestring):
+        if isinstance(style, str):
             style = get_style_by_name(style)
         self._style = style
         self._clear_caches()
@@ -176,7 +176,7 @@ class PygmentsHighlighter(QtGui.QSyntaxHighlighter):
     def _get_format_from_document(self, token, document):
         """ Returns a QTextCharFormat for token by 
         """
-        code, html = self._formatter._format_lines([(token, 'dummy')]).next()
+        code, html = next(self._formatter._format_lines([(token, 'dummy')]))
         self._document.setHtml(html)
         return QtGui.QTextCursor(self._document).charFormat()
 
@@ -184,7 +184,7 @@ class PygmentsHighlighter(QtGui.QSyntaxHighlighter):
         """ Returns a QTextCharFormat for token by reading a Pygments style.
         """
         result = QtGui.QTextCharFormat()
-        for key, value in style.style_for_token(token).items():
+        for key, value in list(style.style_for_token(token).items()):
             if value:
                 if key == 'color':
                     result.setForeground(self._get_brush(value))

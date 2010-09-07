@@ -22,6 +22,7 @@ import os
 import sys
 
 from IPython.testing.decorators import make_label_dec
+import collections
 
 #-----------------------------------------------------------------------------
 # Testing decorators
@@ -52,7 +53,7 @@ def skipif(skip_condition, msg=None):
     def skip_decorator(f):
 
         # Allow for both boolean or callable skip conditions.
-        if callable(skip_condition):
+        if isinstance(skip_condition, collections.Callable):
             skip_val = lambda : skip_condition()
         else:
             skip_val = lambda : skip_condition

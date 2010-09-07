@@ -30,12 +30,12 @@ def selflaunch(ip,line):
     
     tup = line.split(None,1)
     if len(tup) == 1:
-        print "Launching nested ipython session"
+        print("Launching nested ipython session")
         os.system(sys.executable)
         return
         
     cmd = sys.executable + ' ' + tup[1]
-    print ">",cmd
+    print(">",cmd)
     os.system(cmd)
 
 class PyLauncher:
@@ -87,7 +87,7 @@ def rehashdir_f(self,arg):
     created = []
     if not arg:
         arg = '.'
-    path = map(os.path.abspath,arg.split(';'))
+    path = list(map(os.path.abspath,arg.split(';')))
     alias_table = self.shell.alias_manager.alias_table
         
     if os.name == 'posix':

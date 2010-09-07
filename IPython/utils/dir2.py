@@ -78,5 +78,5 @@ def dir2(obj):
 
     # filter out non-string attributes which may be stuffed by dir() calls
     # and poor coding in third-party modules
-    return [w for w in words if isinstance(w, basestring)]
+    return [w for w in words if isinstance(w, str)]
 

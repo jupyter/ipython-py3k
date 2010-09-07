@@ -14,7 +14,7 @@ Gnuplot, so it should be safe to do:
 import IPython.Gnuplot2 as Gnuplot
 """
 
-import cStringIO
+import io
 import os
 import string
 import sys
@@ -89,7 +89,7 @@ if Gnuplot_ori.__version__ <= '1.6':
                 self._options['index'] = (index, 'index %s' % index)
             elif type(index) is type(()):
                 self._options['index'] = (index,'index %s' %
-                                          string.join(map(repr, index), ':'))
+                                          string.join(list(map(repr, index)), ':'))
             else:
                 raise OptionException('index=%s' % (index,))
 
@@ -125,12 +125,12 @@ def eps_fix_bbox(fname):
 
     # note: ps2ps and eps2eps do NOT work, ONLY ps2eps works correctly. The
     # others make output with bitmapped fonts, which looks horrible.
-    print 'Fixing eps file: <%s>' % fname
+    print('Fixing eps file: <%s>' % fname)
     xsys('ps2eps -f -q -l %s' % fname)
     if fname.endswith('.eps'):
         os.rename(fname+'.eps',fname)
 
-def is_list1d(x,containers = [types.ListType,types.TupleType]):
+def is_list1d(x,containers = [list,tuple]):
     """Returns true if x appears to be a 1d list/tuple/array.
 
     The heuristics are: identify Numeric arrays, or lists/tuples whose first
@@ -191,7 +191,7 @@ def zip_items(items,titles=None):
                             title,titles = get_titles(titles)
                         else:
                             title = None
-                        new_items.append(Data(zip(item,next_item),
+                        new_items.append(Data(list(zip(item,next_item)),
                                               title=title))
                         n += 1  # avoid double-inclusion of next item
                     else: # can't zip with next, zip with own index list
@@ -203,7 +203,7 @@ def zip_items(items,titles=None):
                 title,titles = get_titles(titles)
             else:
                 title = None
-            new_items.append(Data(zip(range(len(item)),item),title=title))
+            new_items.append(Data(list(zip(list(range(len(item))),item)),title=title))
         except AttributeError:
             new_items.append(item)
         n+=1
@@ -311,8 +311,8 @@ class Gnuplot(Gnuplot_ori.Gnuplot):
                   'fontsize':None,
                   'debug':0 }
 
-        for k in psargs.keys():
-            if keyw.has_key(k):
+        for k in list(psargs.keys()):
+            if k in keyw:
                 psargs[k] = keyw[k]
                 del keyw[k]
 
@@ -324,8 +324,7 @@ class Gnuplot(Gnuplot_ori.Gnuplot):
         # override switch only which needs to be explicitly set to zero
         if hardcopy:
             if psargs['filename'] is None:
-                raise ValueError, \
-                      'If you request hardcopy, you must give a filename.'
+                raise ValueError('If you request hardcopy, you must give a filename.')
 
             # set null output so nothing goes to screen. hardcopy() restores output
             self('set term dumb')
@@ -459,12 +458,12 @@ class Gnuplot(Gnuplot_ori.Gnuplot):
         Any keywords are passed directly to plot()."""
 
         if hasattr(arg,'keys'):
-            keys = arg.keys()
+            keys = list(arg.keys())
             keys.sort()
         else:
-            keys = range(len(arg))
+            keys = list(range(len(arg)))
 
-        pitems = [Data(zip(range(len(arg[k])),arg[k]),title=`k`) for k in keys]
+        pitems = [Data(list(zip(list(range(len(arg[k]))),arg[k])),title=repr(k)) for k in keys]
         self.plot(*pitems,**kw)
 
     def splot(self, *items, **keyw):
@@ -646,8 +645,8 @@ class Gnuplot(Gnuplot_ori.Gnuplot):
                 time.sleep(0.05)  # safety, very small delay
                 if os.path.isfile(filename):
                     if debug:
-                        print 'Hardcopy to file <%s> success at attempt #%s.' \
-                        % (filename,i+1)
+                        print('Hardcopy to file <%s> success at attempt #%s.' \
+                        % (filename,i+1))
                     break
                 time.sleep(delay)
                 # try again, issue all commands just in case
@@ -655,8 +654,8 @@ class Gnuplot(Gnuplot_ori.Gnuplot):
                 self.set_string('output', filename)
                 self.refresh()
             if not os.path.isfile(filename):
-                print >> sys.stderr,'ERROR: Tried %s times and failed to '\
-                'create hardcopy file `%s`' % (maxtries,filename)
+                print('ERROR: Tried %s times and failed to '\
+                'create hardcopy file `%s`' % (maxtries,filename), file=sys.stderr)
 
         # reset the terminal to its `default' setting:
         self('set terminal %s' % gp.GnuplotOpts.default_term)

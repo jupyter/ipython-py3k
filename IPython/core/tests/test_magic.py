@@ -2,7 +2,7 @@
 
 Needs to be run by nose (to make ipython session available).
 """
-from __future__ import absolute_import
+
 
 #-----------------------------------------------------------------------------
 # Imports
@@ -12,7 +12,7 @@ import os
 import sys
 import tempfile
 import types
-from cStringIO import StringIO
+from io import StringIO
 
 import nose.tools as nt
 
@@ -33,7 +33,7 @@ def test_rehashx():
     # Practically ALL ipython development systems will have more than 10 aliases
 
     yield (nt.assert_true, len(_ip.alias_manager.alias_table) > 10)
-    for key, val in _ip.alias_manager.alias_table.items():
+    for key, val in list(_ip.alias_manager.alias_table.items()):
         # we must strip dots from alias names
         nt.assert_true('.' not in key)
 
@@ -279,7 +279,7 @@ def test_parse_options():
     # These are only the most minimal of tests, more should be added later.  At
     # the very least we check that basic text/unicode calls work OK.
     nt.assert_equal(_ip.parse_options('foo', '')[1], 'foo')
-    nt.assert_equal(_ip.parse_options(u'foo', '')[1], u'foo')
+    nt.assert_equal(_ip.parse_options('foo', '')[1], 'foo')
 
     
 def test_dirops():

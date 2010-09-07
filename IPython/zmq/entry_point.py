@@ -15,11 +15,11 @@ import zmq
 from IPython.core.ultratb import FormattedTB
 from IPython.external.argparse import ArgumentParser
 from IPython.utils import io
-from exitpoller import ExitPollerUnix, ExitPollerWindows
-from displayhook import DisplayHook
-from iostream import OutStream
-from session import Session
-from heartbeat import Heartbeat
+from .exitpoller import ExitPollerUnix, ExitPollerWindows
+from .displayhook import DisplayHook
+from .iostream import OutStream
+from .session import Session
+from .heartbeat import Heartbeat
 
 def bind_port(socket, ip, port):
     """ Binds the specified ZMQ socket. If the port is zero, a random port is
@@ -81,7 +81,7 @@ def make_kernel(namespace, kernel_factory,
     # Create a context, a session, and the kernel sockets.
     io.raw_print("Starting the kernel at pid:", os.getpid())
     context = zmq.Context()
-    session = Session(username=u'kernel')
+    session = Session(username='kernel')
 
     reply_socket = context.socket(zmq.XREP)
     xrep_port = bind_port(reply_socket, namespace.ip, namespace.xrep)
@@ -101,8 +101,8 @@ def make_kernel(namespace, kernel_factory,
 
     # Redirect input streams and set a display hook.
     if out_stream_factory:
-        sys.stdout = out_stream_factory(session, pub_socket, u'stdout')
-        sys.stderr = out_stream_factory(session, pub_socket, u'stderr')
+        sys.stdout = out_stream_factory(session, pub_socket, 'stdout')
+        sys.stderr = out_stream_factory(session, pub_socket, 'stderr')
     if display_hook_factory:
         sys.displayhook = display_hook_factory(session, pub_socket)
 
@@ -176,7 +176,7 @@ def base_launch_kernel(code, xrep_port=0, pub_port=0, req_port=0, hb_port=0,
     ports = []
     ports_needed = int(xrep_port <= 0) + int(pub_port <= 0) + \
                    int(req_port <= 0) + int(hb_port <= 0)
-    for i in xrange(ports_needed):
+    for i in range(ports_needed):
         sock = socket.socket()
         sock.bind(('', 0))
         ports.append(sock)

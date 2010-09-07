@@ -14,6 +14,6 @@ in a non-blocking way. It can be used to interact with a subprocess in eg
 a GUI event loop.
 """
 
-from pipedprocess import PipedProcess
+from .pipedprocess import PipedProcess
 
 

@@ -5,6 +5,7 @@ IPython extension: %lookfor command for searching docstrings
 # Pauli Virtanen <pav@iki.fi>, 2008.
 
 import re, inspect, pkgutil, pydoc
+import collections
 
 #------------------------------------------------------------------------------
 # Lookfor functionality
@@ -52,7 +53,7 @@ def lookfor(what, modules=None, import_modules=True, regenerate=False):
     whats = str(what).lower().split()
     if not whats: return
 
-    for name, (docstring, kind, index) in cache.iteritems():
+    for name, (docstring, kind, index) in cache.items():
         if kind in ('module', 'object'): 
             # don't show modules or objects
             continue
@@ -117,7 +118,7 @@ def lookfor(what, modules=None, import_modules=True, regenerate=False):
         pager = pydoc.getpager()
         pager("\n".join(help_text))
     else:
-        print "\n".join(help_text)
+        print("\n".join(help_text))
 
 def _lookfor_generate_cache(module, import_modules, regenerate):
     """
@@ -188,7 +189,7 @@ def _lookfor_generate_cache(module, import_modules, regenerate):
             kind = "class"
             for n, v in inspect.getmembers(item):
                 stack.append(("%s.%s" % (name, n), v))
-        elif callable(item):
+        elif isinstance(item, collections.Callable):
             kind = "func"
         
         doc = inspect.getdoc(item)
@@ -225,7 +226,7 @@ def lookfor_f(self, arg=''):
 def lookfor_modules_f(self, arg=''):
     global _lookfor_modules
     if not arg:
-        print "Modules included in %lookfor search:", _lookfor_modules
+        print("Modules included in %lookfor search:", _lookfor_modules)
     else:
         _lookfor_modules = arg.split()
 

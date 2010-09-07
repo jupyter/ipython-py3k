@@ -7,7 +7,7 @@ functionality."""
 VERBOSE = True
 
 # stdlib imports
-import cStringIO as StringIO
+import io as StringIO
 import sys
 import unittest
 
@@ -41,10 +41,10 @@ class RunnerTestCase(unittest.TestCase):
             if ol1 != ol2:
                 mismatch += 1
                 if VERBOSE:
-                    print '<<< line %s does not match:' % n
-                    print repr(ol1)
-                    print repr(ol2)
-                    print '>>>'
+                    print('<<< line %s does not match:' % n)
+                    print(repr(ol1))
+                    print(repr(ol2))
+                    print('>>>')
         self.assert_(mismatch==0,'Number of mismatched lines: %s' %
                      mismatch)
 

@@ -89,7 +89,7 @@ def multiple_replace(dict, text):
     # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/81330
 
     # Create a regular expression  from the dictionary keys
-    regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
+    regex = re.compile("(%s)" % "|".join(map(re.escape, list(dict.keys()))))
     # For each match, look-up corresponding value in dictionary
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
 
@@ -221,11 +221,11 @@ def str_safe(arg):
     except UnicodeError:
         try:
             out = arg.encode('utf_8','replace')
-        except Exception,msg:
+        except Exception as msg:
             # let's keep this little duplication here, so that the most common
             # case doesn't suffer from a double try wrapping.
             out = '<ERROR: %s>' % msg
-    except Exception,msg:
+    except Exception as msg:
         out = '<ERROR: %s>' % msg
         #raise  # dbg
     return out
@@ -286,7 +286,7 @@ class BasePrompt(object):
                                                          self.p_template),
                                         self.cache.shell.user_ns,loc)
         except:
-            print "Illegal prompt template (check $ usage!):",self.p_template
+            print("Illegal prompt template (check $ usage!):",self.p_template)
             self.p_str = self.p_template
             self.p_str_nocolor = self.p_template
 
@@ -347,7 +347,7 @@ class BasePrompt(object):
         else:
             return os.sep
 
-    def __nonzero__(self):
+    def __bool__(self):
         """Implement boolean behavior.
 
         Checks whether the p_str attribute is non-empty"""

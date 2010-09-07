@@ -69,7 +69,7 @@ def list2dict2(lst, default=''):
 
     dic = {}
     for elem in lst:
-        if type(elem) in (types.ListType,types.TupleType):
+        if type(elem) in (list,tuple):
             size = len(elem)
             if  size == 0:
                 pass
@@ -95,12 +95,12 @@ def get_slice(seq, start=0, stop=None, step=1):
     if stop == None:
         stop = len(seq)
     item = lambda i: seq[i]
-    return map(item,xrange(start,stop,step))
+    return list(map(item,range(start,stop,step)))
 
 
 def chop(seq, size):
     """Chop a sequence into chunks of the given size."""
     chunk = lambda i: seq[i:i+size]
-    return map(chunk,xrange(0,len(seq),size))
+    return list(map(chunk,range(0,len(seq),size)))
 
 

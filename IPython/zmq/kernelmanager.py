@@ -18,7 +18,7 @@ Todo
 #-----------------------------------------------------------------------------
 
 # Standard library imports.
-from Queue import Queue, Empty
+from queue import Queue, Empty
 from subprocess import Popen
 from threading import Thread
 import time
@@ -31,7 +31,7 @@ from zmq.eventloop import ioloop
 # Local imports.
 from IPython.utils import io
 from IPython.utils.traitlets import HasTraits, Any, Instance, Type, TCPAddress
-from session import Session
+from .session import Session
 
 #-----------------------------------------------------------------------------
 # Constants and exceptions
@@ -56,7 +56,7 @@ def validate_string_list(lst):
     if not isinstance(lst, list):
         raise ValueError('input %r must be a list' % lst)
     for x in lst:
-        if not isinstance(x, basestring):
+        if not isinstance(x, str):
             raise ValueError('element %r in list must be a string' % x)
 
 
@@ -64,10 +64,10 @@ def validate_string_dict(dct):
     """Validate that the input is a dict with string keys and values.
 
     Raises ValueError if not."""
-    for k,v in dct.iteritems():
-        if not isinstance(k, basestring):
+    for k,v in dct.items():
+        if not isinstance(k, str):
             raise ValueError('key %r in dict must be a string' % k)
-        if not isinstance(v, basestring):
+        if not isinstance(v, str):
             raise ValueError('value %r in dict must be a string' % v)
 
 
@@ -225,7 +225,7 @@ class XReqSocketChannel(ZmqSocketChannel):
             user_expressions = {}
             
         # Don't waste network traffic if inputs are invalid
-        if not isinstance(code, basestring):
+        if not isinstance(code, str):
             raise ValueError('code %r must be a string' % code)
         validate_string_list(user_variables)
         validate_string_dict(user_expressions)
@@ -403,7 +403,7 @@ class SubSocketChannel(ZmqSocketChannel):
         # We do the IOLoop callback process twice to ensure that the IOLoop
         # gets to perform at least one full poll.
         stop_time = time.time() + timeout
-        for i in xrange(2):
+        for i in range(2):
             self._flushed = False
             self.ioloop.add_callback(self._flush)
             while not self._flushed and time.time() < stop_time:
@@ -542,7 +542,7 @@ class HBSocketChannel(ZmqSocketChannel):
             try:
                 #io.rprint('Ping from HB channel') # dbg
                 self.socket.send_json('ping')
-            except zmq.ZMQError, e:
+            except zmq.ZMQError as e:
                 #io.rprint('*** HB Error:', e) # dbg
                 if e.errno == zmq.EFSM:
                     #io.rprint('sleep...', self.time_to_dead) # dbg
@@ -554,7 +554,7 @@ class HBSocketChannel(ZmqSocketChannel):
                 while True:
                     try:
                         self.socket.recv_json(zmq.NOBLOCK)
-                    except zmq.ZMQError, e:
+                    except zmq.ZMQError as e:
                         #io.rprint('*** HB Error 2:', e) # dbg
                         if e.errno == zmq.EAGAIN:
                             before_poll = time.time()
@@ -702,9 +702,9 @@ class KernelManager(HasTraits):
 
         self._launch_args = kw.copy()
         if kw.pop('ipython', True):
-            from ipkernel import launch_kernel
+            from .ipkernel import launch_kernel
         else:
-            from pykernel import launch_kernel
+            from .pykernel import launch_kernel
         self.kernel, xrep, pub, req, hb = launch_kernel(
             xrep_port=xreq[1], pub_port=sub[1], 
             req_port=rep[1], hb_port=hb[1], **kw)

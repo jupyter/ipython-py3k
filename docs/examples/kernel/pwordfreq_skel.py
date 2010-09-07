@@ -21,13 +21,13 @@ if __name__ == '__main__':
     ipc.run('wordfreq.py')
 
     # Run the serial version
-    print "Serial word frequency count:"
+    print("Serial word frequency count:")
     text = open('davinci.txt').read()
     freqs = wordfreq(text)
     print_wordfreq(freqs, 10)
     
     # The parallel version
-    print "\nParallel word frequency count:"
+    print("\nParallel word frequency count:")
     files = ['davinci%i.txt' % i for i in range(4)]
     ipc.scatter('textfile', files)
     ipc.execute('text = open(textfile[0]).read()')

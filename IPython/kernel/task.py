@@ -385,7 +385,7 @@ class StringTask(BaseTask):
             elif len(self.pull) == 1:
                 resultDict = {self.pull[0]:result}
             else:
-                resultDict = dict(zip(self.pull, result))
+                resultDict = dict(list(zip(self.pull, result)))
             tr = TaskResult(resultDict, engine_id)
         # Assign task attributes
         tr.submitted = self.submitted
@@ -425,7 +425,7 @@ class ResultNS(object):
     [0, 1, 2]
     """
     def __init__(self, dikt):
-        for k,v in dikt.iteritems():
+        for k,v in dikt.items():
             setattr(self,k,v)
     
     def __repr__(self):
@@ -493,7 +493,7 @@ class TaskResult(object):
         
         self._ns = ResultNS(self.results)
         
-        self.keys = self.results.keys()
+        self.keys = list(self.results.keys())
     
     def __repr__(self):
         if self.failure is not None:
@@ -845,7 +845,7 @@ class TaskController(cs.ControllerAdapterBase):
         self.idleLater = None # delayed call object for timeout
         self.scheduler = self.SchedulerClass()
         
-        for id in self.controller.engines.keys():
+        for id in list(self.controller.engines.keys()):
                 self.workers[id] = IWorker(self.controller.engines[id])
                 self.workers[id].workerid = id
                 self.schedule.add_worker(self.workers[id])
@@ -856,14 +856,14 @@ class TaskController(cs.ControllerAdapterBase):
             raise ValueError("worker with id %s already exists.  This should not happen." % id)
         self.workers[id] = IWorker(self.controller.engines[id])
         self.workers[id].workerid = id
-        if not self.pendingTasks.has_key(id):# if not working
+        if id not in self.pendingTasks:# if not working
             self.scheduler.add_worker(self.workers[id])
         self.distributeTasks()
     
     def unregisterWorker(self, id):
         """Called by controller.unregister_engine"""
         
-        if self.workers.has_key(id):
+        if id in self.workers:
             try:
                 self.scheduler.pop_worker(id)
             except IndexError:
@@ -871,7 +871,7 @@ class TaskController(cs.ControllerAdapterBase):
             self.workers.pop(id)
     
     def _pendingTaskIDs(self):
-        return [t.taskid for t in self.pendingTasks.values()]
+        return [t.taskid for t in list(self.pendingTasks.values())]
     
     #---------------------------------------------------------------------------
     # Interface methods
@@ -897,10 +897,10 @@ class TaskController(cs.ControllerAdapterBase):
         Returns a `Deferred` to the task result, or None.
         """
         log.msg("Getting task result: %i" % taskid)
-        if self.finishedResults.has_key(taskid):
+        if taskid in self.finishedResults:
             tr = self.finishedResults[taskid]
             return defer.succeed(tr)
-        elif self.deferredResults.has_key(taskid):
+        elif taskid in self.deferredResults:
             if block:
                 d = defer.Deferred()
                 self.deferredResults[taskid].append(d)
@@ -918,8 +918,8 @@ class TaskController(cs.ControllerAdapterBase):
             return defer.fail(failure.Failure(TypeError("an integer task id expected: %r" % taskid)))
         try:
             self.scheduler.pop_task(taskid)
-        except IndexError, e:
-            if taskid in self.finishedResults.keys():
+        except IndexError as e:
+            if taskid in list(self.finishedResults.keys()):
                 d = defer.fail(IndexError("Task Already Completed"))
             elif taskid in self.abortPending:
                 d = defer.fail(IndexError("Task Already Aborted"))
@@ -951,7 +951,7 @@ class TaskController(cs.ControllerAdapterBase):
         pending = self._pendingTaskIDs()
         failed = []
         succeeded = []
-        for k,v in self.finishedResults.iteritems():
+        for k,v in self.finishedResults.items():
             if not isinstance(v, failure.Failure):
                 if hasattr(v,'failure'):
                     if v.failure is None:
@@ -1095,7 +1095,7 @@ class TaskController(cs.ControllerAdapterBase):
         implemented through `reactor.callLater`.
         """
         
-        if workerid in self.workers.keys() and workerid not in self.pendingTasks.keys():
+        if workerid in list(self.workers.keys()) and workerid not in list(self.pendingTasks.keys()):
             self.scheduler.add_worker(self.workers[workerid])
             self.distributeTasks()
     

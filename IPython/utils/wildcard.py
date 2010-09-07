@@ -13,7 +13,7 @@ Authors
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 
-import __builtin__
+import builtins
 import re
 import types
 
@@ -46,7 +46,7 @@ def is_type(obj,typestr_or_type):
     """
     if typestr_or_type=="all":
         return True
-    if type(typestr_or_type)==types.TypeType:
+    if type(typestr_or_type)==type:
         test_type=typestr_or_type
     else:
         test_type=typestr2type.get(typestr_or_type,False)
@@ -71,12 +71,12 @@ class NameSpace(object):
        self.ignore_case = ignore_case
        
        # We should only match EXACT dicts here, so DON'T use isinstance()
-       if type(obj) == types.DictType:
+       if type(obj) == dict:
            self._ns = obj
        else:
            kv = []
            for key in dir2(obj):
-               if isinstance(key, basestring):
+               if isinstance(key, str):
                    # This seemingly unnecessary try/except is actually needed
                    # because there is code out there with metaclasses that
                    # create 'write only' attributes, where a getattr() call
@@ -96,7 +96,7 @@ class NameSpace(object):
 
     def get_ns_names(self):
         """Return list of object names in namespace that match the patterns."""
-        return self.ns.keys()
+        return list(self.ns.keys())
     ns_names=property(get_ns_names,doc="List of objects in name space that "
                       "match the type and name patterns.")
         
@@ -113,7 +113,7 @@ class NameSpace(object):
             return result
         ns=self._ns
         #Filter namespace by the name_pattern
-        all=[(x,ns[x]) for x in glob_filter(ns.keys(),name_pattern,
+        all=[(x,ns[x]) for x in glob_filter(list(ns.keys()),name_pattern,
                                             self.show_all,self.ignore_case)]
         #Filter namespace by type_pattern
         all=[(key,obj) for key,obj in all if is_type(obj,type_pattern)]
@@ -138,9 +138,9 @@ def list_namespace(namespace,type_pattern,filter,ignore_case=False,show_all=Fals
                      ignore_case=ignore_case,show_all=show_all)
         res={}
         nsdict=ns.ns
-        for name,obj in nsdict.iteritems():
+        for name,obj in nsdict.items():
             ns=list_namespace(obj,type_pattern,".".join(pattern_list[1:]),
                               ignore_case=ignore_case,show_all=show_all)
-            for inner_name,inner_obj in ns.iteritems():
+            for inner_name,inner_obj in ns.items():
                 res["%s.%s"%(name,inner_name)]=inner_obj
         return res

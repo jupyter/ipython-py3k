@@ -241,19 +241,19 @@ class MultiEngine(ControllerAdapterBase):
                 If targets is not valid or if an engine is not registered.
         """
         if isinstance(targets, int):
-            if targets not in self.engines.keys():
+            if targets not in list(self.engines.keys()):
                 log.msg("Engine with id %i is not registered" % targets)
                 raise error.InvalidEngineID("Engine with id %i is not registered" % targets)
             else: 
                 return [self.engines[targets]]
         elif isinstance(targets, (list, tuple)):
             for id in targets:
-                if id not in self.engines.keys():
+                if id not in list(self.engines.keys()):
                     log.msg("Engine with id %r is not registered" % id)
                     raise error.InvalidEngineID("Engine with id %r is not registered" % id)  
-            return map(self.engines.get, targets)
+            return list(map(self.engines.get, targets))
         elif targets == 'all':
-            eList = self.engines.values()
+            eList = list(self.engines.values())
             if len(eList) == 0:
                 raise error.NoEnginesRegistered("There are no engines registered. "
                     "Check the logs if you think there should have been.")
@@ -322,7 +322,7 @@ class MultiEngine(ControllerAdapterBase):
     #---------------------------------------------------------------------------
     
     def get_ids(self):
-        return defer.succeed(self.engines.keys())
+        return defer.succeed(list(self.engines.keys()))
     
     #---------------------------------------------------------------------------
     # IEngineMultiplexer methods
@@ -364,7 +364,7 @@ class MultiEngine(ControllerAdapterBase):
         return d
     
     def push_serialized(self, namespace, targets='all'):
-        for k, v in namespace.iteritems():
+        for k, v in namespace.items():
             log.msg("Pushed object %s is %f MB" % (k, v.getDataSize()))
         d = self._performOnEnginesAndGatherBoth('push_serialized', namespace, targets=targets)      
         return d
