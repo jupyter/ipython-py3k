@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Word completion for IPython.
 
 This module is a fork of the rlcompleter module in the Python standard
@@ -305,7 +306,7 @@ class Completer(object):
         match_append = matches.append
         n = len(text)
         for lst in [keyword.kwlist,
-                    list(__builtin__.__dict__.keys()),
+                    list(__builtins__.keys()),
                     list(self.namespace.keys()),
                     list(self.global_namespace.keys())]:
             for word in lst:
