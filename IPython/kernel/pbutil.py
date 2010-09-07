@@ -15,7 +15,7 @@ __docformat__ = "restructuredtext en"
 # Imports
 #-------------------------------------------------------------------------------
 
-import cPickle as pickle
+import pickle as pickle
 
 from twisted.python.failure import Failure
 from twisted.python import failure

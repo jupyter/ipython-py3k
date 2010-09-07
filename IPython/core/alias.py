@@ -20,7 +20,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 import keyword
 import os
 import re
@@ -120,13 +120,13 @@ class AliasManager(Configurable):
 
     @property
     def aliases(self):
-        return [(item[0], item[1][1]) for item in self.alias_table.iteritems()]
+        return [(item[0], item[1][1]) for item in self.alias_table.items()]
 
     def exclude_aliases(self):
         # set of things NOT to alias (keywords, builtins and some magics)
         no_alias = set(['cd','popd','pushd','dhist','alias','unalias'])
         no_alias.update(set(keyword.kwlist))
-        no_alias.update(set(__builtin__.__dict__.keys()))
+        no_alias.update(set(builtins.__dict__.keys()))
         self.no_alias = no_alias
 
     def init_aliases(self):
@@ -145,7 +145,7 @@ class AliasManager(Configurable):
         """Define an alias, but don't raise on an AliasError."""
         try:
             self.define_alias(name, cmd)
-        except AliasError, e:
+        except AliasError as e:
             error("Invalid alias: %s" % e)
 
     def define_alias(self, name, cmd):
@@ -158,7 +158,7 @@ class AliasManager(Configurable):
         self.alias_table[name] = (nargs, cmd)
 
     def undefine_alias(self, name):
-        if self.alias_table.has_key(name):
+        if name in self.alias_table:
             del self.alias_table[name]
 
     def validate_alias(self, name, cmd):
@@ -166,7 +166,7 @@ class AliasManager(Configurable):
         if name in self.no_alias:
             raise InvalidAliasError("The name %s can't be aliased "
                                     "because it is a keyword or builtin." % name)
-        if not (isinstance(cmd, basestring)):
+        if not (isinstance(cmd, str)):
             raise InvalidAliasError("An alias command must be a string, "
                                     "got: %r" % name)
         nargs = cmd.count('%s')

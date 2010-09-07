@@ -94,7 +94,7 @@ class FunctionMaker(object):
         func.__name__ = self.name
         func.__doc__ = getattr(self, 'doc', None)
         func.__dict__ = getattr(self, 'dict', {})
-        func.func_defaults = getattr(self, 'defaults', ())
+        func.__defaults__ = getattr(self, 'defaults', ())
         callermodule = sys._getframe(3).f_globals.get('__name__', '?')
         func.__module__ = getattr(self, 'module', callermodule)
         func.__dict__.update(kw)
@@ -109,17 +109,17 @@ class FunctionMaker(object):
         name = mo.group(1) # extract the function name
         reserved_names = set([name] + [
             arg.strip(' *') for arg in self.signature.split(',')])
-        for n, v in evaldict.iteritems():
+        for n, v in evaldict.items():
             if n in reserved_names:
                 raise NameError('%s is overridden in\n%s' % (n, src))
         if not src.endswith('\n'): # add a newline just for safety
             src += '\n'
         try:
             code = compile(src, '<string>', 'single')
-            exec code in evaldict
+            exec(code, evaldict)
         except:
-            print >> sys.stderr, 'Error in generated code:'
-            print >> sys.stderr, src
+            print('Error in generated code:', file=sys.stderr)
+            print(src, file=sys.stderr)
             raise
         func = evaldict[name]
         if addsource:
@@ -217,9 +217,9 @@ def getinfo(func):
     signature = inspect.formatargspec(regargs, varargs, varkwargs, defaults,
                                       formatvalue=lambda value: "")[1:-1]
     return dict(name=func.__name__, argnames=argnames, signature=signature,
-                defaults = func.func_defaults, doc=func.__doc__,
+                defaults = func.__defaults__, doc=func.__doc__,
                 module=func.__module__, dict=func.__dict__,
-                globals=func.func_globals, closure=func.func_closure)
+                globals=func.__globals__, closure=func.__closure__)
 
 @deprecated
 def update_wrapper(wrapper, model, infodict=None):
@@ -229,7 +229,7 @@ def update_wrapper(wrapper, model, infodict=None):
     wrapper.__doc__ = infodict['doc']
     wrapper.__module__ = infodict['module']
     wrapper.__dict__.update(infodict['dict'])
-    wrapper.func_defaults = infodict['defaults']
+    wrapper.__defaults__ = infodict['defaults']
     wrapper.undecorated = model
     return wrapper
 

@@ -52,17 +52,17 @@ class DistributedSpider(object):
         if url not in self.allLinks:
             self.allLinks.append(url)
             if url.startswith(self.site):
-                print '    ', url
+                print('    ', url)
                 self.linksWorking[url] = self.tc.run(client.StringTask('links = fetchAndParse(url)', pull=['links'], push={'url': url}))
         
     def onVisitDone(self, result, url):
-        print url, ':'
+        print(url, ':')
         self.linksDone[url] = None
         del self.linksWorking[url]
         if isinstance(result.failure, Failure):
             txt = result.failure.getTraceback()
             for line in txt.split('\n'):
-                print '    ', line
+                print('    ', line)
         else:
             for link in result.ns.links:
                 self.visitLink(link)
@@ -70,12 +70,12 @@ class DistributedSpider(object):
     def run(self):
         self.visitLink(self.site)
         while self.linksWorking:
-            print len(self.linksWorking), 'pending...'
+            print(len(self.linksWorking), 'pending...')
             self.synchronize()
             time.sleep(self.pollingDelay)
     
     def synchronize(self):
-        for url, taskId in self.linksWorking.items():
+        for url, taskId in list(self.linksWorking.items()):
             # Calling get_task_result with block=False will return None if the
             # task is not done yet.  This provides a simple way of polling.
             result = self.tc.get_task_result(taskId, block=False)
@@ -83,7 +83,7 @@ class DistributedSpider(object):
                 self.onVisitDone(result, url)
 
 def main():
-    distributedSpider = DistributedSpider(raw_input('Enter site to crawl: '))
+    distributedSpider = DistributedSpider(input('Enter site to crawl: '))
     distributedSpider.run()
 
 if __name__ == '__main__':

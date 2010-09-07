@@ -30,7 +30,7 @@ def magic_rehash(self, parameter_s = ''):
     # typical Linux box involves several thousand entries, so efficiency
     # here is a top concern.
 
-    path = filter(os.path.isdir,os.environ.get('PATH','').split(os.pathsep))
+    path = list(filter(os.path.isdir,os.environ.get('PATH','').split(os.pathsep)))
     alias_table = self.shell.alias_table
     for pdir in path:
         for ff in os.listdir(pdir):
@@ -57,6 +57,6 @@ ip.define_magic("Quit", magic_Quit)
 # make it autocallable fn if you really need it
 def magic_p(self, parameter_s=''):
     """Just a short alias for Python's 'print'."""
-    exec 'print ' + parameter_s in self.shell.user_ns
+    exec('print ' + parameter_s, self.shell.user_ns)
 
 ip.define_magic("p", magic_p)

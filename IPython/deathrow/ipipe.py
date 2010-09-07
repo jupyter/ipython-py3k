@@ -86,7 +86,7 @@ three extensions points (all of them optional):
 skip_doctest = True  # ignore top-level docstring as a doctest.
 
 import sys, os, os.path, stat, glob, new, csv, datetime, types
-import itertools, mimetypes, StringIO
+import itertools, mimetypes, io
 
 try: # Python 2.3 compatibility
     import collections
@@ -190,7 +190,7 @@ except TypeError:
         Python 2.3's eval.
         """
 
-        if isinstance(codestring, basestring):
+        if isinstance(codestring, str):
             code = compile(codestring, "_eval", "eval")
         else:
             code = codestring
@@ -623,7 +623,7 @@ class Pipe(Table):
     def __ror__(self, input):
         # autoinstantiate left hand side
         if isinstance(input, type) and issubclass(input, Table):
-            input = input()
+            input = eval(input())
         self.input = input
         return self
 
@@ -708,14 +708,14 @@ def xrepr_unicode(self, mode="default"):
         yield (astyle.style_default, repr(self.expandtabs(tab))[2:-1])
     else:
         yield (astyle.style_default, repr(self))
-xrepr.when_type(unicode)(xrepr_unicode)
+xrepr.when_type(str)(xrepr_unicode)
 
 
 def xrepr_number(self, mode="default"):
     yield (1, True)
     yield (astyle.style_type_number, repr(self))
 xrepr.when_type(int)(xrepr_number)
-xrepr.when_type(long)(xrepr_number)
+xrepr.when_type(int)(xrepr_number)
 xrepr.when_type(float)(xrepr_number)
 
 
@@ -829,7 +829,7 @@ def xrepr_dict(self, mode="default"):
         else:
             yield (astyle.style_default, "dictproxy((")
             end = "})"
-        for (i, (key, value)) in enumerate(self.iteritems()):
+        for (i, (key, value)) in enumerate(iter(self.items())):
             if i:
                 yield (astyle.style_default, ", ")
             for part in xrepr(key, "default"):
@@ -859,7 +859,7 @@ def upgradexattr(attr):
         return selfdescriptor
     elif isinstance(attr, Descriptor):
         return attr
-    elif isinstance(attr, basestring):
+    elif isinstance(attr, str):
         if attr.endswith("()"):
             if attr.startswith("-"):
                 return IterMethodDescriptor(attr[1:-2])
@@ -870,9 +870,9 @@ def upgradexattr(attr):
                 return IterAttributeDescriptor(attr[1:])
             else:
                 return AttributeDescriptor(attr)
-    elif isinstance(attr, (int, long)):
+    elif isinstance(attr, int):
         return IndexDescriptor(attr)
-    elif callable(attr):
+    elif isinstance(attr, collections.Callable):
         return FunctionDescriptor(attr)
     else:
         raise TypeError("can't handle descriptor %r" % attr)
@@ -933,7 +933,7 @@ def _isdict(item):
 
 
 def _isstr(item):
-    if not isinstance(item, basestring):
+    if not isinstance(item, str):
         return False
     try:
         itermeth = item.__class__.__iter__
@@ -953,7 +953,7 @@ def xiter(item):
         if _isdict(item):
             def items(item):
                 fields = ("key", "value")
-                for (key, value) in item.iteritems():
+                for (key, value) in item.items():
                     yield Fields(fields, key=key, value=value)
             return items(item)
         elif isinstance(item, new.module):
@@ -1335,14 +1335,14 @@ class ipwdentry(object):
 
     def _getentry(self):
         if self._entry is None:
-            if isinstance(self._id, basestring):
+            if isinstance(self._id, str):
                 self._entry = pwd.getpwnam(self._id)
             else:
                 self._entry = pwd.getpwuid(self._id)
         return self._entry
 
     def getname(self):
-        if isinstance(self._id, basestring):
+        if isinstance(self._id, str):
             return self._id
         else:
             return self._getentry().pw_name
@@ -1353,7 +1353,7 @@ class ipwdentry(object):
     passwd = property(getpasswd, None, None, "Password")
 
     def getuid(self):
-        if isinstance(self._id, basestring):
+        if isinstance(self._id, str):
             return self._getentry().pw_uid
         else:
             return self._id
@@ -1424,14 +1424,14 @@ class igrpentry(object):
 
     def _getentry(self):
         if self._entry is None:
-            if isinstance(self._id, basestring):
+            if isinstance(self._id, str):
                 self._entry = grp.getgrnam(self._id)
             else:
                 self._entry = grp.getgrgid(self._id)
         return self._entry
 
     def getname(self):
-        if isinstance(self._id, basestring):
+        if isinstance(self._id, str):
             return self._id
         else:
             return self._getentry().gr_name
@@ -1442,7 +1442,7 @@ class igrpentry(object):
     passwd = property(getpasswd, None, None, "Password")
 
     def getgid(self):
-        if isinstance(self._id, basestring):
+        if isinstance(self._id, str):
             return self._getentry().gr_gid
         else:
             return self._id
@@ -1461,7 +1461,7 @@ class igrpentry(object):
             try:
                 yield (astyle.style_default, self.name)
             except KeyError:
-                if isinstance(self._id, basestring):
+                if isinstance(self._id, str):
                     yield (astyle.style_default, self.name_id)
                 else:
                     yield (astyle.style_type_number, str(self._id))
@@ -1495,7 +1495,7 @@ class igrp(Table):
 class Fields(object):
     def __init__(self, fieldnames, **fields):
         self.__fieldnames = [upgradexattr(fieldname) for fieldname in fieldnames]
-        for (key, value) in fields.iteritems():
+        for (key, value) in fields.items():
             setattr(self, key, value)
 
     def __xattrs__(self, mode="default"):
@@ -1556,7 +1556,7 @@ class FieldTable(Table, list):
 
 class List(list):
     def __xattrs__(self, mode="default"):
-        return xrange(len(self))
+        return range(len(self))
 
     def __xrepr__(self, mode="default"):
         yield (-1, False)
@@ -1585,7 +1585,7 @@ class ienv(Table):
 
     def __iter__(self):
         fields = ("key", "value")
-        for (key, value) in os.environ.iteritems():
+        for (key, value) in os.environ.items():
             yield Fields(fields, key=key, value=value)
 
     def __xrepr__(self, mode="default"):
@@ -1644,7 +1644,7 @@ class ialias(Table):
     def __iter__(self):
         api = ipapi.get()
 
-        for (name, (args, command)) in api.alias_manager.alias_table.iteritems():
+        for (name, (args, command)) in api.alias_manager.alias_table.items():
             yield Alias(name, args, command)
 
 
@@ -1677,7 +1677,7 @@ class icsv(Pipe):
                     yield part
                 yield (astyle.style_default, " | ")
             yield (astyle.style_default, "%s(" % self.__class__.__name__)
-            for (i, (name, value)) in enumerate(self.csvargs.iteritems()):
+            for (i, (name, value)) in enumerate(iter(self.csvargs.items())):
                 if i:
                     yield (astyle.style_default, ", ")
                 yield (astyle.style_default, name)
@@ -1689,7 +1689,7 @@ class icsv(Pipe):
             yield (astyle.style_default, repr(self))
 
     def __repr__(self):
-        args = ", ".join(["%s=%r" % item for item in self.csvargs.iteritems()])
+        args = ", ".join(["%s=%r" % item for item in self.csvargs.items()])
         return "<%s.%s %s at 0x%x>" % \
         (self.__class__.__module__, self.__class__.__name__, args, id(self))
 
@@ -1779,7 +1779,7 @@ class ifilter(Pipe):
         self.errors = errors
 
     def __iter__(self):
-        if callable(self.expr):
+        if isinstance(self.expr, collections.Callable):
             test = self.expr
         else:
             g = getglobals(self.globals)
@@ -1796,7 +1796,7 @@ class ifilter(Pipe):
                 ok += 1
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except Exception, exc:
+            except Exception as exc:
                 if self.errors == "drop":
                     pass # Ignore errors
                 elif self.errors == "keep":
@@ -1809,7 +1809,7 @@ class ifilter(Pipe):
                     if exc_info is None:
                         exc_info = sys.exc_info()
         if not ok and exc_info is not None:
-            raise exc_info[0], exc_info[1], exc_info[2]
+            raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
 
     def __xrepr__(self, mode="default"):
         if mode == "header" or mode == "footer":
@@ -1854,7 +1854,7 @@ class ieval(Pipe):
         self.errors = errors
 
     def __iter__(self):
-        if callable(self.expr):
+        if isinstance(self.expr, collections.Callable):
             do = self.expr
         else:
             g = getglobals(self.globals)
@@ -1869,7 +1869,7 @@ class ieval(Pipe):
                 yield do(item)
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except Exception, exc:
+            except Exception as exc:
                 if self.errors == "drop":
                     pass # Ignore errors
                 elif self.errors == "keep":
@@ -1882,7 +1882,7 @@ class ieval(Pipe):
                     if exc_info is None:
                         exc_info = sys.exc_info()
         if not ok and exc_info is not None:
-            raise exc_info[0], exc_info[1], exc_info[2]
+            raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
 
     def __xrepr__(self, mode="default"):
         if mode == "header" or mode == "footer":
@@ -1948,7 +1948,7 @@ class isort(Pipe):
     def __iter__(self):
         if self.key is None:
             items = sorted(xiter(self.input), reverse=self.reverse)
-        elif callable(self.key):
+        elif isinstance(self.key, collections.Callable):
             items = sorted(xiter(self.input), key=self.key, reverse=self.reverse)
         else:
             g = getglobals(self.globals)
@@ -1988,7 +1988,7 @@ tab = 3 # for expandtabs()
 def _format(field):
     if isinstance(field, str):
         text = repr(field.expandtabs(tab))[1:-1]
-    elif isinstance(field, unicode):
+    elif isinstance(field, str):
         text = repr(field.expandtabs(tab))[2:-1]
     elif isinstance(field, datetime.datetime):
         # Don't use strftime() here, as this requires year >= 1900
@@ -2040,8 +2040,8 @@ class iless(Display):
                     pager.write("\n")
             finally:
                 pager.close()
-        except Exception, exc:
-            print "%s: %s" % (exc.__class__.__name__, str(exc))
+        except Exception as exc:
+            print("%s: %s" % (exc.__class__.__name__, str(exc)))
 
 
 class _RedirectIO(object):
@@ -2049,7 +2049,7 @@ class _RedirectIO(object):
         """
         Map the system output streams to self.
         """
-        self.stream = StringIO.StringIO()
+        self.stream = io.StringIO()
         self.stdout = sys.stdout
         sys.stdout = self
         self.stderr = sys.stderr
@@ -2150,7 +2150,7 @@ def xformat(value, mode, maxlength):
 
 
 
-import astyle
+from . import astyle
 
 class idump(Display):
     # The approximate maximum length of a column entry
@@ -2187,7 +2187,7 @@ class idump(Display):
                     value = attr.value(item)
                 except (KeyboardInterrupt, SystemExit):
                     raise
-                except Exception, exc:
+                except Exception as exc:
                     value = exc
                 (align, width, text) = xformat(value, "cell", self.maxattrlength)
                 colwidths[attr] = max(colwidths[attr], width)
@@ -2281,11 +2281,11 @@ class AttributeDetail(Table):
 
 
 try:
-    from ibrowse import ibrowse
+    from .ibrowse import ibrowse
 except ImportError:
     # No curses (probably Windows) => try igrid
     try:
-        from igrid import igrid
+        from .igrid import igrid
     except ImportError:
         # no wx either => use ``idump`` as the default display.
         defaultdisplay = idump

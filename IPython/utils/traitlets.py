@@ -56,6 +56,7 @@ from types import (
     InstanceType, ClassType, FunctionType,
     ListType, TupleType
 )
+import collections
 
 def import_item(name):
     """Import and return bar given the string foo.bar."""
@@ -63,10 +64,10 @@ def import_item(name):
     obj = name.split('.')[-1]
     execString = 'from %s import %s' % (package, obj)
     try:
-        exec execString
+        exec(execString)
     except SyntaxError:
         raise ImportError("Invalid class specification: %s" % name)
-    exec 'temp = %s' % obj
+    exec('temp = %s' % obj)
     return temp
 
 
@@ -99,7 +100,7 @@ def class_of ( object ):
     correct indefinite article ('a' or 'an') preceding it (e.g., 'an Image',
     'a PlotValue').
     """
-    if isinstance( object, basestring ):
+    if isinstance( object, str ):
         return add_article( object )
 
     return add_article( object.__class__.__name__ )
@@ -347,7 +348,7 @@ class MetaHasTraits(type):
         # print "MetaHasTraitlets (mcls, name): ", mcls, name
         # print "MetaHasTraitlets (bases): ", bases
         # print "MetaHasTraitlets (classdict): ", classdict
-        for k,v in classdict.iteritems():
+        for k,v in classdict.items():
             if isinstance(v, TraitType):
                 v.name = k
             elif inspect.isclass(v):
@@ -363,14 +364,12 @@ class MetaHasTraits(type):
         This sets the :attr:`this_class` attribute of each TraitType in the
         class dict to the newly created class ``cls``.
         """
-        for k, v in classdict.iteritems():
+        for k, v in classdict.items():
             if isinstance(v, TraitType):
                 v.this_class = cls
         super(MetaHasTraits, cls).__init__(name, bases, classdict)
 
-class HasTraits(object):
-
-    __metaclass__ = MetaHasTraits
+class HasTraits(object, metaclass=MetaHasTraits):
 
     def __new__(cls, **kw):
         # This is needed because in Python 2.6 object.__new__ only accepts
@@ -402,7 +401,7 @@ class HasTraits(object):
         # Allow trait values to be set using keyword arguments.
         # We need to use setattr for this to trigger validation and
         # notifications.
-        for key, value in kw.iteritems():
+        for key, value in list(kw.items()):
             setattr(self, key, value)
 
     def _notify_trait(self, name, old_value, new_value):
@@ -423,7 +422,7 @@ class HasTraits(object):
         # Call them all now
         for c in callables:
             # Traits catches and logs errors here.  I allow them to raise
-            if callable(c):
+            if isinstance(c, collections.Callable):
                 argspec = inspect.getargspec(c)
                 nargs = len(argspec[0])
                 # Bound methods have an additional 'self' argument
@@ -450,7 +449,7 @@ class HasTraits(object):
                 
 
     def _add_notifiers(self, handler, name):
-        if not self._trait_notifiers.has_key(name):
+        if name not in self._trait_notifiers:
             nlist = []
             self._trait_notifiers[name] = nlist
         else:
@@ -459,7 +458,7 @@ class HasTraits(object):
             nlist.append(handler)
 
     def _remove_notifiers(self, handler, name):
-        if self._trait_notifiers.has_key(name):
+        if name in self._trait_notifiers:
             nlist = self._trait_notifiers[name]
             try:
                 index = nlist.index(handler)
@@ -504,7 +503,7 @@ class HasTraits(object):
 
     def trait_names(self, **metadata):
         """Get a list of all the names of this classes traits."""
-        return self.traits(**metadata).keys()
+        return list(list(self.traits(**metadata).keys()))
 
     def traits(self, **metadata):
         """Get a list of all the traits of this class.
@@ -523,13 +522,13 @@ class HasTraits(object):
         if len(metadata) == 0:
             return traits
 
-        for meta_name, meta_eval in metadata.items():
+        for meta_name, meta_eval in list(list(metadata.items())):
             if type(meta_eval) is not FunctionType:
                 metadata[meta_name] = _SimpleTest(meta_eval)
 
         result = {}
-        for name, trait in traits.items():
-            for meta_name, meta_eval in metadata.items():
+        for name, trait in list(list(traits.items())):
+            for meta_name, meta_eval in list(list(metadata.items())):
                 if not meta_eval(trait.get_metadata(meta_name)):
                     break
             else:
@@ -603,7 +602,7 @@ class Type(ClassBasedTraitType):
         elif klass is None:
             klass = default_value
 
-        if not (inspect.isclass(klass) or isinstance(klass, basestring)):
+        if not (inspect.isclass(klass) or isinstance(klass, str)):
             raise TraitError("A Type trait must specify a class.")
 
         self.klass       = klass
@@ -624,7 +623,7 @@ class Type(ClassBasedTraitType):
 
     def info(self):
         """ Returns a description of the trait."""
-        if isinstance(self.klass, basestring):
+        if isinstance(self.klass, str):
             klass = self.klass
         else:
             klass = self.klass.__name__
@@ -638,9 +637,9 @@ class Type(ClassBasedTraitType):
         super(Type, self).instance_init(obj)
 
     def _resolve_classes(self):
-        if isinstance(self.klass, basestring):
+        if isinstance(self.klass, str):
             self.klass = import_item(self.klass)
-        if isinstance(self.default_value, basestring):
+        if isinstance(self.default_value, str):
             self.default_value = import_item(self.default_value)
 
     def get_default_value(self):
@@ -695,7 +694,7 @@ class Instance(ClassBasedTraitType):
 
         self._allow_none = allow_none
 
-        if (klass is None) or (not (inspect.isclass(klass) or isinstance(klass, basestring))):
+        if (klass is None) or (not (inspect.isclass(klass) or isinstance(klass, str))):
             raise TraitError('The klass argument must be a class'
                                 ' you gave: %r' % klass)
         self.klass = klass
@@ -732,7 +731,7 @@ class Instance(ClassBasedTraitType):
             self.error(obj, value)
 
     def info(self):
-        if isinstance(self.klass, basestring):
+        if isinstance(self.klass, str):
             klass = self.klass
         else:
             klass = self.klass.__name__
@@ -747,7 +746,7 @@ class Instance(ClassBasedTraitType):
         super(Instance, self).instance_init(obj)
 
     def _resolve_classes(self):
-        if isinstance(self.klass, basestring):
+        if isinstance(self.klass, str):
             self.klass = import_item(self.klass)
 
     def get_default_value(self):
@@ -821,14 +820,14 @@ class CInt(Int):
 class Long(TraitType):
     """A long integer trait."""
 
-    default_value = 0L
+    default_value = 0
     info_text = 'a long'
 
     def validate(self, obj, value):
-        if isinstance(value, long):
+        if isinstance(value, int):
             return value
         if isinstance(value, int):
-            return long(value)
+            return int(value)
         self.error(obj, value)
 
 
@@ -837,7 +836,7 @@ class CLong(Long):
 
     def validate(self, obj, value):
         try:
-            return long(value)
+            return int(value)
         except:
             self.error(obj, value)
 
@@ -909,7 +908,7 @@ class CStr(Str):
             return str(value)
         except:
             try:
-                return unicode(value)
+                return str(value)
             except:
                 self.error(obj, value)
 
@@ -917,14 +916,14 @@ class CStr(Str):
 class Unicode(TraitType):
     """A trait for unicode strings."""
 
-    default_value = u''
+    default_value = ''
     info_text = 'a unicode string'
 
     def validate(self, obj, value):
-        if isinstance(value, unicode):
+        if isinstance(value, str):
             return value
         if isinstance(value, str):
-            return unicode(value)
+            return str(value)
         self.error(obj, value)
 
 
@@ -933,7 +932,7 @@ class CUnicode(Unicode):
 
     def validate(self, obj, value):
         try:
-            return unicode(value)
+            return str(value)
         except:
             self.error(obj, value)
 
@@ -1055,7 +1054,7 @@ class TCPAddress(TraitType):
     def validate(self, obj, value):
         if isinstance(value, tuple):
             if len(value) == 2:
-                if isinstance(value[0], basestring) and isinstance(value[1], int):
+                if isinstance(value[0], str) and isinstance(value[1], int):
                     port = value[1]
                     if port >= 0 and port <= 65535:
                         return value

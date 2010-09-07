@@ -25,7 +25,7 @@ __docformat__ = "restructuredtext en"
 from copy import copy
 
 # Local imports.
-from util import InputList
+from .util import InputList
 
 
 ##############################################################################

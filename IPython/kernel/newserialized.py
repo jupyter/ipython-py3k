@@ -19,7 +19,7 @@ __test__ = {}
 # Imports
 #-------------------------------------------------------------------------------
 
-import cPickle as pickle
+import pickle as pickle
 
 from twisted.python import components
 from zope.interface import Interface, implements
@@ -95,7 +95,7 @@ class SerializeIt(object):
     def __init__(self, unSerialized):
         self.data = None
         self.obj = unSerialized.getObject()
-        if globals().has_key('numpy'):
+        if 'numpy' in globals():
             if isinstance(self.obj, numpy.ndarray):
                 if len(self.obj) == 0:         # length 0 arrays can't be reconstructed
                     raise SerializationError("You cannot send a length 0 array")
@@ -142,7 +142,7 @@ class UnSerializeIt(UnSerialized):
         
     def getObject(self):
         typeDescriptor = self.serialized.getTypeDescriptor()
-        if globals().has_key('numpy'):
+        if 'numpy' in globals():
             if typeDescriptor == 'ndarray':
                 result = numpy.frombuffer(self.serialized.getData(), dtype = self.serialized.metadata['dtype'])
                 result.shape = self.serialized.metadata['shape']

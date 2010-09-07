@@ -63,8 +63,8 @@ class CompletionContext(object):
     def get_completions(self):
         try:
             return self.get_completions_or_raise()
-        except Exception, e:
-            print e, type(e)
+        except Exception as e:
+            print(e, type(e))
             return []
 
     def get_option_completions(self):
@@ -125,7 +125,7 @@ class PromptCmd(cmd.Cmd):
         self.do_quit(args)
 
     def do_EOF(self, args):
-        print
+        print()
         self.do_quit(args)
 
     def postcmd(self, line, bar):
@@ -166,8 +166,8 @@ class PromptCmd(cmd.Cmd):
         try:
             os.chdir(newcwd)
             self.cwd = newcwd
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
         try:
             self.tree = WorkingTree.open_containing(".")[0]
         except:
@@ -199,13 +199,13 @@ class PromptCmd(cmd.Cmd):
                 return os.system("bzr "+line)
             else:
                 return (cmd_obj.run_argv_aliases(args, alias_args) or 0)
-        except BzrError, e:
-            print e
-        except KeyboardInterrupt, e:
-            print "Interrupted"
-        except Exception, e:
+        except BzrError as e:
+            print(e)
+        except KeyboardInterrupt as e:
+            print("Interrupted")
+        except Exception as e:
 #            print "Unhandled error:\n%s" % errors.exception_str(e)
-            print "Unhandled error:\n%s" % (e)
+            print("Unhandled error:\n%s" % (e))
 
 
     def completenames(self, text, line, begidx, endidx):
@@ -241,7 +241,7 @@ def run_shell():
 
 
 def iter_opt_completions(command_obj):
-    for option_name, option in command_obj.options().items():
+    for option_name, option in list(command_obj.options().items()):
         yield "--" + option_name
         short_name = option.short_name()
         if short_name:
@@ -305,7 +305,7 @@ def iter_executables(path):
             continue
         fullpath = os.path.join(dirname, filename)
         mode=os.lstat(fullpath)[stat.ST_MODE]
-        if stat.S_ISREG(mode) and 0111 & mode:
+        if stat.S_ISREG(mode) and 0o111 & mode:
             yield fullpath + ' '
 
 

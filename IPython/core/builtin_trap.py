@@ -18,7 +18,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 
 from IPython.config.configurable import Configurable
 from IPython.core.quitter import Quitter
@@ -75,7 +75,7 @@ class BuiltinTrap(Configurable):
 
     def add_builtin(self, key, value):
         """Add a builtin and save the original."""
-        bdict = __builtin__.__dict__
+        bdict = builtins.__dict__
         orig = bdict.get(key, BuiltinUndefined)
         self._orig_builtins[key] = orig
         bdict[key] = value
@@ -88,21 +88,21 @@ class BuiltinTrap(Configurable):
             pass
         else:
             if orig is BuiltinUndefined:
-                del __builtin__.__dict__[key]
+                del builtins.__dict__[key]
             else:
-                __builtin__.__dict__[key] = orig
+                builtins.__dict__[key] = orig
 
     def activate(self):
         """Store ipython references in the __builtin__ namespace."""
 
         add_builtin = self.add_builtin
-        for name, func in self.auto_builtins.iteritems():
+        for name, func in self.auto_builtins.items():
             add_builtin(name, func)
 
         # Keep in the builtins a flag for when IPython is active.  We set it
         # with setdefault so that multiple nested IPythons don't clobber one
         # another.
-        __builtin__.__dict__.setdefault('__IPYTHON__active', 0)
+        builtins.__dict__.setdefault('__IPYTHON__active', 0)
 
     def deactivate(self):
         """Remove any builtins which might have been added by add_builtins, or
@@ -110,11 +110,11 @@ class BuiltinTrap(Configurable):
         # Note: must iterate over a static keys() list because we'll be
         # mutating the dict itself
         remove_builtin = self.remove_builtin
-        for key in self._orig_builtins.keys():
+        for key in list(self._orig_builtins.keys()):
             remove_builtin(key)
         self._orig_builtins.clear()
         self._builtins_added = False
         try:
-            del __builtin__.__dict__['__IPYTHON__active']
+            del builtins.__dict__['__IPYTHON__active']
         except KeyError:
             pass

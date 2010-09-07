@@ -49,9 +49,9 @@ class ModuleReloader(object):
         """Check whether some modules need to be reloaded."""
 
         if check_all or self.check_all:
-            modules = sys.modules.keys()
+            modules = list(sys.modules.keys())
         else:
-            modules = self.modules.keys()
+            modules = list(self.modules.keys())
 
         for modname in modules:
             m = sys.modules.get(modname, None)
@@ -91,8 +91,8 @@ class ModuleReloader(object):
                 if filename[:-1] in self.failed:
                     del self.failed[filename[:-1]]
             except:
-                print >> sys.stderr, "[autoreload of %s failed: %s]" % (
-                        modname, traceback.format_exc(1))
+                print("[autoreload of %s failed: %s]" % (
+                        modname, traceback.format_exc(1)), file=sys.stderr)
                 self.failed[filename[:-1]] = pymtime
 
 #------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ def update_function(old, new):
 def update_class(old, new):
     """Replace stuff in the __dict__ of a class, and upgrade
     method code objects"""
-    for key in old.__dict__.keys():
+    for key in list(old.__dict__.keys()):
         old_obj = getattr(old, key)
 
         try:
@@ -141,16 +141,16 @@ def isinstance2(a, b, typ):
     return isinstance(a, typ) and isinstance(b, typ)
 
 UPDATE_RULES = [
-    (lambda a, b: isinstance2(a, b, types.ClassType),
+    (lambda a, b: isinstance2(a, b, type),
      update_class),
-    (lambda a, b: isinstance2(a, b, types.TypeType),
+    (lambda a, b: isinstance2(a, b, type),
      update_class),
     (lambda a, b: isinstance2(a, b, types.FunctionType),
      update_function),
     (lambda a, b: isinstance2(a, b, property),
      update_property),
     (lambda a, b: isinstance2(a, b, types.MethodType),
-     lambda a, b: update_function(a.im_func, b.im_func)),
+     lambda a, b: update_function(a.__func__, b.__func__)),
 ]
 
 def update_generic(a, b):
@@ -178,7 +178,7 @@ def superreload(module, reload=reload, old_objects={}):
     """
 
     # collect old objects in the module
-    for name, obj in module.__dict__.items():
+    for name, obj in list(module.__dict__.items()):
         if not hasattr(obj, '__module__') or obj.__module__ != module.__name__:
             continue
         key = (module.__name__, name)
@@ -187,7 +187,7 @@ def superreload(module, reload=reload, old_objects={}):
         except TypeError:
             # weakref doesn't work for all types;
             # create strong references for 'important' cases
-            if isinstance(obj, types.ClassType):
+            if isinstance(obj, type):
                 old_objects.setdefault(key, []).append(StrongRef(obj))
 
     # reload module
@@ -201,7 +201,7 @@ def superreload(module, reload=reload, old_objects={}):
     module = reload(module)
 
     # iterate over all objects and update functions & classes
-    for name, new_obj in module.__dict__.items():
+    for name, new_obj in list(module.__dict__.items()):
         key = (module.__name__, name)
         if key not in old_objects: continue
 
@@ -317,15 +317,15 @@ def aimport_f(self, parameter_s=''):
 
     modname = parameter_s
     if not modname:
-        to_reload = reloader.modules.keys()
+        to_reload = list(reloader.modules.keys())
         to_reload.sort()
-        to_skip = reloader.skip_modules.keys()
+        to_skip = list(reloader.skip_modules.keys())
         to_skip.sort()
         if reloader.check_all:
-            print "Modules to reload:\nall-expect-skipped"
+            print("Modules to reload:\nall-expect-skipped")
         else:
-            print "Modules to reload:\n%s" % ' '.join(to_reload)
-        print "\nModules to skip:\n%s" % ' '.join(to_skip)
+            print("Modules to reload:\n%s" % ' '.join(to_reload))
+        print("\nModules to skip:\n%s" % ' '.join(to_skip))
     elif modname.startswith('-'):
         modname = modname[1:]
         try: del reloader.modules[modname]

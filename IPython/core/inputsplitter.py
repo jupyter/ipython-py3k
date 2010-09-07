@@ -197,7 +197,7 @@ def split_blocks(python):
 
     # The compiler module does not like unicode. We need to convert
     # it encode it:
-    if isinstance(python, unicode):
+    if isinstance(python, str):
         # Use the utf-8-sig BOM so the compiler detects this a UTF-8
         # encode string.
         python = '\xef\xbb\xbf' + python.encode('utf-8')
@@ -668,9 +668,9 @@ def split_user_input(line):
     try:
         fpart = fpart.encode('ascii')
     except UnicodeEncodeError:
-        lspace = unicode(lspace)
-        rest = fpart + u' ' + rest
-        fpart = u''
+        lspace = str(lspace)
+        rest = fpart + ' ' + rest
+        fpart = ''
 
     #print 'line:<%s>' % line # dbg
     #print 'esc <%s> fpart <%s> rest <%s>' % (esc,fpart.strip(),rest) # dbg

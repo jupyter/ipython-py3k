@@ -138,23 +138,23 @@ class CrashHandler(object):
 
         # print traceback to screen
         if self.show_crash_traceback:
-            print >> sys.stderr, traceback
+            print(traceback, file=sys.stderr)
 
         # and generate a complete report on disk
         try:
             report = open(report_name,'w')
         except:
-            print >> sys.stderr, 'Could not create crash report on disk.'
+            print('Could not create crash report on disk.', file=sys.stderr)
             return
 
         # Inform user on stderr of what happened
         msg = itpl('\n'+'*'*70+'\n'+self.message_template)
-        print >> sys.stderr, msg
+        print(msg, file=sys.stderr)
 
         # Construct report on disk
         report.write(self.make_report(traceback))
         report.close()
-        raw_input("Hit <Enter> to quit this message (your terminal may close):")
+        input("Hit <Enter> to quit this message (your terminal may close):")
 
     def make_report(self,traceback):
         """Return a string containing a crash report."""

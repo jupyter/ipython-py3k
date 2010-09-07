@@ -79,7 +79,7 @@ def get_py_filename(name):
     if os.path.isfile(name):
         return name
     else:
-        raise IOError,'File `%s` not found.' % name
+        raise IOError('File `%s` not found.' % name)
 
 
 def filefind(filename, path_dirs=None):
@@ -123,7 +123,7 @@ def filefind(filename, path_dirs=None):
         
     if path_dirs is None:
         path_dirs = ("",)
-    elif isinstance(path_dirs, basestring):
+    elif isinstance(path_dirs, str):
         path_dirs = (path_dirs,)
         
     for path in path_dirs:
@@ -215,7 +215,7 @@ def get_home_dir():
 
         # Use the registry to get the 'My Documents' folder.
         try:
-            import _winreg as wreg
+            import winreg as wreg
             key = wreg.OpenKey(
                 wreg.HKEY_CURRENT_USER,
                 "Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"

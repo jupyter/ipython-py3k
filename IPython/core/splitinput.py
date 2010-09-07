@@ -75,8 +75,8 @@ def split_user_input(line, pattern=None):
     try:
         ifun = ifun.encode('ascii')
     except UnicodeEncodeError:
-        the_rest = ifun + u' ' + the_rest
-        ifun = u''
+        the_rest = ifun + ' ' + the_rest
+        ifun = ''
 
     #print 'line:<%s>' % line # dbg
     #print 'pre <%s> ifun <%s> rest <%s>' % (pre,ifun.strip(),the_rest) # dbg

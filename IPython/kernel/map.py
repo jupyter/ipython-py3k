@@ -56,7 +56,7 @@ class Map:
         
         # Test for error conditions here
         if p<0 or p>=q:
-          print "No partition exists."
+          print("No partition exists.")
           return
           
         remainder = len(seq)%q
@@ -86,7 +86,7 @@ class Map:
             if isinstance(testObject, m['type']):
                 return m['module'].concatenate(listOfPartitions)
         # Next try for Python sequence types
-        if isinstance(testObject, (types.ListType, types.TupleType)):
+        if isinstance(testObject, (list, tuple)):
             return utils_flatten(listOfPartitions)
         # If we have scalars, just return listOfPartitions
         return listOfPartitions

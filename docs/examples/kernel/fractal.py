@@ -51,7 +51,7 @@ def mandel(n, m, itermax, xmin, xmax, ymin, ymax):
     # We need to copy c because otherwise the operation
     # z->z^2 will send c->c^2.
     z = copy(c)
-    for i in xrange(itermax):
+    for i in range(itermax):
         if not len(z): break # all points have escaped
         # equivalent to z = z*z+c but quicker and uses
         # less memory
@@ -83,7 +83,7 @@ if __name__=='__main__':
     import time
     start = time.time()
     I = mandel(400, 400, 100, -2, .5, -1.25, 1.25)
-    print 'Time taken:', time.time()-start
+    print('Time taken:', time.time()-start)
     I[I==0] = 101
     img = imshow(I.T, origin='lower left')
     img.write_png('mandel.png', noscale=True)

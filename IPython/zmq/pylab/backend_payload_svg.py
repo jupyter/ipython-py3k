@@ -5,14 +5,14 @@
 #-----------------------------------------------------------------------------
 
 # Standard library imports
-from cStringIO import StringIO
+from io import StringIO
 
 # System library imports.
 from matplotlib.backends.backend_svg import new_figure_manager
 from matplotlib._pylab_helpers import Gcf
 
 # Local imports.
-from backend_payload import add_plot_payload
+from .backend_payload import add_plot_payload
 
 #-----------------------------------------------------------------------------
 # Functions

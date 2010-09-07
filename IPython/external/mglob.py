@@ -84,7 +84,7 @@ def expand(flist,exp_dirs = False):
     contained in them - otherwise, directory names are returned as is.
     
     """
-    if isinstance(flist, basestring):
+    if isinstance(flist, str):
         import shlex
         flist = shlex.split(flist)
     done_set = set()
@@ -182,17 +182,17 @@ def expand(flist,exp_dirs = False):
             denied_set.add(ent[1:])
         # glob only dirs
         elif ent.lower().startswith('dir:'):
-            res.extend(once_filter(filter(os.path.isdir,glob.glob(ent[4:]))))
+            res.extend(once_filter(list(filter(os.path.isdir,glob.glob(ent[4:])))))
         elif ent.lower().startswith('cont:'):
             cont_set.add(ent[5:])
         # get all files in the specified dir
         elif os.path.isdir(ent) and exp_dirs:
-            res.extend(once_filter(filter(os.path.isfile,glob.glob(ent + os.sep+"*"))))
+            res.extend(once_filter(list(filter(os.path.isfile,glob.glob(ent + os.sep+"*")))))
             
         # glob only files
 
         elif '*' in ent or '?' in ent:
-            res.extend(once_filter(filter(os.path.isfile,glob.glob(ent))))
+            res.extend(once_filter(list(filter(os.path.isfile,glob.glob(ent)))))
 
         else:
             res.extend(once_filter([ent]))
@@ -207,17 +207,17 @@ def test():
     
 def main():
     if len(sys.argv) < 2:
-        print globsyntax
+        print(globsyntax)
         return
     
-    print "\n".join(expand(sys.argv[1:])),
+    print("\n".join(expand(sys.argv[1:])), end=' ')
 
 def mglob_f(self, arg):
     from IPython.utils.text import SList
     if arg.strip():
         return SList(expand(arg))
-    print "Please specify pattern!"
-    print globsyntax
+    print("Please specify pattern!")
+    print(globsyntax)
 
 def init_ipython(ip):
     """ register %mglob for IPython """

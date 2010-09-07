@@ -176,7 +176,7 @@ class CallTipWidget(QtGui.QLabel):
         qchar = document.characterAt(position)
         while (position > 0 and qchar.isPrint() and 
                # Need to check explicitly for line/paragraph separators:
-               qchar.unicode() not in (0x2028, 0x2029)):
+               qchar.str() not in (0x2028, 0x2029)):
             char = qchar.toAscii()
             if char == ',' and depth == 0:
                 commas += 1

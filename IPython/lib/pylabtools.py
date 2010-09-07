@@ -59,7 +59,7 @@ def find_gui_and_backend(gui=None):
         backend = matplotlib.rcParams['backend']
         # In this case, we need to find what the appropriate gui selection call
         # should be for IPython, so we can activate inputhook accordingly
-        b2g = dict(zip(g2b.values(),g2b.keys()))
+        b2g = dict(list(zip(list(g2b.values()),list(g2b.keys()))))
         gui = b2g.get(backend, None)
     return gui, backend
 
@@ -96,16 +96,16 @@ def import_pylab(user_ns, import_all=True):
     # Import numpy as np/pyplot as plt are conventions we're trying to
     # somewhat standardize on.  Making them available to users by default
     # will greatly help this. 
-    exec ("import numpy\n"
+    exec(("import numpy\n"
           "import matplotlib\n"
           "from matplotlib import pylab, mlab, pyplot\n"
           "np = numpy\n"
           "plt = pyplot\n"
-          ) in user_ns
+          ), user_ns)
 
     if import_all:
-        exec("from matplotlib.pylab import *\n"
-             "from numpy import *\n") in user_ns
+        exec(("from matplotlib.pylab import *\n"
+             "from numpy import *\n"), user_ns)
 
 
 def pylab_activate(user_ns, gui=None, import_all=True):
@@ -133,9 +133,9 @@ def pylab_activate(user_ns, gui=None, import_all=True):
     activate_matplotlib(backend)
     import_pylab(user_ns)
 
-    print """
+    print("""
 Welcome to pylab, a matplotlib-based Python environment [backend: %s].
-For more information, type 'help(pylab)'.""" % backend
+For more information, type 'help(pylab)'.""" % backend)
     
     return gui
 

@@ -16,10 +16,10 @@ def pwordfreq(rc, text):
     freqs_list = rc.pull('freqs')
     word_set = set()
     for f in freqs_list:
-        word_set.update(f.keys())
-    freqs = dict(zip(word_set, repeat(0)))
+        word_set.update(list(f.keys()))
+    freqs = dict(list(zip(word_set, repeat(0))))
     for f in freqs_list:
-        for word, count in f.iteritems():
+        for word, count in f.items():
             freqs[word] += count
     return freqs
 
@@ -32,13 +32,13 @@ if __name__ == '__main__':
     ipc.run('wordfreq.py')
 
     # Run the serial version
-    print "Serial word frequency count:"
+    print("Serial word frequency count:")
     text = open('davinci.txt').read()
     freqs = wordfreq(text)
     print_wordfreq(freqs, 10)
     
     # The parallel version
-    print "\nParallel word frequency count:"
+    print("\nParallel word frequency count:")
     files = ['davinci%i.txt' % i for i in range(4)]
     ipc.scatter('textfile', files)
     ipc.execute('text = open(textfile[0]).read()')

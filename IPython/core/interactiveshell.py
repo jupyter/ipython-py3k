@@ -14,10 +14,10 @@
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
-from __future__ import absolute_import
 
-import __builtin__
+
+
+import builtins
 import __future__
 import abc
 import atexit
@@ -318,7 +318,7 @@ class InteractiveShell(Configurable, Magic):
 
     def _ipython_dir_changed(self, name, new):
         if not os.path.isdir(new):
-            os.makedirs(new, mode = 0777)
+            os.makedirs(new, mode = 0o777)
 
     def set_autoindent(self,value=None):
         """Set the autoindent flag, checking for readline support.
@@ -410,7 +410,7 @@ class InteractiveShell(Configurable, Magic):
         # for pushd/popd management
         try:
             self.home_dir = get_home_dir()
-        except HomeDirError, msg:
+        except HomeDirError as msg:
             fatal(msg)
 
         self.dir_stack = []
@@ -503,7 +503,7 @@ class InteractiveShell(Configurable, Magic):
     def restore_sys_module_state(self):
         """Restore the state of the sys module."""
         try:
-            for k, v in self._orig_sys_module_state.items():
+            for k, v in list(self._orig_sys_module_state.items()):
                 setattr(sys, k, v)
         except AttributeError:
             pass
@@ -557,8 +557,8 @@ class InteractiveShell(Configurable, Magic):
             
         dp = getattr(self.hooks, name, None)
         if name not in IPython.core.hooks.__all__:
-            print "Warning! Hook '%s' is not one of %s" % \
-                  (name, IPython.core.hooks.__all__ )
+            print("Warning! Hook '%s' is not one of %s" % \
+                  (name, IPython.core.hooks.__all__ ))
         if not dp:
             dp = IPython.core.hooks.CommandChainDispatcher()
         
@@ -659,7 +659,7 @@ class InteractiveShell(Configurable, Magic):
     def _set_call_pdb(self,val):
 
         if val not in (0,1,False,True):
-            raise ValueError,'new call_pdb value must be boolean'
+            raise ValueError('new call_pdb value must be boolean')
 
         # store value in instance
         self._call_pdb = val
@@ -789,7 +789,7 @@ class InteractiveShell(Configurable, Magic):
         self.ns_table = {'user':user_ns,
                          'user_global':user_global_ns,
                          'internal':self.internal_ns,
-                         'builtin':__builtin__.__dict__
+                         'builtin':builtins.__dict__
                          }
 
         # Similarly, track all namespaces where references can be held and that
@@ -1011,8 +1011,8 @@ class InteractiveShell(Configurable, Magic):
         # We need a dict of name/value pairs to do namespace updates.
         if isinstance(variables, dict):
             vdict = variables
-        elif isinstance(variables, (basestring, list, tuple)):
-            if isinstance(variables, basestring):
+        elif isinstance(variables, (str, list, tuple)):
+            if isinstance(variables, str):
                 vlist = variables.split()
             else:
                 vlist = variables
@@ -1022,8 +1022,8 @@ class InteractiveShell(Configurable, Magic):
                 try:
                     vdict[name] = eval(name, cf.f_globals, cf.f_locals)
                 except:
-                    print ('Could not get variable %s from %s' %
-                           (name,cf.f_code.co_name))
+                    print(('Could not get variable %s from %s' %
+                           (name,cf.f_code.co_name)))
         else:
             raise ValueError('variables must be a dict/str/list/tuple')
             
@@ -1033,10 +1033,10 @@ class InteractiveShell(Configurable, Magic):
         # And configure interactive visibility
         config_ns = self.user_ns_hidden
         if interactive:
-            for name, val in vdict.iteritems():
+            for name, val in vdict.items():
                 config_ns.pop(name, None)
         else:
-            for name,val in vdict.iteritems():
+            for name,val in vdict.items():
                 config_ns[name] = val
 
     #-------------------------------------------------------------------------
@@ -1055,7 +1055,7 @@ class InteractiveShell(Configurable, Magic):
             oname = oname.strip().encode('ascii')
             #print '2- oname: <%r>' % oname  # dbg
         except UnicodeEncodeError:
-            print 'Python identifiers can only contain ascii characters.'
+            print('Python identifiers can only contain ascii characters.')
             return dict(found=False)
 
         alias_ns = None
@@ -1065,7 +1065,7 @@ class InteractiveShell(Configurable, Magic):
             # find things in the same order that Python finds them.
             namespaces = [ ('Interactive', self.user_ns),
                            ('IPython internal', self.internal_ns),
-                           ('Python builtin', __builtin__.__dict__),
+                           ('Python builtin', builtins.__dict__),
                            ('Alias', self.alias_manager.alias_table),
                            ]
             alias_ns = self.alias_manager.alias_table
@@ -1173,7 +1173,7 @@ class InteractiveShell(Configurable, Magic):
             else:
                 pmethod(info.obj, oname)
         else:
-            print 'Object `%s` not found.' % oname
+            print('Object `%s` not found.' % oname)
             return 'not found'  # so callers can take other action
 
     def object_inspect(self, oname):
@@ -1219,10 +1219,10 @@ class InteractiveShell(Configurable, Magic):
         try:
             self.db = pickleshare.PickleShareDB(self.ipython_dir + "/db")
         except exceptions.UnicodeDecodeError:
-            print "Your ipython_dir can't be decoded to unicode!"
-            print "Please set HOME environment variable to something that"
-            print r"only has ASCII characters, e.g. c:\home"
-            print "Now it is", self.ipython_dir
+            print("Your ipython_dir can't be decoded to unicode!")
+            print("Please set HOME environment variable to something that")
+            print(r"only has ASCII characters, e.g. c:\home")
+            print("Now it is", self.ipython_dir)
             sys.exit()
         self.shadowhist = ipcorehist.ShadowHist(self.db)
 
@@ -1232,8 +1232,8 @@ class InteractiveShell(Configurable, Magic):
         try:
             self.readline.write_history_file(self.histfile)
         except:
-            print 'Unable to save IPython command history to file: ' + \
-                  `self.histfile`
+            print('Unable to save IPython command history to file: ' + \
+                  repr(self.histfile))
 
     def reloadhist(self):
         """Reload the input history from disk file."""
@@ -1375,11 +1375,11 @@ class InteractiveShell(Configurable, Magic):
                "The custom exceptions must be given AS A TUPLE."
 
         def dummy_handler(self,etype,value,tb):
-            print '*** Simple custom exception handler ***'
-            print 'Exception type :',etype
-            print 'Exception value:',value
-            print 'Traceback      :',tb
-            print 'Source code    :','\n'.join(self.buffer)
+            print('*** Simple custom exception handler ***')
+            print('Exception type :',etype)
+            print('Exception value:',value)
+            print('Traceback      :',tb)
+            print('Source code    :','\n'.join(self.buffer))
 
         if handler is None: handler = dummy_handler
 
@@ -1442,7 +1442,7 @@ class InteractiveShell(Configurable, Magic):
                 # line, there may be SyntaxError cases whith imported code.
                 self.showsyntaxerror(filename)
             elif etype is UsageError:
-                print "UsageError:", value
+                print("UsageError:", value)
             else:
                 # WARNING: these variables are somewhat deprecated and not
                 # necessarily safe to use in a threaded environment, but tools
@@ -1456,7 +1456,7 @@ class InteractiveShell(Configurable, Magic):
                     # FIXME: Old custom traceback objects may just return a
                     # string, in that case we just put it into a list
                     stb = self.CustomTB(etype, value, tb, tb_offset)
-                    if isinstance(ctb, basestring):
+                    if isinstance(ctb, str):
                         stb = [stb]
                 else:
                     if exception_only:
@@ -1485,7 +1485,7 @@ class InteractiveShell(Configurable, Magic):
         Subclasses may override this method to put the traceback on a different
         place, like a side channel.
         """
-        print >> io.Term.cout, self.InteractiveTB.stb2text(stb)
+        print(self.InteractiveTB.stb2text(stb), file=io.Term.cout)
 
     def showsyntaxerror(self, filename=None):
         """Display the syntax error that just occurred.
@@ -1752,7 +1752,7 @@ class InteractiveShell(Configurable, Magic):
         # even need a centralize colors management object.
         self.magic_colors(self.colors)
         # History was moved to a separate module
-        from . import history
+        from .. import history
         history.init_ipython(self)
 
     def magic(self,arg_s):
@@ -1825,7 +1825,7 @@ class InteractiveShell(Configurable, Magic):
         
         from IPython.core import macro
 
-        if isinstance(themacro, basestring):
+        if isinstance(themacro, str):
             themacro = macro.Macro(themacro)
         if not isinstance(themacro, macro.Macro):
             raise ValueError('A macro must be a string or a Macro instance.')
@@ -1909,9 +1909,9 @@ class InteractiveShell(Configurable, Magic):
             # plain ascii works better w/ pyreadline, on some machines, so
             # we use it and only print uncolored rewrite if we have unicode
             rw = str(rw)
-            print >> IPython.utils.io.Term.cout, rw
+            print(rw, file=IPython.utils.io.Term.cout)
         except UnicodeEncodeError:
-            print "------> " + cmd
+            print("------> " + cmd)
             
     #-------------------------------------------------------------------------
     # Things related to extracting values/expressions from kernel and user_ns
@@ -1919,7 +1919,7 @@ class InteractiveShell(Configurable, Magic):
 
     def _simple_error(self):
         etype, value = sys.exc_info()[:2]
-        return u'[ERROR] {e.__name__}: {v}'.format(e=etype, v=value)
+        return '[ERROR] {e.__name__}: {v}'.format(e=etype, v=value)
 
     def get_user_variables(self, names):
         """Get a list of variable names from the user's namespace.
@@ -1944,7 +1944,7 @@ class InteractiveShell(Configurable, Magic):
         out = {}
         user_ns = self.user_ns
         global_ns = self.user_global_ns
-        for key, expr in expressions.iteritems():
+        for key, expr in expressions.items():
             try:
                 value = repr(eval(expr, global_ns, user_ns))
             except:
@@ -1959,7 +1959,7 @@ class InteractiveShell(Configurable, Magic):
     def ex(self, cmd):
         """Execute a normal python statement in user namespace."""
         with nested(self.builtin_trap,):
-            exec cmd in self.user_global_ns, self.user_ns
+            exec(cmd, self.user_global_ns, self.user_ns)
 
     def ev(self, expr):
         """Evaluate python expression expr in user namespace.
@@ -2010,8 +2010,8 @@ class InteractiveShell(Configurable, Magic):
 
         with prepended_to_syspath(dname):
             try:
-                execfile(fname,*where)
-            except SystemExit, status:
+                exec(compile(open(fname,*where).read(), fname,*where, 'exec'))
+            except SystemExit as status:
                 # If the call was made with 0 or None exit status (sys.exit(0)
                 # or sys.exit() ), don't bother showing a traceback, as both of
                 # these are considered normal by the OS:
@@ -2236,7 +2236,7 @@ class InteractiveShell(Configurable, Magic):
 
         # It's also possible that we've been fed a plain string.  In that case,
         # we must store it in the input history.
-        if isinstance(code_obj, basestring):
+        if isinstance(code_obj, str):
             self.input_hist_raw.append(code_obj)
 
         # Set our own excepthook in case the user code tries to call it
@@ -2251,7 +2251,7 @@ class InteractiveShell(Configurable, Magic):
             try:
                 self.hooks.pre_runcode_hook()
                 #rprint('Running code') # dbg
-                exec code_obj in self.user_global_ns, self.user_ns
+                exec(code_obj, self.user_global_ns, self.user_ns)
             finally:
                 # Reset our crash handler in place
                 sys.excepthook = old_excepthook
@@ -2267,7 +2267,7 @@ class InteractiveShell(Configurable, Magic):
         else:
             outflag = 0
             if softspace(sys.stdout, 0):
-                print
+                print()
         # Flush out code object which has been run (and source)
         self.code_to_run = None
         return outflag
@@ -2456,8 +2456,7 @@ class InteractiveShell(Configurable, Magic):
         self.restore_sys_module_state()
 
 
-class InteractiveShellABC(object):
+class InteractiveShellABC(object, metaclass=abc.ABCMeta):
     """An abstract base class for InteractiveShell."""
-    __metaclass__ = abc.ABCMeta
 
 InteractiveShellABC.register(InteractiveShell)

@@ -5,12 +5,13 @@ r""" %which magic command
 """
 
 from IPython.core import ipapi
+import collections
 ip = ipapi.get()
 
 import os,sys
 from fnmatch import fnmatch
 def which(fname):
-    fullpath = filter(os.path.isdir,os.environ['PATH'].split(os.pathsep))
+    fullpath = list(filter(os.path.isdir,os.environ['PATH'].split(os.pathsep)))
     
     if '.' not in fullpath:
         fullpath = ['.'] + fullpath
@@ -23,22 +24,22 @@ def which(fname):
     return
 
 def which_alias(fname):
-    for al, tgt in ip.alias_table.items():
+    for al, tgt in list(list(ip.alias_table.items())):
         if not (al == fname or fnmatch(al, fname)):
             continue
-        if callable(tgt):
-            print "Callable alias",tgt
+        if isinstance(tgt, collections.Callable):
+            print("Callable alias",tgt)
             d = tgt.__doc__
             if d:
-                print "Docstring:\n",d
+                print("Docstring:\n",d)
                 continue
         trg = tgt[1]
         
         trans = ip.expand_alias(trg)
         cmd = trans.split(None,1)[0]
-        print al,"->",trans
+        print(al,"->",trans)
         for realcmd in which(cmd):
-            print "  ==",realcmd
+            print("  ==",realcmd)
         
 def which_f(self, arg):
     r""" %which <cmd> => search PATH for files matching cmd. Also scans aliases.
@@ -70,7 +71,7 @@ def which_f(self, arg):
     which_alias(arg)
 
     for e in which(arg):
-        print e
+        print(e)
     
 ip.define_magic("which",which_f)        
         

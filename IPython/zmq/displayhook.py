@@ -1,6 +1,6 @@
-import __builtin__
+import builtins
 
-from session import extract_header
+from .session import extract_header
 
 class DisplayHook(object):
 
@@ -13,8 +13,8 @@ class DisplayHook(object):
         if obj is None:
             return
 
-        __builtin__._ = obj
-        msg = self.session.msg(u'pyout', {u'data':repr(obj)},
+        builtins._ = obj
+        msg = self.session.msg('pyout', {'data':repr(obj)},
                                parent=self.parent_header)
         self.pub_socket.send_json(msg)
 

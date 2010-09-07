@@ -12,10 +12,10 @@ Useful for test suites and blocking terminal interfaces.
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
-from __future__ import print_function
+
 
 # Stdlib
-from Queue import Queue, Empty
+from queue import Queue, Empty
 
 # Our own
 from IPython.utils import io

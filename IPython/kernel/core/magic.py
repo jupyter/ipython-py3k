@@ -14,10 +14,10 @@ __docformat__ = "restructuredtext en"
 #-------------------------------------------------------------------------------
 
 import os
-import __builtin__
+import builtins
 
 # Local imports.
-from util import Bunch
+from .util import Bunch
 
 
 # fixme: RTK thinks magics should be implemented as separate classes rather than
@@ -60,7 +60,7 @@ class Magic(object):
         # fixme: implement internal and alias namespaces.
         user_ns = self.interpreter.user_ns
         internal_ns = {}
-        builtin_ns = __builtin__.__dict__
+        builtin_ns = builtins.__dict__
         alias_ns = {}
 
         # Order the namespaces.

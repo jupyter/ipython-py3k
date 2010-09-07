@@ -38,15 +38,15 @@ from matplotlib.pyplot import *
 
 x = np.linspace(0,pi,500)
 
-print "A plot has been created"
+print("A plot has been created")
 line, = plot(x,sin(2*x))
 inputhook.spin() # This has to be removed for Tk
 
 
-print "Now, we will update the plot..."
-print
+print("Now, we will update the plot...")
+print()
 for i in range(1,51):
-    print i, 
+    print(i, end=' ') 
     sys.stdout.flush()
     line.set_data(x,sin(x*i))
     plt.title('i=%d' % i)

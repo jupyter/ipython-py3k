@@ -28,11 +28,11 @@ def install_editor(run_template, wait = False):
         if line is None:
             line = 0
         cmd = itplns(run_template, locals())
-        print ">",cmd
+        print(">",cmd)
         if os.system(cmd) != 0:
             raise TryNext()
         if wait:
-            raw_input("Press Enter when done editing:")
+            input("Press Enter when done editing:")
 
     ip.set_hook('editor',call_editor)
 

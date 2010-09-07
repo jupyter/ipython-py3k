@@ -12,7 +12,7 @@
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
+
 import os
 
 from IPython.kernel.fcutil import (
@@ -485,7 +485,7 @@ class AsyncCluster(object):
 
     def __del__(self):
         if self.auto_stop and self.state=='running':
-            print "Auto stopping the cluster..."
+            print("Auto stopping the cluster...")
             self.stop()
 
     @property
@@ -763,12 +763,12 @@ class Cluster(object):
         return self.async_cluster.get_logs()
 
     def _print_logs(self, logs):
-        for k, v in logs.iteritems():
-            print "==================================="
-            print "Logfile: %s" % k
-            print "==================================="
-            print v
-            print
+        for k, v in logs.items():
+            print("===================================")
+            print("Logfile: %s" % k)
+            print("===================================")
+            print(v)
+            print()
 
     def print_ipengine_logs(self):
         """Print the ipengine logs for this cluster to stdout."""

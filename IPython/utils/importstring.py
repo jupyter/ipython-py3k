@@ -24,8 +24,8 @@ def import_item(name):
     obj = name.split('.')[-1]
     execString = 'from %s import %s' % (package, obj)
     try:
-        exec execString
+        exec(execString)
     except SyntaxError:
         raise ImportError("Invalid class specification: %s" % name)
-    exec 'temp = %s' % obj
+    exec('temp = %s' % obj)
     return temp

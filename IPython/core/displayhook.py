@@ -19,7 +19,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 from pprint import PrettyPrinter
 pformat = PrettyPrinter().pformat
 
@@ -108,7 +108,7 @@ class DisplayHook(Configurable):
         self.output_sep = output_sep
         self.output_sep2 = output_sep2
         self._,self.__,self.___ = '','',''
-        self.pprint_types = map(type,[(),[],{}])
+        self.pprint_types = list(map(type,[(),[],{}]))
 
         # these are deliberately global:
         to_user_ns = {'_':self._,'__':self.__,'___':self.___}
@@ -150,7 +150,7 @@ class DisplayHook(Configurable):
         # If something injected a '_' variable in __builtin__, delete
         # ipython's automatic one so we don't clobber that.  gettext() in
         # particular uses _, so we need to stay away from it.
-        if '_' in __builtin__.__dict__:
+        if '_' in builtins.__dict__:
             try:
                 del self.shell.user_ns['_']
             except KeyError:
@@ -211,7 +211,7 @@ class DisplayHook(Configurable):
         # We want to print because we want to always make sure we have a 
         # newline, even if all the prompt separators are ''. This is the
         # standard IPython behavior.
-        print >>IPython.utils.io.Term.cout, result_repr
+        print(result_repr, file=IPython.utils.io.Term.cout)
 
     def update_user_ns(self, result):
         """Update user_ns with various things like _, __, _1, etc."""
@@ -220,7 +220,7 @@ class DisplayHook(Configurable):
         if result is not self.shell.user_ns['_oh']:
             if len(self.shell.user_ns['_oh']) >= self.cache_size and self.do_full_cache:
                 warn('Output cache limit (currently '+
-                      `self.cache_size`+' entries) hit.\n'
+                      repr(self.cache_size)+' entries) hit.\n'
                      'Flushing cache and resetting history counter...\n'
                      'The only history variables available will be _,__,___ and _1\n'
                      'with the current result.')
@@ -228,7 +228,7 @@ class DisplayHook(Configurable):
                 self.flush()
             # Don't overwrite '_' and friends if '_' is in __builtin__ (otherwise
             # we cause buggy behavior for things like gettext).
-            if '_' not in __builtin__.__dict__:
+            if '_' not in builtins.__dict__:
                 self.___ = self.__
                 self.__ = self._
                 self._ = result
@@ -237,7 +237,7 @@ class DisplayHook(Configurable):
             # hackish access to top-level  namespace to create _1,_2... dynamically
             to_main = {}
             if self.do_full_cache:
-                new_result = '_'+`self.prompt_count`
+                new_result = '_'+repr(self.prompt_count)
                 to_main[new_result] = result
                 self.shell.user_ns.update(to_main)
                 self.shell.user_ns['_oh'][self.prompt_count] = result
@@ -270,18 +270,18 @@ class DisplayHook(Configurable):
 
     def flush(self):
         if not self.do_full_cache:
-            raise ValueError,"You shouldn't have reached the cache flush "\
-                  "if full caching is not enabled!"
+            raise ValueError("You shouldn't have reached the cache flush "\
+                  "if full caching is not enabled!")
         # delete auto-generated vars from global namespace
         
         for n in range(1,self.prompt_count + 1):
-            key = '_'+`n`
+            key = '_'+repr(n)
             try:
                 del self.shell.user_ns[key]
             except: pass
         self.shell.user_ns['_oh'].clear()
         
-        if '_' not in __builtin__.__dict__:
+        if '_' not in builtins.__dict__:
             self.shell.user_ns.update({'_':None,'__':None, '___':None})
         import gc
         gc.collect() # xxx needed?

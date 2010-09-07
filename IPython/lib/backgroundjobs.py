@@ -32,6 +32,7 @@ import threading
 
 from IPython.core.ultratb import AutoFormattedTB
 from IPython.utils.warn import warn, error
+import collections
 
 class BackgroundJobManager:
     """Class to manage a pool of backgrounded threaded jobs.
@@ -146,10 +147,10 @@ class BackgroundJobManager:
         4. There is no way, due to limitations in the Python threads library,
         to kill a thread once it has started."""
         
-        if callable(func_or_exp):
+        if isinstance(func_or_exp, collections.Callable):
             kw  = kwargs.get('kw',{})
             job = BackgroundJobFunc(func_or_exp,*args,**kw)
-        elif isinstance(func_or_exp,basestring):
+        elif isinstance(func_or_exp,str):
             if not args:
                 frame = sys._getframe(1)
                 glob, loc = frame.f_globals, frame.f_locals
@@ -158,19 +159,18 @@ class BackgroundJobManager:
             elif len(args)==2:
                 glob,loc = args
             else:
-                raise ValueError,\
-                      'Expression jobs take at most 2 args (globals,locals)'
+                raise ValueError('Expression jobs take at most 2 args (globals,locals)')
             job = BackgroundJobExpr(func_or_exp,glob,loc)
         else:
             raise
-        jkeys = self.jobs_all.keys()
+        jkeys = list(list(self.jobs_all.keys()))
         if jkeys:
             job.num = max(jkeys)+1
         else:
             job.num = 0
         self.jobs_run.append(job)
         self.jobs_all[job.num] = job
-        print 'Starting job # %s in a separate thread.' % job.num
+        print('Starting job # %s in a separate thread.' % job.num)
         job.start()
         return job
 
@@ -211,7 +211,7 @@ class BackgroundJobManager:
                 self.jobs_dead.append(job)
                 self._dead_report.append(job)
                 jobs_run[num] = False
-        self.jobs_run = filter(None,self.jobs_run)
+        self.jobs_run = [_f for _f in self.jobs_run if _f]
 
     def _group_report(self,group,name):
         """Report summary for a given job group.
@@ -219,10 +219,10 @@ class BackgroundJobManager:
         Return True if the group had any elements."""
 
         if group:
-            print '%s jobs:' % name
+            print('%s jobs:' % name)
             for job in group:
-                print '%s : %s' % (job.num,job)
-            print
+                print('%s : %s' % (job.num,job))
+            print()
             return True
 
     def _group_flush(self,group,name):
@@ -233,7 +233,7 @@ class BackgroundJobManager:
         njobs = len(group)
         if njobs:
             plural = {1:''}.setdefault(njobs,'s')
-            print 'Flushing %s %s job%s.' % (njobs,name,plural)
+            print('Flushing %s %s job%s.' % (njobs,name,plural))
             group[:] = []
             return True
         
@@ -304,7 +304,7 @@ class BackgroundJobManager:
         fl_comp = self._group_flush(self.jobs_comp,'Completed')
         fl_dead = self._group_flush(self.jobs_dead,'Dead')
         if not (fl_comp or fl_dead):
-            print 'No jobs to flush.'
+            print('No jobs to flush.')
 
     def result(self,num):
         """result(N) -> return the result of job N."""
@@ -344,8 +344,7 @@ class BackgroundJobBase(threading.Thread):
     stat_dead_c = -1
 
     def __init__(self):
-        raise NotImplementedError, \
-              "This class can not be instantiated directly."
+        raise NotImplementedError("This class can not be instantiated directly.")
 
     def _init(self):
         """Common initialization for all BackgroundJob objects"""
@@ -380,7 +379,7 @@ class BackgroundJobBase(threading.Thread):
         return '<BackgroundJob: %s>' % self.strform
 
     def traceback(self):
-        print self._tb
+        print(self._tb)
         
     def run(self):
         try:
@@ -432,7 +431,7 @@ class BackgroundJobFunc(BackgroundJobBase):
         Any positional arguments and keyword args given to this constructor
         after the initial callable are passed directly to it."""
 
-        assert callable(func),'first argument must be callable'
+        assert isinstance(func, collections.Callable),'first argument must be callable'
         
         if args is None:
             args = []
@@ -470,7 +469,7 @@ if __name__=='__main__':
     def printfunc(interval=1,reps=5):
         for n in range(reps):
             time.sleep(interval)
-            print 'In the background...'
+            print('In the background...')
 
     jobs = BackgroundJobManager()
     # first job will have # 0
@@ -483,8 +482,8 @@ if __name__=='__main__':
     # after a while, you can get the traceback of a dead job.  Run the line
     # below again interactively until it prints a traceback (check the status
     # of the job):
-    print jobs[1].status
+    print(jobs[1].status)
     jobs[1].traceback()
     
     # Run this line again until the printed result changes
-    print "The result of job #0 is:",jobs[0].result
+    print("The result of job #0 is:",jobs[0].result)

@@ -25,7 +25,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 import codeop
 import re
 
@@ -39,6 +39,7 @@ from IPython.utils.traitlets import List, Int, Any, Str, CBool, Bool, Instance
 import IPython.utils.io
 from IPython.utils.text import make_quoted_expr
 from IPython.utils.autoattr import auto_attr
+import collections
 
 #-----------------------------------------------------------------------------
 # Global utilities, errors and constants
@@ -737,7 +738,7 @@ class AutocallChecker(PrefilterChecker):
         if not oinfo['found']:
             return None
         
-        if callable(oinfo['obj']) \
+        if isinstance(oinfo['obj'], collections.Callable) \
                and (not re_exclude_auto.match(line_info.the_rest)) \
                and re_fun_name.match(line_info.ifun):
             return self.prefilter_manager.get_handler_by_name('auto')
