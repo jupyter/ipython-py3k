@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ path.py - An object representing a path to a file or directory.
 
 Example:
@@ -32,7 +33,7 @@ Date:    9 Mar 2007
 import sys, warnings, os, fnmatch, glob, shutil, codecs
 # deprecated in python 2.6
 warnings.filterwarnings('ignore', r'.*md5.*')
-import md5
+from hashlib import md5
 
 __version__ = '2.2'
 __all__ = ['path']
@@ -49,38 +50,10 @@ else:
     except ImportError:
         pwd = None
 
-# Pre-2.3 support.  Are unicode filenames supported?
-_base = str
-_getcwd = os.getcwd
-try:
-    if os.path.supports_unicode_filenames:
-        _base = str
-        _getcwd = os.getcwd
-except AttributeError:
-    pass
-
-# Pre-2.3 workaround for booleans
-try:
-    True, False
-except NameError:
-    True, False = 1, 0
-
-# Pre-2.3 workaround for basestring.
-try:
-    str
-except NameError:
-    str = (str, str)
-
-# Universal newline support
-_textmode = 'r'
-if hasattr(file, 'newlines'):
-    _textmode = 'U'
-
-
 class TreeWalkWarning(Warning):
     pass
 
-class path(_base):
+class path(str):
     """ Represents a filesystem path.
 
     For documentation on individual methods, consult their
@@ -90,12 +63,12 @@ class path(_base):
     # --- Special Python methods.
 
     def __repr__(self):
-        return 'path(%s)' % _base.__repr__(self)
+        return 'path(%s)' % str.__repr__(self)
 
     # Adding a path and a string yields a path.
     def __add__(self, more):
         try:
-            resultStr = _base.__add__(self, more)
+            resultStr = str.__add__(self, more)
         except TypeError:  #Python bug
             resultStr = NotImplemented
         if resultStr is NotImplemented:
@@ -122,7 +95,7 @@ class path(_base):
 
     def getcwd(cls):
         """ Return the current working directory as a path object. """
-        return cls(_getcwd())
+        return cls(os.getcwd())
     getcwd = classmethod(getcwd)
 
 
@@ -152,7 +125,7 @@ class path(_base):
         return base
 
     def _get_ext(self):
-        f, ext = os.path.splitext(_base(self))
+        f, ext = os.path.splitext(str(self))
         return ext
 
     def _get_drive(self):
@@ -513,14 +486,14 @@ class path(_base):
         of all the files users have in their bin directories.
         """
         cls = self.__class__
-        return [cls(s) for s in glob.glob(_base(self / pattern))]
+        return [cls(s) for s in glob.glob(str(self / pattern))]
 
 
     # --- Reading or writing an entire file at once.
 
     def open(self, mode='r'):
         """ Open this file.  Return a file object. """
-        return file(self, mode)
+        return open(self, mode)
 
     def bytes(self):
         """ Open this file, read all bytes, return them as a string. """
@@ -563,7 +536,7 @@ class path(_base):
         """
         if encoding is None:
             # 8-bit
-            f = self.open(_textmode)
+            f = self.open()
             try:
                 return f.read()
             finally:
@@ -690,7 +663,7 @@ class path(_base):
         This uses 'U' mode in Python 2.3 and later.
         """
         if encoding is None and retain:
-            f = self.open(_textmode)
+            f = self.open()
             try:
                 return f.readlines()
             finally:
@@ -770,7 +743,7 @@ class path(_base):
         """
         f = self.open('rb')
         try:
-            m = md5.new()
+            m = md5()
             while True:
                 d = f.read(8192)
                 if not d:

@@ -173,14 +173,14 @@ class Parser:
 
         # parse the source and write it
         self.pos = 0
-        text = io.StringIO(self.raw)
+        text = io.BytesIO(self.raw.encode())
 
         error = False
         try:
-            tokenize.tokenize(text.readline, self)
+            [self(*token) for token in tokenize.tokenize(text.readline)]
         except tokenize.TokenError as ex:
-            msg = ex[0]
-            line = ex[1][0]
+            msg = ex.args[0]
+            line = ex.args[1][0]
             self.out.write("%s\n\n*** ERROR: %s%s%s\n" %
                            (colors[token.ERRORTOKEN],
                             msg, self.raw[self.lines[line]:],

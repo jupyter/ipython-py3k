@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # encoding: utf-8
 """
 Prefiltering components.
@@ -238,7 +239,7 @@ class PrefilterManager(Configurable):
         This must be called after the priority of a transformer is changed.
         The :meth:`register_transformer` method calls this automatically.
         """
-        self._transformers.sort(cmp=lambda x,y: x.priority-y.priority)
+        self._transformers.sort(key=lambda x: x.priority)
 
     @property
     def transformers(self):
@@ -274,7 +275,7 @@ class PrefilterManager(Configurable):
         This must be called after the priority of a checker is changed.
         The :meth:`register_checker` method calls this automatically.
         """
-        self._checkers.sort(cmp=lambda x,y: x.priority-y.priority)
+        self._checkers.sort(key=lambda x: x.priority)
 
     @property
     def checkers(self):

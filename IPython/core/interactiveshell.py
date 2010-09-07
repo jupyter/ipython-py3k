@@ -22,13 +22,12 @@ import __future__
 import abc
 import atexit
 import codeop
-import exceptions
-import new
 import os
 import re
 import string
 import sys
 import tempfile
+import types
 from contextlib import nested
 
 from IPython.config.configurable import Configurable
@@ -82,7 +81,7 @@ dedent_re = re.compile(r'^\s+raise|^\s+return|^\s+pass')
 
 # store the builtin raw_input globally, and use this always, in case user code
 # overwrites it (like wx.py.PyShell does)
-raw_input_original = raw_input
+raw_input_original = input
 
 def softspace(file, newvalue):
     """Copied from code.py, to remove the dependency"""
@@ -102,7 +101,7 @@ def softspace(file, newvalue):
 
 def no_op(*a, **kw): pass
 
-class SpaceInInput(exceptions.Exception): pass
+class SpaceInInput(Exception): pass
 
 class Bunch: pass
 
@@ -541,7 +540,7 @@ class InteractiveShell(Configurable, Magic):
         # accepts it.  Probably at least check that the hook takes the number
         # of args it's supposed to.
         
-        f = new.instancemethod(hook,self,self.__class__)
+        f = types.MethodType(hook, self)
 
         # check if the hook is for strdispatcher first
         if str_key is not None:
@@ -840,13 +839,13 @@ class InteractiveShell(Configurable, Magic):
             # Set __name__ to __main__ to better match the behavior of the
             # normal interpreter.
             user_ns = {'__name__'     :'__main__',
-                       '__builtin__' : __builtin__,
-                       '__builtins__' : __builtin__,
+                       '__builtin__' : builtins,
+                       '__builtins__' : builtins,
                       }
         else:
             user_ns.setdefault('__name__','__main__')
-            user_ns.setdefault('__builtin__',__builtin__)
-            user_ns.setdefault('__builtins__',__builtin__)
+            user_ns.setdefault('__builtin__',builtins)
+            user_ns.setdefault('__builtins__',builtins)
 
         if user_global_ns is None:
             user_global_ns = user_ns
@@ -910,7 +909,7 @@ class InteractiveShell(Configurable, Magic):
         
         # For more details:
         # http://mail.python.org/pipermail/python-dev/2001-April/014068.html
-        ns = dict(__builtin__ = __builtin__)
+        ns = dict(__builtin__ = builtins)
         
         # Put 'help' in the user namespace
         try:
@@ -1052,7 +1051,7 @@ class InteractiveShell(Configurable, Magic):
         #oname = oname.strip()
         #print '1- oname: <%r>' % oname  # dbg
         try:
-            oname = oname.strip().encode('ascii')
+            oname = oname.strip()
             #print '2- oname: <%r>' % oname  # dbg
         except UnicodeEncodeError:
             print('Python identifiers can only contain ascii characters.')
@@ -1077,10 +1076,12 @@ class InteractiveShell(Configurable, Magic):
         # We need to special-case 'print', which as of python2.6 registers as a
         # function but should only be treated as one if print_function was
         # loaded with a future import.  In this case, just bail.
-        if (oname == 'print' and not (self.compile.compiler.flags &
-                                      __future__.CO_FUTURE_PRINT_FUNCTION)):
-            return {'found':found, 'obj':obj, 'namespace':ospace,
-                    'ismagic':ismagic, 'isalias':isalias, 'parent':parent}
+
+        # In Python 3, print is always a function. Commented out to allow introspection.
+        #if (oname == 'print' and not (self.compile.compiler.flags &
+                                      #__future__.CO_FUTURE_PRINT_FUNCTION)):
+            #return {'found':found, 'obj':obj, 'namespace':ospace,
+                    #'ismagic':ismagic, 'isalias':isalias, 'parent':parent}
 
         # Look for the given name by splitting it in parts.  If the head is
         # found, then we look for all the remaining parts as members, and only
@@ -1218,7 +1219,7 @@ class InteractiveShell(Configurable, Magic):
     def init_shadow_hist(self):
         try:
             self.db = pickleshare.PickleShareDB(self.ipython_dir + "/db")
-        except exceptions.UnicodeDecodeError:
+        except UnicodeDecodeError:
             print("Your ipython_dir can't be decoded to unicode!")
             print("Please set HOME environment variable to something that")
             print(r"only has ASCII characters, e.g. c:\home")
@@ -1383,7 +1384,7 @@ class InteractiveShell(Configurable, Magic):
 
         if handler is None: handler = dummy_handler
 
-        self.CustomTB = new.instancemethod(handler,self,self.__class__)
+        self.CustomTB = types.MethodType(handler, self)
         self.custom_exceptions = exc_tuple
 
     def excepthook(self, etype, value, tb):
@@ -1586,9 +1587,8 @@ class InteractiveShell(Configurable, Magic):
 
             # Remove some chars from the delimiters list.  If we encounter
             # unicode chars, discard them.
-            delims = readline.get_completer_delims().encode("ascii", "ignore")
-            delims = delims.translate(string._idmap,
-                                      self.readline_remove_delims)
+            delims = readline.get_completer_delims()
+            delims = delims.translate(self.readline_remove_delims)
             delims = delims.replace(ESC_MAGIC, '')
             readline.set_completer_delims(delims)
             # otherwise we end up with a monster history after a while:
@@ -1725,8 +1725,7 @@ class InteractiveShell(Configurable, Magic):
         The position argument (defaults to 0) is the index in the completers
         list where you want the completer to be inserted."""
 
-        newcomp = new.instancemethod(completer,self.Completer,
-                                     self.Completer.__class__)
+        newcomp = types.MethodType(completer, self.Completer)
         self.Completer.matchers.insert(pos,newcomp)
 
     def set_readline_completer(self):
@@ -1752,7 +1751,7 @@ class InteractiveShell(Configurable, Magic):
         # even need a centralize colors management object.
         self.magic_colors(self.colors)
         # History was moved to a separate module
-        from .. import history
+        from . import history
         history.init_ipython(self)
 
     def magic(self,arg_s):
@@ -1801,8 +1800,7 @@ class InteractiveShell(Configurable, Magic):
         self.define_magic('foo',foo_impl)
         """
         
-        import new
-        im = new.instancemethod(func,self, self.__class__)
+        im = types.MethodType(func, self)
         old = getattr(self, "magic_" + magicname, None)
         setattr(self, "magic_" + magicname, im)
         return old
@@ -2010,7 +2008,7 @@ class InteractiveShell(Configurable, Magic):
 
         with prepended_to_syspath(dname):
             try:
-                exec(compile(open(fname,*where).read(), fname,*where, 'exec'))
+                exec(compile(open(fname).read(), fname, 'exec'), *where)
             except SystemExit as status:
                 # If the call was made with 0 or None exit status (sys.exit(0)
                 # or sys.exit() ), don't bother showing a traceback, as both of
@@ -2194,7 +2192,7 @@ class InteractiveShell(Configurable, Magic):
         # this allows execution of indented pasted code. It is tempting
         # to add '\n' at the end of source to run commands like ' a=1'
         # directly, but this fails for more complicated scenarios
-        source=source.encode(self.stdin_encoding)
+        
         if source[:1] in [' ', '\t']:
             source = 'if 1:\n%s' % source
 

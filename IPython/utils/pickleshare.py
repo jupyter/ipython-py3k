@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """ PickleShare - a small 'shelve' like datastore with concurrency support
 
@@ -36,7 +37,6 @@ License: MIT open source license.
 from IPython.external.path import path as Path
 import os,stat,time
 import pickle as pickle
-import UserDict
 import glob
 
 def gethashfile(key):
@@ -44,7 +44,7 @@ def gethashfile(key):
 
 _sentinel = object()
 
-class PickleShareDB(UserDict.DictMixin):
+class PickleShareDB(dict):
     """ The main 'connection' object for PickleShare database """
     def __init__(self,root):
         """ Return a db object that will manage the specied directory"""
@@ -67,7 +67,7 @@ class PickleShareDB(UserDict.DictMixin):
             return self.cache[fil][0]
         try:
             # The cached item has expired, need to read
-            obj = pickle.load(fil.open())
+            obj = pickle.load(fil.open('rb'))
         except:
             raise KeyError(key)
             
@@ -80,7 +80,7 @@ class PickleShareDB(UserDict.DictMixin):
         parent = fil.parent
         if parent and not parent.isdir():
             parent.makedirs()
-        pickled = pickle.dump(value,fil.open('w'))
+        pickled = pickle.dump(value,fil.open('wb'))
         try:
             self.cache[fil] = (value,fil.mtime)
         except OSError as e:

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # encoding: utf-8
 """
 A lightweight Traits like module.
@@ -52,28 +53,14 @@ Authors:
 import inspect
 import sys
 import types
-from types import (
-    InstanceType, ClassType, FunctionType,
-    ListType, TupleType
-)
+from types import FunctionType
 import collections
-
-def import_item(name):
-    """Import and return bar given the string foo.bar."""
-    package = '.'.join(name.split('.')[0:-1])
-    obj = name.split('.')[-1]
-    execString = 'from %s import %s' % (package, obj)
-    try:
-        exec(execString)
-    except SyntaxError:
-        raise ImportError("Invalid class specification: %s" % name)
-    exec('temp = %s' % obj)
-    return temp
+from .importstring import import_item
 
 
-ClassTypes = (ClassType, type)
+ClassTypes = (type)
 
-SequenceTypes = (ListType, TupleType)
+SequenceTypes = (list, tuple)
 
 #-----------------------------------------------------------------------------
 # Basic classes
@@ -121,9 +108,6 @@ def repr_type(obj):
     error messages.
     """
     the_type = type(obj)
-    if the_type is InstanceType:
-        # Old-style class.
-        the_type = obj.__class__
     msg = '%r %r' % (obj, the_type)
     return msg
 
@@ -560,10 +544,7 @@ class ClassBasedTraitType(TraitType):
 
     def error(self, obj, value):
         kind = type(value)
-        if kind is InstanceType:
-            msg = 'class %s' % value.__class__.__name__
-        else:
-            msg = '%s (i.e. %s)' % ( str( kind )[1:-1], repr( value ) )
+        msg = '%s (i.e. %s)' % ( str( kind )[1:-1], repr( value ) )
 
         super(ClassBasedTraitType, self).error(obj, msg)
 

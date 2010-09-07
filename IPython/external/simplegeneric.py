@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #Name: simplegeneric
 #Version: 0.6
 #Summary: Simple generic functions (similar to Python's own len(), pickle.dump(), etc.)
@@ -12,32 +13,19 @@
 
 __all__ = ["generic"]
 
-
-from types import ClassType, InstanceType
-classtypes = type, ClassType
-
 def generic(func):
     """Create a simple generic function"""
 
     _sentinel = object()
 
-    def _by_class(*args, **kw):
-        cls = args[0].__class__
-        for t in type(cls.__name__, (cls,object), {}).__mro__:
-            f = _gbt(t, _sentinel)
-            if f is not _sentinel:
-                return f(*args, **kw)
-        else:
-            return func(*args, **kw)
-
-    _by_type = {object: func, InstanceType: _by_class}
+    _by_type = {object: func}
     _gbt = _by_type.get
 
     def when_type(t):
         """Decorator to add a method that will be called for type `t`"""
-        if not isinstance(t, classtypes):
+        if not isinstance(t, type):
             raise TypeError(
-                "%r is not a type or class" % (t,)
+                "%r is not a type" % (t,)
             )
         def decorate(f):
             if _by_type.setdefault(t,f) is not f:
