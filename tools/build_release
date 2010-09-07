@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+"""IPython release build script.
+"""
+from toollib import *
+
+# Get main ipython dir, this will raise if it doesn't pass some checks
+ipdir = get_ipdir()
+cd(ipdir)
+
+# Load release info
+execfile(pjoin('IPython','core','release.py'))
+
+# Check that everything compiles
+compile_tree()
+
+# Cleanup
+for d in ['build','dist',pjoin('docs','build'),pjoin('docs','dist')]:
+    if os.path.isdir(d):
+        remove_tree(d)
+
+# Build source and binary distros
+c('./setup.py sdist --formats=gztar,zip')
+
+# Build eggs
+c('python2.5 ./setupegg.py bdist_egg')
+c('python2.6 ./setupegg.py bdist_egg')
+
+# Call the windows build separately, so that the extra Windows scripts don't
+# get pulled into Unix builds (setup.py has code which checks for
+# bdist_wininst)
+c("python setup.py bdist_wininst")
+
+# Change name so retarded Vista runs the installer correctly
+c("rename 's/linux-i686/win32-setup/' dist/*.exe")
