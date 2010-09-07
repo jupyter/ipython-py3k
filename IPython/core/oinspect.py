@@ -194,9 +194,8 @@ class Inspector:
         exception is suppressed."""
         
         try:
-            # We need a plain string here, NOT unicode!
             hdef = oname + inspect.formatargspec(*getargspec(obj))
-            return hdef.encode('ascii')
+            return hdef
         except:
             return None
  

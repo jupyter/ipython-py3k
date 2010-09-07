@@ -196,6 +196,12 @@ class Parser:
 
     def __call__(self, toktype, toktext, xxx_todo_changeme, xxx_todo_changeme1, line):
         """ Token handler, with syntax highlighting."""
+        # The encoding is now returned as the first token. I think this will
+        # always be utf-8, which we can ignore, but we may need to do something
+        # with it otherwise.
+        if toktype == tokenize.ENCODING:
+            return
+            
         (srow,scol) = xxx_todo_changeme
         (erow,ecol) = xxx_todo_changeme1
         colors = self.colors
