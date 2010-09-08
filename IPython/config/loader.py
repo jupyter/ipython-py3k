@@ -93,6 +93,7 @@ class Config(dict):
         else:
             return False
 
+    # .has_key is deprecated for dictionaries.
     def has_key(self, key):
         if self._is_section_key(key):
             return True

@@ -67,6 +67,7 @@ from IPython.utils.traitlets import (Int, Str, CBool, CaselessStrEnum, Enum,
                                      List, Unicode, Instance, Type)
 from IPython.utils.warn import warn, error, fatal
 import IPython.core.hooks
+import collections
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -161,6 +162,7 @@ class InteractiveShell(Configurable, Magic):
     object_info_string_level = Enum((0,1,2), default_value=0,
                                     config=True)
     pdb = CBool(False, config=True)
+
     pprint = CBool(True, config=True)
     profile = Str('', config=True)
     prompt_in1 = Str('In [\\#]: ', config=True)
@@ -210,6 +212,9 @@ class InteractiveShell(Configurable, Magic):
     extension_manager = Instance('IPython.core.extensions.ExtensionManager')
     plugin_manager = Instance('IPython.core.plugin.PluginManager')
     payload_manager = Instance('IPython.core.payload.PayloadManager')
+
+    # Private interface
+    _post_execute = set()
 
     def __init__(self, config=None, ipython_dir=None,
                  user_ns=None, user_global_ns=None,
@@ -502,7 +507,7 @@ class InteractiveShell(Configurable, Magic):
     def restore_sys_module_state(self):
         """Restore the state of the sys module."""
         try:
-            for k, v in list(self._orig_sys_module_state.items()):
+            for k, v in self._orig_sys_module_state.items():
                 setattr(sys, k, v)
         except AttributeError:
             pass
@@ -568,6 +573,13 @@ class InteractiveShell(Configurable, Magic):
             dp = f
 
         setattr(self.hooks,name, dp)
+
+    def register_post_execute(self, func):
+        """Register a function for calling after code execution.
+        """
+        if not isinstance(func, collections.Callable):
+            raise ValueError('argument %s must be callable' % func)
+        self._post_execute.add(func)
 
     #-------------------------------------------------------------------------
     # Things related to the "main" module
@@ -1796,7 +1808,7 @@ class InteractiveShell(Configurable, Magic):
             print 'Magic function. Passed parameter is between < >:'
             print '<%s>' % parameter_s
             print 'The self object is:',self
-    
+    newcomp = types.MethodType(completer, self.Completer)
         self.define_magic('foo',foo_impl)
         """
         
@@ -2109,7 +2121,7 @@ class InteractiveShell(Configurable, Magic):
         # This seems like a reasonable usability design.
         last = blocks[-1]
         if len(last.splitlines()) < 2:
-            self.runcode('\n'.join(blocks[:-1]))
+            self.runcode(''.join(blocks[:-1]))
             self.runlines(last)
         else:
             self.runcode(cell)
@@ -2266,6 +2278,21 @@ class InteractiveShell(Configurable, Magic):
             outflag = 0
             if softspace(sys.stdout, 0):
                 print()
+
+        # Execute any registered post-execution functions.  Here, any errors
+        # are reported only minimally and just on the terminal, because the
+        # main exception channel may be occupied with a user traceback.
+        # FIXME: we need to think this mechanism a little more carefully.
+        for func in self._post_execute:
+            try:
+                func()
+            except:
+                head = '[ ERROR ] Evaluating post_execute function: %s' % func
+                print(head, file=io.Term.cout)
+                print(self._simple_error(), file=io.Term.cout)
+                print('Removing from post_execute', file=io.Term.cout)
+                self._post_execute.remove(func)
+
         # Flush out code object which has been run (and source)
         self.code_to_run = None
         return outflag

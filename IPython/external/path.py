@@ -8,7 +8,7 @@ d = path('/home/guido/bin')
 for f in d.files('*.py'):
     f.chmod(0755)
 
-This module requires Python 2.2 or later.
+This module requires Python 2.5 or later.
 
 
 URL:     http://www.jorendorff.com/articles/python/path
@@ -31,8 +31,6 @@ Date:    9 Mar 2007
 
 
 import sys, warnings, os, fnmatch, glob, shutil, codecs
-# deprecated in python 2.6
-warnings.filterwarnings('ignore', r'.*md5.*')
 from hashlib import md5
 
 __version__ = '2.2'
