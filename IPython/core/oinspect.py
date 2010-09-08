@@ -17,8 +17,8 @@ reference the name under which an object is being read.
 __all__ = ['Inspector','InspectColors']
 
 # stdlib modules
-import __builtin__
-import StringIO
+import builtins
+import io
 import inspect
 import linecache
 import os
@@ -36,6 +36,7 @@ import IPython.utils.io
 from IPython.utils.text import indent
 from IPython.utils.wildcard import list_namespace
 from IPython.utils.coloransi import *
+import collections
 
 #****************************************************************************
 # Builtin color schemes
@@ -160,16 +161,16 @@ def getargspec(obj):
     if inspect.isfunction(obj):
         func_obj = obj
     elif inspect.ismethod(obj):
-        func_obj = obj.im_func
+        func_obj = obj.__func__
     else:
         raise TypeError('arg is not a Python function')
-    args, varargs, varkw = inspect.getargs(func_obj.func_code)
-    return args, varargs, varkw, func_obj.func_defaults
+    args, varargs, varkw = inspect.getargs(func_obj.__code__)
+    return args, varargs, varkw, func_obj.__defaults__
 
 #****************************************************************************
 # Class definitions
 
-class myStringIO(StringIO.StringIO):
+class myStringIO(io.StringIO):
     """Adds a writeln method to normal StringIO."""
     def writeln(self,*arg,**kw):
         """Does a write() and then a write('\n')"""
@@ -210,19 +211,19 @@ class Inspector:
     
     def noinfo(self,msg,oname):
         """Generic message when no information is found."""
-        print 'No %s found' % msg,
+        print('No %s found' % msg, end=' ')
         if oname:
-            print 'for %s' % oname
+            print('for %s' % oname)
         else:
-            print
+            print()
             
     def pdef(self,obj,oname=''):
         """Print the definition header for any callable object.
 
         If the object is a class, print the constructor information."""
 
-        if not callable(obj):
-            print 'Object is not callable.'
+        if not isinstance(obj, collections.Callable):
+            print('Object is not callable.')
             return
 
         header = ''
@@ -237,7 +238,7 @@ class Inspector:
         if output is None:
             self.noinfo('definition header',oname)
         else:
-            print >>IPython.utils.io.Term.cout, header,self.format(output),
+            print(header,self.format(output), end=' ', file=IPython.utils.io.Term.cout)
 
     def pdoc(self,obj,oname='',formatter = None):
         """Print the docstring for any object.
@@ -306,9 +307,9 @@ class Inspector:
         ofile = inspect.getabsfile(obj)
 
         if (ofile.endswith('.so') or ofile.endswith('.dll')):
-            print 'File %r is binary, not printing.' % ofile
+            print('File %r is binary, not printing.' % ofile)
         elif not os.path.isfile(ofile):
-            print 'File %r does not exist, not printing.' % ofile
+            print('File %r does not exist, not printing.' % ofile)
         else:
             # Print only text files, not extension binaries.  Note that
             # getsourcelines returns lineno with 1-offset and page() uses
@@ -343,7 +344,7 @@ class Inspector:
             ospace = info.namespace
         # Get docstring, special-casing aliases:
         if isalias:
-            if not callable(obj):
+            if not isinstance(obj, collections.Callable):
                 try:
                     ds = "Alias to the system command:\n  %s" % obj[1]
                 except:
@@ -451,7 +452,7 @@ class Inspector:
                     source = self.format(src)
                     out.write(header('Source:\n')+source.rstrip())
                     source_success = True
-            except Exception, msg:
+            except Exception as msg:
                 pass
             
             if ds and not source_success:
@@ -567,7 +568,7 @@ class Inspector:
             ospace = info.namespace
         # Get docstring, special-casing aliases:
         if isalias:
-            if not callable(obj):
+            if not isinstance(obj, collections.Callable):
                 try:
                     ds = "Alias to the system command:\n  %s" % obj[1]
                 except:
@@ -678,7 +679,7 @@ class Inspector:
                     source = self.format(src)
                     out['source'] = source.rstrip()
                     source_success = True
-            except Exception, msg:
+            except Exception as msg:
                 pass
 
         # Constructor docstring for classes
@@ -795,7 +796,7 @@ class Inspector:
         for name in ns_search:
             if name not in ns_table:
                 raise ValueError('invalid namespace <%s>. Valid names: %s' %
-                                 (name,ns_table.keys()))
+                                 (name,list(list(ns_table.keys()))))
 
         #print 'type_pattern:',type_pattern # dbg
         search_result = []

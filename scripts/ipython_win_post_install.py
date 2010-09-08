@@ -93,4 +93,4 @@ if len(sys.argv) > 1:
     elif sys.argv[1] == '-remove':
         remove()
     else:
-        print "Script was called with option %s" % sys.argv[1]
+        print("Script was called with option %s" % sys.argv[1])

@@ -160,7 +160,7 @@ class TaskMapper(object):
         for s in sequences:
             if len(s)!=max_len:
                 raise ValueError('all sequences must have equal length')
-        task_args = zip(*sequences)
+        task_args = list(zip(*sequences))
         task_ids = []
         dlist = []
         for ta in task_args:
@@ -217,7 +217,7 @@ class SynchronousTaskMapper(object):
         for s in sequences:
             if len(s)!=max_len:
                 raise ValueError('all sequences must have equal length')
-        task_args = zip(*sequences)
+        task_args = list(zip(*sequences))
         task_ids = []
         for ta in task_args:
             task = MapTask(func, ta, clear_before=self.clear_before,

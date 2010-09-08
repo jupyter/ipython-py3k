@@ -14,7 +14,7 @@ import os,re,textwrap
 # The import below effectively obsoletes your old-style ipythonrc[.ini],
 # so consider yourself warned!
 
-import ipy_defaults
+from . import ipy_defaults
 
 def main():    
     ip = ipapi.get()
@@ -88,11 +88,11 @@ def main():
     
     syscmds = db.get("syscmdlist",[] )
     if not syscmds:
-        print textwrap.dedent("""
+        print(textwrap.dedent("""
         System command list not initialized, probably the first run...
         running %rehashx to refresh the command list. Run %rehashx
         again to refresh command list (after installing new software etc.)
-        """)
+        """))
         ip.magic('rehashx')
         syscmds = db.get("syscmdlist")
     

@@ -12,12 +12,13 @@ from twisted.internet import reactor, threads
 from IPython.core.ipmaker import make_IPython
 from IPython.core.iplib import InteractiveShell 
 from IPython.utils.ipstruct import Struct
-import Queue,thread,threading,signal
+import queue,_thread,threading,signal
 from signal import signal, SIGINT
 import IPython.utils.io, ask_yes_no
 from IPython.utils.warn import warn, error
 from IPython.utils.decorators import flag_calls
 from IPython.core import shellglobals
+import collections
 
 def install_gtk2():
     """ Install gtk2 reactor, needs to be called bef """
@@ -68,15 +69,15 @@ class TwistedInteractiveShell(InteractiveShell):
 
 
         # A queue to hold the code to be executed. 
-        self.code_queue = Queue.Queue()
+        self.code_queue = queue.Queue()
 
         # Stuff to do at closing time
         self._kill = None
         on_kill = kw.get('on_kill', [])
         # Check that all things to kill are callable:
         for t in on_kill:
-            if not callable(t):
-                raise TypeError,'on_kill must be a list of callables'
+            if not isinstance(t, collections.Callable):
+                raise TypeError('on_kill must be a list of callables')
         self.on_kill = on_kill
         # thread identity of the "worker thread" (that may execute code directly)
         self.worker_ident = None
@@ -114,7 +115,7 @@ class TwistedInteractiveShell(InteractiveShell):
         # in IPython construction)
         
         if (not self.reactor_started or (self.worker_ident is None and not self.first_run) 
-            or self.worker_ident == thread.get_ident() or shellglobals.run_in_frontend(source)):
+            or self.worker_ident == _thread.get_ident() or shellglobals.run_in_frontend(source)):
             InteractiveShell.runcode(self,code)
             return
 
@@ -130,8 +131,8 @@ class TwistedInteractiveShell(InteractiveShell):
         received_ev.wait(5)
         if not received_ev.isSet():
             # the mainloop is dead, start executing code directly
-            print "Warning: Timeout for mainloop thread exceeded"
-            print "switching to nonthreaded mode (until mainloop wakes up again)"
+            print("Warning: Timeout for mainloop thread exceeded")
+            print("switching to nonthreaded mode (until mainloop wakes up again)")
             self.worker_ident = None
         else:            
             completed_ev.wait()
@@ -145,14 +146,14 @@ class TwistedInteractiveShell(InteractiveShell):
         
         
         # we are in worker thread, stash out the id for runsource() 
-        self.worker_ident = thread.get_ident()
+        self.worker_ident = _thread.get_ident()
 
         if self._kill:
-            print >>Term.cout, 'Closing threads...',
+            print('Closing threads...', end=' ', file=Term.cout)
             Term.cout.flush()
             for tokill in self.on_kill:
                 tokill()
-            print >>Term.cout, 'Done.'
+            print('Done.', file=Term.cout)
             # allow kill() to return
             self._kill.set()
             return True
@@ -173,7 +174,7 @@ class TwistedInteractiveShell(InteractiveShell):
         while 1:
             try:
                 code_to_run, completed_ev, received_ev = self.code_queue.get_nowait()                
-            except Queue.Empty:
+            except queue.Empty:
                 break
             received_ev.set()
 
@@ -189,7 +190,7 @@ class TwistedInteractiveShell(InteractiveShell):
                    shellglobals.CODE_RUN = True
                    InteractiveShell.runcode(self,code_to_run)
                 except KeyboardInterrupt:
-                   print "Keyboard interrupted in mainloop"
+                   print("Keyboard interrupted in mainloop")
                    while not self.code_queue.empty():
                       code = self.code_queue.get_nowait()
                    break
@@ -251,14 +252,14 @@ class IPShellTwisted:
 
     def mainloop(self):
         def mainLoopThreadDeath(r):
-            print "mainLoopThreadDeath: ", str(r)
+            print("mainLoopThreadDeath: ", str(r))
         def spawnMainloopThread():
             d=threads.deferToThread(self.run)
             d.addBoth(mainLoopThreadDeath)
         reactor.callWhenRunning(spawnMainloopThread)
         self.IP.reactor_started = True
         self.reactor.run()
-        print "mainloop ending...."   
+        print("mainloop ending....")   
         
 exists = True
 
@@ -283,5 +284,5 @@ if __name__ == '__main__':
     shell.mainloop()
 
     # You must exit IPython to terminate your program.
-    print 'Goodbye!'
+    print('Goodbye!')
 

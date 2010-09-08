@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 
 def ask_question(text, the_type, default):
     s = '%s [%r]: ' % (text, the_type(default))
-    result = raw_input(s)
+    result = input(s)
     if result:
         return the_type(result)
     else:
@@ -59,9 +59,9 @@ mec.run('mcpricer.py')
 # Perform parallel calculation
 #-----------------------------------------------------------------------------
 
-print "Running parallel calculation over strike prices and volatilities..."
-print "Strike prices: ", strike_vals
-print "Volatilities: ", sigma_vals
+print("Running parallel calculation over strike prices and volatilities...")
+print("Strike prices: ", strike_vals)
+print("Volatilities: ", sigma_vals)
 sys.stdout.flush()
 
 # Submit tasks to the TaskClient for each (strike, sigma) pair as a MapTask.
@@ -75,7 +75,7 @@ for strike in strike_vals:
         )
         taskids.append(tc.run(t))
 
-print "Submitted tasks: ", len(taskids)
+print("Submitted tasks: ", len(taskids))
 sys.stdout.flush()
 
 # Block until all tasks are completed.
@@ -83,8 +83,8 @@ tc.barrier(taskids)
 t2 = time.time()
 t = t2-t1
 
-print "Parallel calculation completed, time = %s s" % t
-print "Collecting results..."
+print("Parallel calculation completed, time = %s s" % t)
+print("Collecting results...")
 
 # Get the results using TaskClient.get_task_result.
 results = [tc.get_task_result(tid) for tid in taskids]
@@ -100,8 +100,8 @@ for i, price_tuple in enumerate(results):
 prices.shape = (n_strikes, n_sigmas)
 strike_mesh, sigma_mesh = np.meshgrid(strike_vals, sigma_vals)
 
-print "Results are available: strike_mesh, sigma_mesh, prices"
-print "To plot results type 'plot_options(sigma_mesh, strike_mesh, prices)'"
+print("Results are available: strike_mesh, sigma_mesh, prices")
+print("To plot results type 'plot_options(sigma_mesh, strike_mesh, prices)'")
 
 #-----------------------------------------------------------------------------
 # Utilities

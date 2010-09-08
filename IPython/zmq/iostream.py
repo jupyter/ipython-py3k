@@ -1,8 +1,8 @@
 import sys
 import time
-from cStringIO import StringIO
+from io import StringIO
 
-from session import extract_header, Message
+from .session import extract_header, Message
 
 from IPython.utils import io
 
@@ -32,12 +32,12 @@ class OutStream(object):
     def flush(self):
         #io.rprint('>>>flushing output buffer: %s<<<' % self.name)  # dbg
         if self.pub_socket is None:
-            raise ValueError(u'I/O operation on closed file')
+            raise ValueError('I/O operation on closed file')
         else:
             data = self._buffer.getvalue()
             if data:
-                content = {u'name':self.name, u'data':data}
-                msg = self.session.msg(u'stream', content=content,
+                content = {'name':self.name, 'data':data}
+                msg = self.session.msg('stream', content=content,
                                        parent=self.parent_header)
                 io.raw_print(msg)
                 self.pub_socket.send_json(msg)
@@ -48,7 +48,7 @@ class OutStream(object):
     def isatty(self):
         return False
 
-    def next(self):
+    def __next__(self):
         raise IOError('Read not supported on a write only stream.')
 
     def read(self, size=-1):

@@ -36,7 +36,7 @@ t1 = clock()
 freqs10m = mapper.map(compute_two_digit_freqs, files[:1])[0]
 t2 = clock()
 digits_per_second1 = 10.0e6/(t2-t1)
-print "Digits per second (1 core, 10m digits):   ", digits_per_second1
+print("Digits per second (1 core, 10m digits):   ", digits_per_second1)
 
 
 # Run 150m digits on 15 engines (8 cores)
@@ -45,9 +45,9 @@ freqs_all = mec.map(compute_two_digit_freqs, files[:len(mec)])
 freqs150m = reduce_freqs(freqs_all)
 t2 = clock()
 digits_per_second8 = 150.0e6/(t2-t1)
-print "Digits per second (8 cores, 150m digits): ", digits_per_second8
+print("Digits per second (8 cores, 150m digits): ", digits_per_second8)
 
-print "Speedup: ", digits_per_second8/digits_per_second1
+print("Speedup: ", digits_per_second8/digits_per_second1)
 
 plot_two_digit_freqs(freqs150m)
 plt.title("2 digit sequences in 150m digits of pi")

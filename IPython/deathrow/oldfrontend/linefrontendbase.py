@@ -161,7 +161,7 @@ class LineFrontEndBase(FrontEndBase):
                 is_complete = codeop.compile_command(clean_string,
                             "<string>", "exec")
                 self.release_output()
-            except Exception, e:
+            except Exception as e:
                 # XXX: Hack: return True so that the
                 # code gets executed and the error captured.
                 is_complete = True
@@ -177,7 +177,7 @@ class LineFrontEndBase(FrontEndBase):
             event loop, to choose whether the write should trigget an UI
             refresh, and thus be syncrhonous, or not.
         """
-        print >>sys.__stderr__, string
+        print(string, file=sys.__stderr__)
 
 
     def execute(self, python_string, raw_string=None):
@@ -231,7 +231,7 @@ class LineFrontEndBase(FrontEndBase):
         """ Do code completion on current line. 
         """
         if self.debug:
-            print >>sys.__stdout__, "complete_current_input", 
+            print("complete_current_input", end=' ', file=sys.__stdout__) 
         line = self.input_buffer
         new_line, completions = self.complete(line)
         if len(completions)>1:
@@ -239,9 +239,9 @@ class LineFrontEndBase(FrontEndBase):
         elif not line == new_line:
             self.input_buffer = new_line
         if self.debug:
-            print >>sys.__stdout__, 'line', line
-            print >>sys.__stdout__, 'new_line', new_line
-            print >>sys.__stdout__, completions 
+            print('line', line, file=sys.__stdout__)
+            print('new_line', new_line, file=sys.__stdout__)
+            print(completions, file=sys.__stdout__) 
 
 
     def get_line_width(self):

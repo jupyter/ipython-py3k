@@ -55,7 +55,7 @@ def export(filename = None):
     
     if aliases:
         lines.extend(['','# === Alias definitions ===',''])
-        for k,v in aliases.items():
+        for k,v in list(aliases.items()):
             try:
                 lines.append("ip.define_alias('%s', %s)" % (k, repr(v[1])))
             except (AttributeError, TypeError):
@@ -73,5 +73,5 @@ def export(filename = None):
     if filename:
         open(filename,'w').write(out)
     else:
-        print out
+        print(out)
     

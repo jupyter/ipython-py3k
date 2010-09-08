@@ -13,7 +13,7 @@ These are all loaded by default by IPython.
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
-from __future__ import print_function
+
 
 # Stdlib imports
 import glob
@@ -67,7 +67,7 @@ def shlex_split(x):
     # %run "c:/python -> ['%run','"c:/python']
 
     # shlex.split has unicode bugs, so encode first to str
-    if isinstance(x, unicode):
+    if isinstance(x, str):
         x = x.encode(sys.stdin.encoding)
 
     endofline = []
@@ -201,7 +201,7 @@ def quick_completer(cmd, completions):
         [d:\ipython]|3> foo ba
     """
     
-    if isinstance(completions, basestring):
+    if isinstance(completions, str):
         completions = completions.split()
 
     def do_complete(self, event):
@@ -281,7 +281,7 @@ def magic_run_completer(self, event):
     # should complete on all files, since after the first one other files may
     # be arguments to the input script.
 
-    if filter(magic_run_re.match, comps):
+    if list(filter(magic_run_re.match, comps)):
         pys =  [f.replace('\\','/') for f in lglob('*')]
     else:
         pys =  [f.replace('\\','/')
@@ -301,7 +301,7 @@ def cd_completer(self, event):
         # return only bookmark completions
         bkms = self.db.get('bookmarks', None)
         if bkms:
-            return bkms.keys()
+            return list(bkms.keys())
         else:
             return []
     
@@ -336,7 +336,7 @@ def cd_completer(self, event):
             return [compress_user(relpath, tilde_expand, tilde_val)]
 
         # if no completions so far, try bookmarks
-        bks = self.db.get('bookmarks',{}).keys()
+        bks = list(self.db.get('bookmarks',{}).keys())
         bkmatches = [s for s in bks if s.startswith(event.symbol)]
         if bkmatches:
             return bkmatches

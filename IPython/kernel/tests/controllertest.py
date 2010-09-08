@@ -54,7 +54,7 @@ class IControllerCoreTestCase(object):
         qengine = es.QueuedEngine(engine)
         regDict = self.controller.register_engine(qengine, 0)
         self.assert_(isinstance(regDict, dict))
-        self.assert_(regDict.has_key('id'))
+        self.assert_('id' in regDict)
         self.assert_(regDict['id']==0)
         self.controller.unregister_engine(0)
         self.assert_(self.controller.engines.get(0, None) == None)

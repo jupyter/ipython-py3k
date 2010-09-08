@@ -15,7 +15,7 @@ Things to do:
 #-----------------------------------------------------------------------------
 
 # Standard library imports.
-import __builtin__
+import builtins
 from code import CommandCompiler
 import sys
 import time
@@ -26,9 +26,9 @@ import zmq
 
 # Local imports.
 from IPython.utils.traitlets import HasTraits, Instance
-from completer import KernelCompleter
-from entry_point import base_launch_kernel, make_default_main
-from session import Session, Message
+from .completer import KernelCompleter
+from .entry_point import base_launch_kernel, make_default_main
+from .session import Session, Message
 
 #-----------------------------------------------------------------------------
 # Main kernel class
@@ -67,11 +67,11 @@ class Kernel(HasTraits):
             assert self.reply_socket.rcvmore(), "Missing message part."
             msg = self.reply_socket.recv_json()
             omsg = Message(msg)
-            print>>sys.__stdout__
-            print>>sys.__stdout__, omsg
+            print(file=sys.__stdout__)
+            print(omsg, file=sys.__stdout__)
             handler = self.handlers.get(omsg.msg_type, None)
             if handler is None:
-                print >> sys.__stderr__, "UNKNOWN MESSAGE TYPE:", omsg
+                print("UNKNOWN MESSAGE TYPE:", omsg, file=sys.__stderr__)
             else:
                 handler(ident, omsg)
 
@@ -81,12 +81,12 @@ class Kernel(HasTraits):
 
     def execute_request(self, ident, parent):
         try:
-            code = parent[u'content'][u'code']
+            code = parent['content']['code']
         except:
-            print>>sys.__stderr__, "Got bad msg: "
-            print>>sys.__stderr__, Message(parent)
+            print("Got bad msg: ", file=sys.__stderr__)
+            print(Message(parent), file=sys.__stderr__)
             return
-        pyin_msg = self.session.msg(u'pyin',{u'code':code}, parent=parent)
+        pyin_msg = self.session.msg('pyin',{'code':code}, parent=parent)
         self.pub_socket.send_json(pyin_msg)
 
         try:
@@ -95,24 +95,24 @@ class Kernel(HasTraits):
             # Replace raw_input. Note that is not sufficient to replace 
             # raw_input in the user namespace.
             raw_input = lambda prompt='': self._raw_input(prompt, ident, parent)
-            __builtin__.raw_input = raw_input
+            builtins.raw_input = raw_input
 
             # Set the parent message of the display hook and out streams.
             sys.displayhook.set_parent(parent)
             sys.stdout.set_parent(parent)
             sys.stderr.set_parent(parent)
 
-            exec comp_code in self.user_ns, self.user_ns
+            exec(comp_code, self.user_ns, self.user_ns)
         except:
             etype, evalue, tb = sys.exc_info()
             tb = traceback.format_exception(etype, evalue, tb)
             exc_content = {
-                u'status' : u'error',
-                u'traceback' : tb,
-                u'ename' : unicode(etype.__name__),
-                u'evalue' : unicode(evalue)
+                'status' : 'error',
+                'traceback' : tb,
+                'ename' : str(etype.__name__),
+                'evalue' : str(evalue)
             }
-            exc_msg = self.session.msg(u'pyerr', exc_content, parent)
+            exc_msg = self.session.msg('pyerr', exc_content, parent)
             self.pub_socket.send_json(exc_msg)
             reply_content = exc_content
         else:
@@ -123,11 +123,11 @@ class Kernel(HasTraits):
         sys.stdout.flush()
 
         # Send the reply.
-        reply_msg = self.session.msg(u'execute_reply', reply_content, parent)
-        print>>sys.__stdout__, Message(reply_msg)
+        reply_msg = self.session.msg('execute_reply', reply_content, parent)
+        print(Message(reply_msg), file=sys.__stdout__)
         self.reply_socket.send(ident, zmq.SNDMORE)
         self.reply_socket.send_json(reply_msg)
-        if reply_msg['content']['status'] == u'error':
+        if reply_msg['content']['status'] == 'error':
             self._abort_queue()
 
     def complete_request(self, ident, parent):
@@ -135,14 +135,14 @@ class Kernel(HasTraits):
                    'status' : 'ok'}
         completion_msg = self.session.send(self.reply_socket, 'complete_reply',
                                            matches, parent, ident)
-        print >> sys.__stdout__, completion_msg
+        print(completion_msg, file=sys.__stdout__)
 
     def object_info_request(self, ident, parent):
         context = parent['content']['oname'].split('.')
         object_info = self._object_info(context)
         msg = self.session.send(self.reply_socket, 'object_info_reply',
                                 object_info, parent, ident)
-        print >> sys.__stdout__, msg
+        print(msg, file=sys.__stdout__)
 
     #---------------------------------------------------------------------------
     # Protected interface
@@ -152,18 +152,18 @@ class Kernel(HasTraits):
         while True:
             try:
                 ident = self.reply_socket.recv(zmq.NOBLOCK)
-            except zmq.ZMQError, e:
+            except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
                     break
             else:
                 assert self.reply_socket.rcvmore(), "Missing message part."
                 msg = self.reply_socket.recv_json()
-            print>>sys.__stdout__, "Aborting:"
-            print>>sys.__stdout__, Message(msg)
+            print("Aborting:", file=sys.__stdout__)
+            print(Message(msg), file=sys.__stdout__)
             msg_type = msg['msg_type']
             reply_type = msg_type.split('_')[0] + '_reply'
             reply_msg = self.session.msg(reply_type, {'status':'aborted'}, msg)
-            print>>sys.__stdout__, Message(reply_msg)
+            print(Message(reply_msg), file=sys.__stdout__)
             self.reply_socket.send(ident,zmq.SNDMORE)
             self.reply_socket.send_json(reply_msg)
             # We need to wait a bit for requests to come in. This can probably
@@ -177,7 +177,7 @@ class Kernel(HasTraits):
 
         # Send the input request.
         content = dict(prompt=prompt)
-        msg = self.session.msg(u'input_request', content, parent)
+        msg = self.session.msg('input_request', content, parent)
         self.req_socket.send_json(msg)
 
         # Await a response.
@@ -185,8 +185,8 @@ class Kernel(HasTraits):
         try:
             value = reply['content']['value']
         except:
-            print>>sys.__stderr__, "Got bad raw_input reply: "
-            print>>sys.__stderr__, Message(parent)
+            print("Got bad raw_input reply: ", file=sys.__stderr__)
+            print(Message(parent), file=sys.__stderr__)
             value = ''
         return value
 
@@ -209,7 +209,7 @@ class Kernel(HasTraits):
         base_symbol_string = context[0]
         symbol = self.user_ns.get(base_symbol_string, None)
         if symbol is None:
-            symbol = __builtin__.__dict__.get(base_symbol_string, None)
+            symbol = builtins.__dict__.get(base_symbol_string, None)
         if symbol is None:
             return None, context
 

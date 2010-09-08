@@ -30,7 +30,7 @@ from IPython.utils.data import flatten
 # Code
 #-----------------------------------------------------------------------------
 
-StringTypes = types.StringTypes
+StringTypes = str
 
 
 def unquote_ends(istr):
@@ -177,7 +177,7 @@ class SList(list):
             except IndexError:
                 return ""
 
-        if isinstance(pattern, basestring):
+        if isinstance(pattern, str):
             pred = lambda x : re.search(pattern, x, re.IGNORECASE)
         else:
             pred = pattern
@@ -329,8 +329,8 @@ def qw(words,flat=0,sep=None,maxsplit=-1):
         return [word.strip() for word in words.split(sep,maxsplit)
                 if word and not word.isspace() ]
     if flat:
-        return flatten(map(qw,words,[1]*len(words)))
-    return map(qw,words)
+        return flatten(list(map(qw,words,[1]*len(words))))
+    return list(map(qw,words))
 
 
 def qwflat(words,sep=None,maxsplit=-1):
@@ -449,7 +449,7 @@ def list_strings(arg):
         Out[9]: ['A', 'list', 'of', 'strings']
     """
 
-    if isinstance(arg,basestring): return [arg]
+    if isinstance(arg,str): return [arg]
     else: return arg
 
 

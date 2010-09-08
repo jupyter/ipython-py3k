@@ -21,7 +21,7 @@ def test():
 
     # Do the import internally, so that this function doesn't increase total
     # import time
-    from iptest import run_iptestall
+    from .iptest import run_iptestall
     run_iptestall()
 
 # So nose doesn't try to run this as a test itself and we end up with an

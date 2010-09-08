@@ -21,9 +21,9 @@ def workdir_f(ip,line):
     dummy,cmd  = line.split(None,1)
     if os.path.isdir(cmd):
         workdir = os.path.abspath(cmd)
-        print "Set workdir",workdir
+        print("Set workdir",workdir)
     elif workdir is None:
-        print "Please set workdir first by doing e.g. 'workdir q:/'"
+        print("Please set workdir first by doing e.g. 'workdir q:/'")
     else:
         sp = cmd.split(None,1)
         if len(sp) == 1:
@@ -32,7 +32,7 @@ def workdir_f(ip,line):
             head, tail = sp
         if os.path.isfile(head):
             cmd = os.path.abspath(head) + ' ' + tail
-        print "Execute command '" + cmd+ "' in",workdir
+        print("Execute command '" + cmd+ "' in",workdir)
         olddir = os.getcwd()
         os.chdir(workdir)
         try:

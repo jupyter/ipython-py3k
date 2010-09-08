@@ -22,7 +22,7 @@ Authors
 - Fernando Perez <Fernando.Perez@berkeley.edu>
 """
 
-from __future__ import absolute_import
+
 
 #-----------------------------------------------------------------------------
 #  Copyright (C) 2009  The IPython Development Team
@@ -60,7 +60,7 @@ def count_failures(runner):
 
     Code modeled after the summarize() method in doctest.
     """
-    return [TestResults(f, t) for f, t in runner._name2ft.values() if f > 0 ]
+    return [TestResults(f, t) for f, t in list(runner._name2ft.values()) if f > 0 ]
 
 
 class IPython2PythonConverter(object):
@@ -80,7 +80,7 @@ class IPython2PythonConverter(object):
 
     def __call__(self, ds):
         """Convert IPython prompts to python ones in a string."""
-        from . import globalipapp
+        from .. import globalipapp
 
         pyps1 = '>>> '
         pyps2 = '... '
@@ -158,7 +158,7 @@ class Doc2UnitTester(object):
             def test(self):
                 # Make a new runner per function to be tested
                 runner = DocTestRunner(verbose=d2u.verbose)
-                map(runner.run, d2u.finder.find(func, func.__name__))
+                list(map(runner.run, d2u.finder.find(func, func.__name__)))
                 failed = count_failures(runner)
                 if failed:
                     # Since we only looked at a single function's docstring,

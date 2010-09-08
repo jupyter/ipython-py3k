@@ -22,7 +22,7 @@ Authors
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import absolute_import
+
 
 import logging
 import os
@@ -45,7 +45,7 @@ from IPython.core import usage
 #-----------------------------------------------------------------------------
 
 #: The default config file name for this application.
-default_config_file_name = u'ipython_config.py'
+default_config_file_name = 'ipython_config.py'
 
 
 class IPAppConfigLoader(BaseAppConfigLoader):
@@ -54,7 +54,7 @@ class IPAppConfigLoader(BaseAppConfigLoader):
         super(IPAppConfigLoader, self)._add_arguments()
         paa = self.parser.add_argument
         paa('-p', 
-            '--profile', dest='Global.profile', type=unicode,
+            '--profile', dest='Global.profile', type=str,
             help=
             """The string name of the ipython profile to be used.  Assume that your
             config file is ipython_config-<name>.py (looks in current dir first,
@@ -65,7 +65,7 @@ class IPAppConfigLoader(BaseAppConfigLoader):
             include this one and load extra things for particular tasks.""",
             metavar='Global.profile')
         paa('--config-file', 
-            dest='Global.config_file', type=unicode,
+            dest='Global.config_file', type=str,
             help=
             """Set the config file name to override default.  Normally IPython
             loads ipython_config.py (from current directory) or
@@ -174,11 +174,11 @@ class IPAppConfigLoader(BaseAppConfigLoader):
             action='store_true', dest='InteractiveShell.logstart',
             help="Start logging to the default log file (./ipython_log.py).")
         paa('--logfile','-lf',
-            type=unicode, dest='InteractiveShell.logfile',
+            type=str, dest='InteractiveShell.logfile',
             help="Start logging to logfile with this name.",
             metavar='InteractiveShell.logfile')
         paa('--log-append','-la',
-            type=unicode, dest='InteractiveShell.logappend',
+            type=str, dest='InteractiveShell.logappend',
             help="Start logging to the given file in append mode.",
             metavar='InteractiveShell.logfile')
         paa('--pdb',
@@ -384,7 +384,7 @@ class IPAppCrashHandler(CrashHandler):
 #-----------------------------------------------------------------------------
 
 class IPythonApp(Application):
-    name = u'ipython'
+    name = 'ipython'
     #: argparse formats better the 'usage' than the 'description' field
     description = None
     usage = usage.cl_usage
@@ -491,7 +491,7 @@ class IPythonApp(Application):
             self.shell.show_banner()
 
         # Make sure there is a space below the banner.
-        if self.log_level <= logging.INFO: print
+        if self.log_level <= logging.INFO: print()
 
         # Now a variety of things that happen after the banner is printed.
         self._enable_gui_pylab()
@@ -581,9 +581,9 @@ class IPythonApp(Application):
             self.shell.showtraceback()
 
     def _exec_file(self, fname):
-        full_filename = filefind(fname, [u'.', self.ipython_dir])
+        full_filename = filefind(fname, ['.', self.ipython_dir])
         if os.path.isfile(full_filename):
-            if full_filename.endswith(u'.py'):
+            if full_filename.endswith('.py'):
                 self.log.info("Running file in user namespace: %s" %
                               full_filename)
                 # Ensure that __file__ is always defined to match Python behavior

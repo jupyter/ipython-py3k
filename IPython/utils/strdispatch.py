@@ -44,7 +44,7 @@ class StrDispatch(object):
         if key in self.strs:
             yield self.strs[key]
         
-        for r, obj in self.regexs.items():
+        for r, obj in list(self.regexs.items()):
             if re.match(r, key):
                 yield obj
             else: 

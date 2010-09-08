@@ -28,7 +28,7 @@ import ipython_console_highlighting
 
 # We load the ipython release info into a dict by explicit execution
 iprelease = {}
-execfile('../../IPython/core/release.py',iprelease)
+exec(compile(open('../../IPython/core/release.py').read(), '../../IPython/core/release.py', 'exec'),iprelease)
 
 # General configuration
 # ---------------------
@@ -164,10 +164,10 @@ latex_font_size = '11pt'
 
 latex_documents = [
     ('index', 'ipython.tex', 'IPython Documentation',
-     ur"""The IPython Development Team""", 'manual', True),
+     r"""The IPython Development Team""", 'manual', True),
     ('parallel/winhpc_index', 'winhpc_whitepaper.tex',
      'Using IPython on Windows HPC Server 2008',
-     ur"Brian E. Granger", 'manual', True)
+     r"Brian E. Granger", 'manual', True)
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

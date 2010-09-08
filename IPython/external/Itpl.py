@@ -131,8 +131,8 @@ class Itpl:
         These are used to encode the format string if a call to str() fails on
         the expanded result."""
 
-        if not isinstance(format,basestring):
-            raise TypeError, "needs string initializer"
+        if not isinstance(format,str):
+            raise TypeError("needs string initializer")
         self.format = format
         self.codec = codec
         self.encoding_errors = encoding_errors
@@ -247,10 +247,10 @@ class ItplNS(Itpl):
 
 # utilities for fast printing
 def itpl(text): return str(Itpl(text))
-def printpl(text): print itpl(text)
+def printpl(text): print(itpl(text))
 # versions with namespace
 def itplns(text,globals,locals=None): return str(ItplNS(text,globals,locals))
-def printplns(text,globals,locals=None): print itplns(text,globals,locals)
+def printplns(text,globals,locals=None): print(itplns(text,globals,locals))
 
 class ItplFile:
     """A file object that filters each write() through an interpolator."""

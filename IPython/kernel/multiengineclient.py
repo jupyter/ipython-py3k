@@ -22,6 +22,7 @@ import warnings
 from twisted.python import components
 from twisted.python.failure import Failure
 from zope.interface import Interface, implements, Attribute
+import collections
 
 try:
     from foolscap.api import DeadReferenceError
@@ -132,7 +133,7 @@ class PendingResult(object):
         
         if self.called:
             if self.raised:
-                raise self.result[0], self.result[1], self.result[2]
+                raise self.result[0](self.result[1]).with_traceback(self.result[2])
             else:
                 return self.result
         try:
@@ -165,7 +166,7 @@ class PendingResult(object):
         any exception raised will not be caught and handled.  User must 
         catch these by hand when calling `get_result`.
         """
-        assert callable(f)
+        assert isinstance(f, collections.Callable)
         self.callbacks.append((f, args, kwargs))
         
     def __cmp__(self, other):
@@ -270,14 +271,14 @@ class InteractiveMultiEngineClient(object):
             # This is injected into __builtins__.
             ip = get_ipython()
         except NameError:
-            print "The IPython parallel magics (%result, %px, %autopx) only work within IPython."
+            print("The IPython parallel magics (%result, %px, %autopx) only work within IPython.")
         else:
             pmagic = ip.get_component('parallel_magic')
             if pmagic is not None:
                 pmagic.active_multiengine_client = self
             else:
-                print "You must first load the parallelmagic extension " \
-                      "by doing '%load_ext parallelmagic'"
+                print("You must first load the parallelmagic extension " \
+                      "by doing '%load_ext parallelmagic'")
 
     def __setitem__(self, key, value):
         """Add a dictionary interface for pushing/pulling.
@@ -856,8 +857,8 @@ class FullBlockingMultiEngineClient(InteractiveMultiEngineClient):
         
         This function is not testable within our current testing framework.
         """
-        import timeit, __builtin__
-        __builtin__._mec_self = self
+        import timeit, builtins
+        builtins._mec_self = self
         benchmarks = {}
         repeat = 3
         count = 10

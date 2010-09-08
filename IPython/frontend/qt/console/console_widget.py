@@ -17,14 +17,14 @@ from PyQt4 import QtCore, QtGui
 from IPython.config.configurable import Configurable
 from IPython.frontend.qt.util import MetaQObjectHasTraits, get_font
 from IPython.utils.traitlets import Bool, Enum, Int
-from ansi_code_processor import QtAnsiCodeProcessor
-from completion_widget import CompletionWidget
+from .ansi_code_processor import QtAnsiCodeProcessor
+from .completion_widget import CompletionWidget
 
 #-----------------------------------------------------------------------------
 # Classes
 #-----------------------------------------------------------------------------
 
-class ConsoleWidget(Configurable, QtGui.QWidget):
+class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits):
     """ An abstract base class for console-type widgets. This class has 
         functionality for:
 
@@ -37,7 +37,6 @@ class ConsoleWidget(Configurable, QtGui.QWidget):
         ConsoleWidget also provides a number of utility methods that will be
         convenient to implementors of a console-style widget.
     """
-    __metaclass__ = MetaQObjectHasTraits
 
     # Whether to process ANSI escape codes.
     ansi_codes = Bool(True, config=True)
@@ -89,7 +88,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget):
                          QtCore.Qt.Key_P : QtCore.Qt.Key_Up,
                          QtCore.Qt.Key_N : QtCore.Qt.Key_Down,
                          QtCore.Qt.Key_D : QtCore.Qt.Key_Delete, }
-    _shortcuts = set(_ctrl_down_remap.keys() +
+    _shortcuts = set(list(_ctrl_down_remap.keys()) +
                      [ QtCore.Qt.Key_C, QtCore.Qt.Key_G, QtCore.Qt.Key_O,
                        QtCore.Qt.Key_V ])
 
@@ -407,7 +406,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget):
         lines = string.splitlines(True)
         if lines:
             self._append_plain_text(lines[0])
-            for i in xrange(1, len(lines)):
+            for i in range(1, len(lines)):
                 if self._continuation_prompt_html is None:
                     self._append_plain_text(self._continuation_prompt)
                 else:

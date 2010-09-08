@@ -15,7 +15,7 @@
 #-----------------------------------------------------------------------------
 
 import os, sys
-import threading, Queue
+import threading, queue
 
 import twisted
 from twisted.internet import defer, reactor
@@ -94,7 +94,7 @@ else:
         @raise: any error raised during the callback chain.
         """
         from twisted.internet import reactor
-        queue = Queue.Queue()
+        queue = queue.Queue()
         def _callFromThread():
             result = defer.maybeDeferred(f, *a, **kw)
             result.addBoth(queue.put)
@@ -105,7 +105,7 @@ else:
             # This makes it easier for the debugger to get access to the instance
             try:
                 result.raiseException()
-            except Exception, e:
+            except Exception as e:
                 raise e
         return result
     

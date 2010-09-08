@@ -9,7 +9,7 @@ import zmq
 from IPython.utils.traitlets import Type
 from IPython.zmq.kernelmanager import KernelManager, SubSocketChannel, \
     XReqSocketChannel, RepSocketChannel, HBSocketChannel
-from util import MetaQObjectHasTraits
+from .util import MetaQObjectHasTraits
 
 # When doing multiple inheritance from QtCore.QObject and other classes
 # the calling of the parent __init__'s is a subtle issue:
@@ -175,11 +175,9 @@ class QtHBSocketChannel(HBSocketChannel, QtCore.QObject):
         self.kernel_died.emit(since_last_heartbeat)
 
 
-class QtKernelManager(KernelManager, QtCore.QObject):
+class QtKernelManager(KernelManager, QtCore.QObject, metaclass=MetaQObjectHasTraits):
     """ A KernelManager that provides signals and slots.
     """
-
-    __metaclass__ = MetaQObjectHasTraits
 
     # Emitted when the kernel manager has started listening.
     started_channels = QtCore.pyqtSignal()

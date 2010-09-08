@@ -36,7 +36,7 @@ from IPython.utils.importstring import import_item
 #-----------------------------------------------------------------------------
 
 #: The default config file name for this application
-default_config_file_name = u'ipengine_config.py'
+default_config_file_name = 'ipengine_config.py'
 
 
 mpi4py_init = """from mpi4py import MPI as mpi
@@ -76,7 +76,7 @@ class IPEngineAppConfigLoader(ClusterDirConfigLoader):
         paa = self.parser.add_argument
         # Controller config
         paa('--furl-file',
-            type=unicode, dest='Global.furl_file',
+            type=str, dest='Global.furl_file',
             help='The full location of the file containing the FURL of the '
             'controller. If this is not given, the FURL file must be in the '
             'security directory of the cluster directory.  This location is '
@@ -100,7 +100,7 @@ class IPEngineAppConfigLoader(ClusterDirConfigLoader):
 
 class IPEngineApp(ApplicationWithClusterDir):
 
-    name = u'ipengine'
+    name = 'ipengine'
     description = _description
     command_line_loader = IPEngineAppConfigLoader
     default_config_file_name = default_config_file_name
@@ -120,10 +120,10 @@ class IPEngineApp(ApplicationWithClusterDir):
         # Configuration related to the controller
         # This must match the filename (path not included) that the controller
         # used for the FURL file.
-        self.default_config.Global.furl_file_name = u'ipcontroller-engine.furl'
+        self.default_config.Global.furl_file_name = 'ipcontroller-engine.furl'
         # If given, this is the actual location of the controller's FURL file.
         # If not, this is computed using the profile, app_dir and furl_file_name
-        self.default_config.Global.furl_file = u''
+        self.default_config.Global.furl_file = ''
 
         # The max number of connection attemps and the initial delay between
         # those attemps.
@@ -213,7 +213,7 @@ class IPEngineApp(ApplicationWithClusterDir):
             try:
                 self.log.info("Initializing MPI:")
                 self.log.info(mpi_import_statement)
-                exec mpi_import_statement in globals()
+                exec(mpi_import_statement, globals())
             except:
                 mpi = None
         else:

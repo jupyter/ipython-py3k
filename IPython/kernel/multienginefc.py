@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 # Imports
 #-------------------------------------------------------------------------------
 
-import cPickle as pickle
+import pickle as pickle
 from types import FunctionType
 
 from zope.interface import Interface, implements
@@ -650,7 +650,7 @@ class FCFullSynchronousMultiEngineClient(object):
         else:
             raise TypeError("func must be a function or str")
         
-        d.addCallback(lambda _: self.scatter('_ipython_map_seq', zip(*sequences), dist, targets=targets))
+        d.addCallback(lambda _: self.scatter('_ipython_map_seq', list(zip(*sequences)), dist, targets=targets))
         d.addCallback(lambda _: self.execute(sourceToRun, targets=targets, block=False))
         d.addCallback(lambda did: self.get_pending_deferred(did, True))
         d.addCallback(lambda _: self.gather('_ipython_map_seq_result', dist, targets=targets, block=block))
@@ -723,7 +723,7 @@ class FCFullSynchronousMultiEngineClient(object):
         if not multitargets:
             result = pushResult[0]
         elif lenKeys > 1:
-            result = zip(*pushResult)
+            result = list(zip(*pushResult))
         elif lenKeys is 1:
             result = list(pushResult)
         return result

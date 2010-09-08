@@ -4,7 +4,7 @@ import curses, fcntl, signal, struct, tty, textwrap, inspect
 
 from IPython.core import ipapi
 
-import astyle, ipipe
+from . import astyle, ipipe
 
 
 # Python 2.3 compatibility
@@ -18,7 +18,7 @@ except NameError:
 try:
     sorted
 except NameError:
-    from ipipe import sorted
+    from .ipipe import sorted
 
 
 class UnassignedKeyError(Exception):
@@ -74,7 +74,7 @@ class Keymap(dict):
         return dict.get(self, key, default)
 
     def findkey(self, command, default=ipipe.noitem):
-        for (key, commandcandidate) in self.iteritems():
+        for (key, commandcandidate) in self.items():
             if commandcandidate == command:
                 return key
         if default is ipipe.noitem:
@@ -108,7 +108,7 @@ class _BrowserHelp(object):
     def __iter__(self):
         # Get reverse key mapping
         allkeys = {}
-        for (key, cmd) in self.browser.keymap.iteritems():
+        for (key, cmd) in self.browser.keymap.items():
             allkeys.setdefault(cmd, []).append(key)
 
         fields = ("key", "description")
@@ -134,7 +134,7 @@ class _BrowserHelp(object):
             keys = allkeys.get(name, [])
 
             yield ipipe.Fields(fields, key="", description=astyle.Text((self.style_header, name)))
-            for i in xrange(max(len(keys), len(lines))):
+            for i in range(max(len(keys), len(lines))):
                 try:
                     key = self.browser.keylabel(keys[i])
                 except IndexError:
@@ -211,13 +211,13 @@ class _BrowserLevel(object):
         have = len(self.items)
         while not self.exhausted and have < count:
             try:
-                item = self.iterator.next()
+                item = next(self.iterator)
             except StopIteration:
                 self.exhausted = True
                 break
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except Exception, exc:
+            except Exception as exc:
                 have += 1
                 self.items.append(_BrowserCachedItem(exc))
                 self.exhausted = True
@@ -242,7 +242,7 @@ class _BrowserLevel(object):
                     attrs.add(attr)
         else:
             endy = min(self.datastarty+self.mainsizey, len(self.items))
-            for i in xrange(self.datastarty, endy):
+            for i in range(self.datastarty, endy):
                 for attr in ipipe.xattrs(self.items[i].item, "default"):
                     if attr not in attrs and attr not in self.hiddenattrs:
                         self.displayattrs.append(attr)
@@ -260,7 +260,7 @@ class _BrowserLevel(object):
                 value = attr.value(item)
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except Exception, exc:
+            except Exception as exc:
                 value = exc
             # only store attribute if it exists (or we got an exception)
             if value is not ipipe.noitem:
@@ -292,7 +292,7 @@ class _BrowserLevel(object):
         # How must space have we got to display data?
         self.mainsizex = self.browser.scrsizex-self.numbersizex-3
         # width of all columns
-        self.datasizex = sum(self.colwidths.itervalues()) + len(self.colwidths)
+        self.datasizex = sum(self.colwidths.values()) + len(self.colwidths)
 
     def calcdisplayattr(self):
         # Find out which attribute the cursor is on and store this
@@ -340,7 +340,7 @@ class _BrowserLevel(object):
         if refresh: # Do we need to refresh the complete display?
             self.calcdisplayattrs()
             endy = min(self.datastarty+self.mainsizey, len(self.items))
-            self.displayrows = map(self.getrow, xrange(self.datastarty, endy))
+            self.displayrows = list(map(self.getrow, range(self.datastarty, endy)))
             self.calcwidths()
         # Did we scroll vertically => update displayrows
         # and various other attributes
@@ -351,12 +351,12 @@ class _BrowserLevel(object):
             # If there are new attributes, recreate the cache
             if self.displayattrs != olddisplayattrs:
                 endy = min(self.datastarty+self.mainsizey, len(self.items))
-                self.displayrows = map(self.getrow, xrange(self.datastarty, endy))
+                self.displayrows = list(map(self.getrow, range(self.datastarty, endy)))
             elif self.datastarty<olddatastarty: # we did scroll up
                 # drop rows from the end
                 del self.displayrows[self.datastarty-olddatastarty:]
                 # fetch new items
-                for i in xrange(min(olddatastarty, self.datastarty+self.mainsizey)-1,
+                for i in range(min(olddatastarty, self.datastarty+self.mainsizey)-1,
                                 self.datastarty-1, -1):
                     try:
                         row = self.getrow(i)
@@ -368,7 +368,7 @@ class _BrowserLevel(object):
                 # drop rows from the start
                 del self.displayrows[:self.datastarty-olddatastarty]
                 # fetch new items
-                for i in xrange(max(olddatastarty+self.mainsizey, self.datastarty),
+                for i in range(max(olddatastarty+self.mainsizey, self.datastarty),
                                 self.datastarty+self.mainsizey):
                     try:
                         row = self.getrow(i)
@@ -652,7 +652,7 @@ class _CommandFind(_CommandInput):
                         break # found something
                 except (KeyboardInterrupt, SystemExit):
                     raise
-                except Exception, exc:
+                except Exception as exc:
                     browser.report(exc)
                     curses.beep()
                     break  # break on error
@@ -677,7 +677,7 @@ class _CommandFindBackwards(_CommandInput):
                         break # found something
                 except (KeyboardInterrupt, SystemExit):
                     raise
-                except Exception, exc:
+                except Exception as exc:
                     browser.report(exc)
                     curses.beep()
                     break # break on error
@@ -946,7 +946,7 @@ class ibrowse(ipipe.Display):
                 )
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except Exception, exc:
+            except Exception as exc:
                 if not self.levels:
                     raise
                 self._calcheaderlines(oldlevels)
@@ -1208,7 +1208,7 @@ class ibrowse(ipipe.Display):
         self.report("markrange")
         start = None
         if level.items:
-            for i in xrange(level.cury, -1, -1):
+            for i in range(level.cury, -1, -1):
                 if level.items[i].marked:
                     start = i
                     break
@@ -1216,7 +1216,7 @@ class ibrowse(ipipe.Display):
             self.report(CommandError("no mark before cursor"))
             curses.beep()
         else:
-            for i in xrange(start, level.cury+1):
+            for i in range(start, level.cury+1):
                 cache = level.items[i]
                 if not cache.marked:
                     cache.marked = True
@@ -1311,7 +1311,7 @@ class ibrowse(ipipe.Display):
                 item = attr.value(item)
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except Exception, exc:
+            except Exception as exc:
                 self.report(exc)
             else:
                 self.report("entering detail view for attribute %s..." % attr.name())
@@ -1498,7 +1498,7 @@ class ibrowse(ipipe.Display):
             level.mainsizey = self.scrsizey-1-self._headerlines-footery
 
             # Paint object header
-            for i in xrange(self._firstheaderline, self._firstheaderline+self._headerlines):
+            for i in range(self._firstheaderline, self._firstheaderline+self._headerlines):
                 lv = self.levels[i]
                 posx = 0
                 posy = i-self._firstheaderline
@@ -1546,7 +1546,7 @@ class ibrowse(ipipe.Display):
 
                 # Paint rows
                 posy = self._headerlines+1+level.datastarty
-                for i in xrange(level.datastarty, min(level.datastarty+level.mainsizey, len(level.items))):
+                for i in range(level.datastarty, min(level.datastarty+level.mainsizey, len(level.items))):
                     cache = level.items[i]
                     if i == level.cury:
                         style = self.style_numberhere
@@ -1598,7 +1598,7 @@ class ibrowse(ipipe.Display):
                         scr.clrtoeol()
 
                 # Add blank row headers for the rest of the screen
-                for posy in xrange(posy+1, self.scrsizey-2):
+                for posy in range(posy+1, self.scrsizey-2):
                     scr.addstr(posy, 0, " " * (level.numbersizex+2), self.getstyle(self.style_colheader))
                     scr.clrtoeol()
 
@@ -1638,7 +1638,7 @@ class ibrowse(ipipe.Display):
                         value = attr.value(item)
                     except (SystemExit, KeyboardInterrupt):
                         raise
-                    except Exception, exc:
+                    except Exception as exc:
                         value = exc
                     if value is not ipipe.noitem:
                         attrstyle = ipipe.xrepr(value, "footer")

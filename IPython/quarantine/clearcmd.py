@@ -37,14 +37,14 @@ def clear_f(self,arg):
     for target in arg.split():
 
         if target == 'out':
-            print "Flushing output cache (%d entries)" % len(user_ns['_oh'])
+            print("Flushing output cache (%d entries)" % len(user_ns['_oh']))
             self.outputcache.flush()
 
         elif target == 'in':
-            print "Flushing input history"
+            print("Flushing input history")
             pc = self.outputcache.prompt_count + 1
             for n in range(1, pc):
-                key = '_i'+`n`
+                key = '_i'+repr(n)
                 user_ns.pop(key,None)
                 try:
                     del user_ns[key]
@@ -59,29 +59,29 @@ def clear_f(self,arg):
                 from numpy import ndarray
                 # This must be done with items and not iteritems because we're
                 # going to modify the dict in-place.
-                for x,val in user_ns.items():
+                for x,val in list(user_ns.items()):
                     if isinstance(val,ndarray):
                         del user_ns[x]
             except AttributeError:
-                print "Clear array only works if Numpy is available."
+                print("Clear array only works if Numpy is available.")
 
         elif target == 'shadow_compress':
-            print "Compressing shadow history"
+            print("Compressing shadow history")
             api.db.hcompress('shadowhist')
             
         elif target == 'shadow_nuke':
-            print "Erased all keys from shadow history "
+            print("Erased all keys from shadow history ")
             for k in ip.db.keys('shadowhist/*'):
                 del ip.db[k]
 
         elif target == 'dhist':
-            print "Clearing directory history"
+            print("Clearing directory history")
             del user_ns['_dh'][:]
 
     gc.collect()        
 
 # Activate the extension
 ip.define_magic("clear",clear_f)
-import ipy_completers
+from . import ipy_completers
 ipy_completers.quick_completer(
     '%clear','in out shadow_nuke shadow_compress dhist')

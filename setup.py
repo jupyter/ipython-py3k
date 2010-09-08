@@ -25,7 +25,7 @@ if sys.version[0:3] < '2.5':
     error = """\
 ERROR: 'IPython requires Python Version 2.5 or above.'
 Exiting."""
-    print >> sys.stderr, error
+    print(error, file=sys.stderr)
     sys.exit(1)
 
 # At least we're on Python 2.5 or newer, move on.
@@ -85,14 +85,14 @@ if os.name == 'posix':
 elif os.name in ['nt','dos']:
     os_name = 'windows'
 else:
-    print 'Unsupported operating system:',os.name
+    print('Unsupported operating system:',os.name)
     sys.exit(1)
 
 # Under Windows, 'sdist' has not been supported.  Now that the docs build with
 # Sphinx it might work, but let's not turn it on until someone confirms that it
 # actually works.
 if os_name == 'windows' and 'sdist' in sys.argv:
-    print 'The sdist command is not available under Windows.  Exiting.'
+    print('The sdist command is not available under Windows.  Exiting.')
     sys.exit(1)
 
 #-------------------------------------------------------------------------------

@@ -82,7 +82,7 @@ open(tmpname,'w').write('set mouse')
 gnu_out = getoutput('gnuplot '+ tmpname)
 os.unlink(tmpname)
 if gnu_out:  # Gnuplot won't print anything if it has mouse support
-    print "*** Your version of Gnuplot appears not to have mouse support."
+    print("*** Your version of Gnuplot appears not to have mouse support.")
     gnuplot_mouse = 0
 else:
     gnuplot_mouse = 1

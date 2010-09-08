@@ -42,12 +42,12 @@ def tkinter_clipboard_get():
     implementation that uses that toolkit.
     """
     try:
-        import Tkinter
+        import tkinter
     except ImportError:
         message = ("Getting text from the clipboard on this platform "
             "requires Tkinter.")
         raise TryNext(message)
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     root.withdraw()
     text = root.clipboard_get()
     root.destroy()

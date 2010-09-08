@@ -11,7 +11,7 @@ directions."""
 #-----------------------------------------------------------------------------
 
 # From std lib
-import StringIO
+import io
 import os
 import shutil
 import tempfile
@@ -70,10 +70,10 @@ f.close()
 my_d = Demo(filename)
 my_cd = ClearDemo(filename)
 
-fobj = StringIO.StringIO(example1)
+fobj = io.StringIO(example1)
 str_d = Demo(fobj, title='via stringio')
 
-print '''
+print('''
 The example that is embeded in demo.py file has been used to create 
 the following 3 demos, and should now be available to use:
    my_d()    -- created from a file
@@ -82,4 +82,4 @@ the following 3 demos, and should now be available to use:
 Call by typing their name, (with parentheses), at the 
 ipython prompt, interact with the block, then call again
 to run the next block.
-'''
+''')

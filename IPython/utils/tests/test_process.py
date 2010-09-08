@@ -65,7 +65,7 @@ def test_find_cmd_fail():
 def test_arg_split():
     """Ensure that argument lines are correctly split like in a shell."""
     tests = [['hi', ['hi']],
-             [u'hi', [u'hi']],
+             ['hi', ['hi']],
              ]
     for argstr, argv in tests:
         nt.assert_equal(arg_split(argstr), argv)
