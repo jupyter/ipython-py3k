@@ -80,7 +80,7 @@ def idoctest(ns=None,eraise=False):
     ip.savehist()
     try:
         while True:
-            line = raw_input()
+            line = input()
             if not line or line.isspace():
                 empty_lines += 1
             else:
@@ -93,7 +93,7 @@ def idoctest(ns=None,eraise=False):
     except EOFError:
         pass
     except KeyboardInterrupt:
-        print "KeyboardInterrupt - Discarding input."
+        print("KeyboardInterrupt - Discarding input.")
         run_test = False
     
     ip.reloadhist()

@@ -39,7 +39,7 @@ from IPython.kernel.clusterdir import (
 #-----------------------------------------------------------------------------
 
 
-default_config_file_name = u'ipcluster_config.py'
+default_config_file_name = 'ipcluster_config.py'
 
 
 _description = """\
@@ -214,7 +214,7 @@ class IPClusterAppConfigLoader(ClusterDirConfigLoader):
 
 class IPClusterApp(ApplicationWithClusterDir):
 
-    name = u'ipcluster'
+    name = 'ipcluster'
     description = _description
     usage = None
     command_line_loader = IPClusterAppConfigLoader
@@ -278,7 +278,7 @@ class IPClusterApp(ApplicationWithClusterDir):
                 if os.path.isdir(full_path) and f.startswith('cluster_'):
                     profile = full_path.split('_')[-1]
                     start_cmd = 'ipcluster start -p %s -n 4' % profile
-                    print start_cmd + " ==> " + full_path
+                    print(start_cmd + " ==> " + full_path)
 
     def pre_construct(self):
         # IPClusterApp.pre_construct() is where we cd to the working directory.

@@ -61,13 +61,13 @@ used, and this module (and the readline module) are silently inactive.
 #  the file COPYING, distributed as part of this software.
 #
 #*****************************************************************************
-from __future__ import print_function
+
 
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 import __main__
 import glob
 import inspect
@@ -305,9 +305,9 @@ class Completer(object):
         match_append = matches.append
         n = len(text)
         for lst in [keyword.kwlist,
-                    __builtin__.__dict__.keys(),
-                    self.namespace.keys(),
-                    self.global_namespace.keys()]:
+                    list(__builtin__.__dict__.keys()),
+                    list(self.namespace.keys()),
+                    list(self.global_namespace.keys())]:
             for word in lst:
                 if word[:n] == text and word != "__builtins__":
                     match_append(word)
@@ -441,7 +441,7 @@ class IPCompleter(Completer):
         completions = []
         comp_append = completions.append
         try:
-            for i in xrange(sys.maxint):
+            for i in range(sys.maxsize):
                 res = self.complete(text, i, text)
                 if not res:
                     break
@@ -556,7 +556,7 @@ class IPCompleter(Completer):
         if ' ' in main_text and not main_text.startswith('sudo'):
             return []
         text = os.path.expanduser(text)
-        aliases =  self.alias_table.keys()
+        aliases =  list(self.alias_table.keys())
         if text == '':
             return aliases
         else:
@@ -578,7 +578,7 @@ class IPCompleter(Completer):
                         # true if txt is _not_ a _ name, false otherwise:
                         no__name = (lambda txt:
                                     re.match(r'.*\._.*?',txt) is None)
-                    matches = filter(no__name, matches)
+                    matches = list(filter(no__name, matches))
             except NameError:
                 # catches <undefined attributes>.<tab>
                 matches = []
@@ -640,10 +640,10 @@ class IPCompleter(Completer):
         isId = re.compile(r'\w+$').match
         while True:
             try:
-                ids.append(iterTokens.next())
+                ids.append(next(iterTokens))
                 if not isId(ids[-1]):
                     ids.pop(); break
-                if not iterTokens.next() == '.':
+                if not next(iterTokens) == '.':
                     break
             except StopIteration:
                 break

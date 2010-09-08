@@ -56,18 +56,18 @@ def page_dumb(strng, start=0, screen_lines=25):
     out_ln  = strng.splitlines()[start:]
     screens = chop(out_ln,screen_lines-1)
     if len(screens) == 1:
-        print >>IPython.utils.io.Term.cout, os.linesep.join(screens[0])
+        print(os.linesep.join(screens[0]), file=IPython.utils.io.Term.cout)
     else:
         last_escape = ""
         for scr in screens[0:-1]:
             hunk = os.linesep.join(scr)
-            print >>IPython.utils.io.Term.cout, last_escape + hunk
+            print(last_escape + hunk, file=IPython.utils.io.Term.cout)
             if not page_more():
                 return
             esc_list = esc_re.findall(hunk)
             if len(esc_list) > 0:
                 last_escape = esc_list[-1]
-        print >>IPython.utils.io.Term.cout, last_escape + os.linesep.join(screens[-1])
+        print(last_escape + os.linesep.join(screens[-1]), file=IPython.utils.io.Term.cout)
 
 
 def page(strng, start=0, screen_lines=0, pager_cmd=None):
@@ -107,7 +107,7 @@ def page(strng, start=0, screen_lines=0, pager_cmd=None):
     # Ugly kludge, but calling curses.initscr() flat out crashes in emacs
     TERM = os.environ.get('TERM','dumb')
     if TERM in ['dumb','emacs'] and os.name != 'nt':
-        print strng
+        print(strng)
         return
     # chop off the topmost part of the string we don't want to see
     str_lines = strng.split(os.linesep)[start:]
@@ -156,7 +156,7 @@ def page(strng, start=0, screen_lines=0, pager_cmd=None):
     #print 'numlines',numlines,'screenlines',screen_lines  # dbg
     if numlines <= screen_lines :
         #print '*** normal print'  # dbg
-        print >>IPython.utils.io.Term.cout, str_toprint
+        print(str_toprint, file=IPython.utils.io.Term.cout)
     else:
         # Try to open pager and default to internal one if that fails.
         # All failure modes are tagged as 'retval=1', to match the return
@@ -188,7 +188,7 @@ def page(strng, start=0, screen_lines=0, pager_cmd=None):
                 pager.write(strng)
                 pager.close()
                 retval = pager.close()  # success returns None
-            except IOError,msg:  # broken pipe when user quits
+            except IOError as msg:  # broken pipe when user quits
                 if msg.args == (32,'Broken pipe'):
                     retval = None
                 else:
@@ -217,7 +217,7 @@ def page_file(fname, start=0, pager_cmd=None):
                 start -= 1
             page(open(fname).read(),start)
         except:
-            print 'Unable to show file',`fname`
+            print('Unable to show file',repr(fname))
 
 
 def get_pager_cmd(pager_cmd=None):
@@ -272,7 +272,7 @@ if os.name == 'nt' and os.environ.get('TERM','dumb') != 'emacs':
         return result
 else:
     def page_more():
-        ans = raw_input('---Return to continue, q to quit--- ')
+        ans = input('---Return to continue, q to quit--- ')
         if ans.lower().startswith('q'):
             return False
         else:
@@ -292,16 +292,16 @@ def snip_print(str,width = 75,print_full = 0,header = ''):
         page(header+str)
         return 0
 
-    print header,
+    print(header, end=' ')
     if len(str) < width:
-        print str
+        print(str)
         snip = 0
     else:
         whalf = int((width -5)/2)
-        print str[:whalf] + ' <...> ' + str[-whalf:]
+        print(str[:whalf] + ' <...> ' + str[-whalf:])
         snip = 1
     if snip and print_full == 2:
-        if raw_input(header+' Snipped. View (y/n)? [N]').lower() == 'y':
+        if input(header+' Snipped. View (y/n)? [N]').lower() == 'y':
             page(str)
     return snip
 

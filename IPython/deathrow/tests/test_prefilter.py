@@ -294,7 +294,7 @@ for c in list('!=()<>+*/%^&|'):
 #
 # XXX Can aliases have '.' in their name?  With autocall off, that works,
 # with autocall on, it doesn't.  Hmmm.
-import __builtin__
+import builtins
 for ac_state in [0,1]:
     ip.options.autocall = ac_state
     ip.IP.alias_table['alias_cmd'] = 'alias_result'
@@ -307,7 +307,7 @@ for ac_state in [0,1]:
         ("alias_cmd /", handle_alias),
         ])
 
-    for ns in [ip.user_ns, ip.IP.internal_ns, __builtin__.__dict__ ]:
+    for ns in [ip.user_ns, ip.IP.internal_ns, builtins.__dict__ ]:
         ns['alias_cmd'] = 'a user value'
         ns['alias_head'] = 'a user value'
         run_handler_tests([
@@ -431,10 +431,10 @@ run_handler_tests(bin_tests)
 # ============
 num_f = len(failures)
 if verbose:
-    print 
-print "%s tests run, %s failure%s" % (num_tests,
+    print() 
+print("%s tests run, %s failure%s" % (num_tests,
                                       num_f,
-                                      num_f != 1 and "s" or "")
+                                      num_f != 1 and "s" or ""))
 for f in failures:
-    print f
+    print(f)
 

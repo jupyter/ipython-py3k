@@ -45,7 +45,7 @@ class SerializedTestCase(unittest.TestCase):
     
     def testSerializedInterfaces(self):
 
-        us = UnSerialized({'a':10, 'b':range(10)})
+        us = UnSerialized({'a':10, 'b':list(range(10))})
         s = ISerialized(us)
         uss = IUnSerialized(s)
         self.assert_(ISerialized.providedBy(s))
@@ -59,7 +59,7 @@ class SerializedTestCase(unittest.TestCase):
             self.assert_(hasattr(uss, m))
 
     def testPickleSerialized(self):
-        obj = {'a':1.45345, 'b':'asdfsdf', 'c':10000L}
+        obj = {'a':1.45345, 'b':'asdfsdf', 'c':10000}
         original = UnSerialized(obj)
         originalSer = ISerialized(original)
         firstData = originalSer.getData()
@@ -69,7 +69,7 @@ class SerializedTestCase(unittest.TestCase):
         self.assert_(firstMD == {})
         unSerialized = IUnSerialized(originalSer)
         secondObj = unSerialized.getObject()
-        for k, v in secondObj.iteritems():
+        for k, v in secondObj.items():
             self.assert_(obj[k] == v)
         secondSer = ISerialized(UnSerialized(secondObj))
         self.assert_(firstData == secondSer.getData())

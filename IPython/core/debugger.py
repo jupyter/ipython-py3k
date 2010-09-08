@@ -47,7 +47,7 @@ if '-pydb' in sys.argv:
             # better protect against it.
             has_pydb = True
     except ImportError:
-        print "Pydb (http://bashdb.sourceforge.net/pydb/) does not seem to be available"
+        print("Pydb (http://bashdb.sourceforge.net/pydb/) does not seem to be available")
 
 if has_pydb:
     from pydb import Pdb as OldPdb
@@ -61,12 +61,12 @@ else:
 # the Tracer constructor.
 def BdbQuit_excepthook(et,ev,tb):
     if et==bdb.BdbQuit:
-        print 'Exiting Debugger.'
+        print('Exiting Debugger.')
     else:
         BdbQuit_excepthook.excepthook_ori(et,ev,tb)
 
 def BdbQuit_IPython_excepthook(self,et,ev,tb):
-    print 'Exiting Debugger.'
+    print('Exiting Debugger.')
 
 
 class Tracer(object):
@@ -279,7 +279,7 @@ class Pdb(OldPdb):
     def print_stack_entry(self,frame_lineno,prompt_prefix='\n-> ',
                           context = 3):
         #frame, lineno = frame_lineno
-        print >>IPython.utils.io.Term.cout, self.format_stack_entry(frame_lineno, '', context)
+        print(self.format_stack_entry(frame_lineno, '', context), file=IPython.utils.io.Term.cout)
 
         # vds: >>
         frame, lineno = frame_lineno
@@ -288,7 +288,7 @@ class Pdb(OldPdb):
         # vds: <<
 
     def format_stack_entry(self, frame_lineno, lprefix=': ', context = 3):
-        import linecache, repr
+        import linecache, reprlib
         
         ret = []
         
@@ -306,7 +306,7 @@ class Pdb(OldPdb):
         if '__return__' in frame.f_locals:
             rv = frame.f_locals['__return__']
             #return_value += '->'
-            return_value += repr.repr(rv) + '\n'
+            return_value += reprlib.repr(rv) + '\n'
         ret.append(return_value)
 
         #s = filename + '(' + `lineno` + ')'
@@ -321,7 +321,7 @@ class Pdb(OldPdb):
         call = ''
         if func != '?':         
             if '__args__' in frame.f_locals:
-                args = repr.repr(frame.f_locals['__args__'])
+                args = reprlib.repr(frame.f_locals['__args__'])
             else:
                 args = '()'
             call = tpl_call % (func, args)
@@ -419,7 +419,7 @@ class Pdb(OldPdb):
                 src.append(line)
                 self.lineno = lineno
 
-            print >>IPython.utils.io.Term.cout, ''.join(src)
+            print(''.join(src), file=IPython.utils.io.Term.cout)
 
         except KeyboardInterrupt:
             pass
@@ -440,7 +440,7 @@ class Pdb(OldPdb):
                 else:
                     first = max(1, int(x) - 5)
             except:
-                print '*** Error in argument:', `arg`
+                print('*** Error in argument:', repr(arg))
                 return
         elif self.lineno is None:
             first = max(1, self.curframe.f_lineno - 5)
@@ -499,12 +499,12 @@ class Pdb(OldPdb):
         #######################################################################
         
         if not line:
-            print >>self.stdout, 'End of file'
+            print('End of file', file=self.stdout)
             return 0
         line = line.strip()
         # Don't allow setting breakpoint at a blank line
         if (not line or (line[0] == '#') or
              (line[:3] == '"""') or line[:3] == "'''"):
-            print >>self.stdout, '*** Blank or comment'
+            print('*** Blank or comment', file=self.stdout)
             return 0
         return lineno

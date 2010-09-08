@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 # Standard library imports.
 from types import FunctionType
 
-import __builtin__
+import builtins
 import codeop
 import compiler
 import sys
@@ -64,14 +64,14 @@ def default_display_formatters():
     """ Return a list of default display formatters.
     """
 
-    from display_formatter import PPrintDisplayFormatter, ReprDisplayFormatter
+    from .display_formatter import PPrintDisplayFormatter, ReprDisplayFormatter
     return [PPrintDisplayFormatter(), ReprDisplayFormatter()]
 
 def default_traceback_formatters():
     """ Return a list of default traceback formatters.
     """
 
-    from traceback_formatter import PlainTracebackFormatter
+    from .traceback_formatter import PlainTracebackFormatter
     return [PlainTracebackFormatter()]
 
 # Top-level classes
@@ -311,7 +311,7 @@ class Interpreter(object):
         # exception that has occured in user code OR return the message
         # dict containing the traceback and other useful info.
         if raiseException and einfo:
-            raise einfo[0],einfo[1],einfo[2]
+            raise einfo[0](einfo[1]).with_traceback(einfo[2])
         else:
             return message
 
@@ -342,7 +342,7 @@ class Interpreter(object):
         # track of __future__ imports.
         try:
             commands = self.split_commands(python)
-        except (SyntaxError, IndentationError), e:
+        except (SyntaxError, IndentationError) as e:
             # Save the exc_info so compilation related exceptions can be
             # reraised
             self.traceback_trap.args = sys.exc_info()
@@ -352,7 +352,7 @@ class Interpreter(object):
         for cmd in commands:
             try:
                 code = self.command_compiler(cmd, self.filename, 'single')
-            except (SyntaxError, OverflowError, ValueError), e:
+            except (SyntaxError, OverflowError, ValueError) as e:
                 self.traceback_trap.args = sys.exc_info()
                 self.pack_exception(self.message,e)
                 # No point in continuing if one block raised
@@ -372,7 +372,7 @@ class Interpreter(object):
         
         outflag = 1 # start by assuming error, success will reset it
         try:
-            exec code in self.user_ns
+            exec(code, self.user_ns)
             outflag = 0
         except SystemExit:
             self.traceback_trap.args = sys.exc_info()
@@ -437,10 +437,10 @@ class Interpreter(object):
     def push_function(self, ns):
         # First set the func_globals for all functions to self.user_ns
         new_kwds = {}
-        for k, v in ns.iteritems():
+        for k, v in ns.items():
             if not isinstance(v, FunctionType):
                 raise TypeError("function object expected")
-            new_kwds[k] = FunctionType(v.func_code, self.user_ns)
+            new_kwds[k] = FunctionType(v.__code__, self.user_ns)
         self.user_ns.update(new_kwds)        
 
     def pack_exception(self,message,exc):
@@ -478,7 +478,7 @@ class Interpreter(object):
 
         try:
             code = self.command_compiler(source,filename,symbol)
-        except (OverflowError, SyntaxError, IndentationError, ValueError ), e:
+        except (OverflowError, SyntaxError, IndentationError, ValueError ) as e:
             # Case 1
             self.traceback_trap.args = sys.exc_info()
             self.pack_exception(self.message,e)
@@ -635,7 +635,7 @@ class Interpreter(object):
         builtin_additions = dict(
             ipmagic=self.ipmagic,
         )
-        __builtin__.__dict__.update(builtin_additions)
+        builtins.__dict__.update(builtin_additions)
 
         if self.history is not None:
             self.history.setup_namespace(self.user_ns)
@@ -681,7 +681,7 @@ class Interpreter(object):
         
         # The compiler module does not like unicode. We need to convert
         # it encode it:
-        if isinstance(python, unicode):
+        if isinstance(python, str):
             # Use the utf-8-sig BOM so the compiler detects this a UTF-8
             # encode string.
             python = '\xef\xbb\xbf' + python.encode('utf-8')

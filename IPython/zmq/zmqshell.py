@@ -13,7 +13,7 @@ machinery.  This should thus be thought of as scaffolding.
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
-from __future__ import print_function
+
 
 # Stdlib
 import inspect
@@ -33,7 +33,7 @@ from IPython.utils.text import StringTypes
 from IPython.utils.traitlets import Instance, Type, Dict
 from IPython.utils.warn import warn
 from IPython.zmq.session import extract_header
-from session import Session
+from .session import Session
 
 #-----------------------------------------------------------------------------
 # Globals and side-effects
@@ -57,7 +57,7 @@ class ZMQDisplayHook(DisplayHook):
         self.parent_header = extract_header(parent)
 
     def start_displayhook(self):
-        self.msg = self.session.msg(u'pyout', {}, parent=self.parent_header)
+        self.msg = self.session.msg('pyout', {}, parent=self.parent_header)
 
     def write_output_prompt(self):
         """Write the output prompt."""
@@ -103,13 +103,13 @@ class ZMQInteractiveShell(InteractiveShell):
     def _showtraceback(self, etype, evalue, stb):
 
         exc_content = {
-            u'traceback' : stb,
-            u'ename' : unicode(etype.__name__),
-            u'evalue' : unicode(evalue)
+            'traceback' : stb,
+            'ename' : str(etype.__name__),
+            'evalue' : str(evalue)
         }
 
         dh = self.displayhook
-        exc_msg = dh.session.msg(u'pyerr', exc_content, dh.parent_header)
+        exc_msg = dh.session.msg('pyerr', exc_content, dh.parent_header)
         # Send exception info over pub socket for other clients than the caller
         # to pick up
         dh.pub_socket.send_json(exc_msg)
@@ -119,7 +119,7 @@ class ZMQInteractiveShell(InteractiveShell):
         # to remove this hack.  Even uglier, we need to store the error status
         # here, because in the main loop, the logic that sets it is being
         # skipped because runlines swallows the exceptions.
-        exc_content[u'status'] = u'error'
+        exc_content['status'] = 'error'
         self._reply_content = exc_content
         # /FIXME
         
@@ -356,8 +356,8 @@ class ZMQInteractiveShell(InteractiveShell):
 
         opts,args = self.parse_options(parameter_s,'prn:')
         # Set a few locals from the options for convenience:
-        opts_p = opts.has_key('p')
-        opts_r = opts.has_key('r')
+        opts_p = 'p' in opts
+        opts_r = 'r' in opts
         
         # Default line number value
         lineno = opts.get('n',None)
@@ -370,7 +370,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
         if opts_p:
             args = '_%s' % last_call[0]
-            if not self.shell.user_ns.has_key(args):
+            if args not in self.shell.user_ns:
                 args = last_call[1]
             
         # use last_call to remember the state of the previous call, but don't

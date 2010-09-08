@@ -16,12 +16,12 @@ This is a bit like 'M-x server-start" or gnuserv in the emacs world.
 from IPython.core import ipapi
 ip = ipapi.get()
 
-import SocketServer
+import socketserver
 
 # user-accessible port
 PORT = 8099
 
-class IPythonRequestHandler(SocketServer.StreamRequestHandler):
+class IPythonRequestHandler(socketserver.StreamRequestHandler):
     def handle(self):
         #print "connection from", self.client_address
         inp = self.rfile.read().replace('\r\n','\n')
@@ -29,10 +29,10 @@ class IPythonRequestHandler(SocketServer.StreamRequestHandler):
         ip.runlines(inp)
 
 def serve(port = PORT):
-    server = SocketServer.TCPServer(("", port), IPythonRequestHandler)
-    print "ipy_server on TCP port", port
+    server = socketserver.TCPServer(("", port), IPythonRequestHandler)
+    print("ipy_server on TCP port", port)
     server.serve_forever()
 
 def serve_thread(port = PORT):
-    import thread
-    thread.start_new_thread(serve, (port,))
+    import _thread
+    _thread.start_new_thread(serve, (port,))

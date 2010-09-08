@@ -15,6 +15,7 @@ function name, setup and teardown functions and so on - see
 """
 import warnings
 import sys
+import collections
 
 # IPython changes: make this work if numpy not available
 # Original code:
@@ -24,7 +25,7 @@ import sys
 try:
     from numpy.testing.utils import WarningManager, WarningMessage
 except ImportError:
-    from _numpy_testing_utils import WarningManager, WarningMessage
+    from ._numpy_testing_utils import WarningManager, WarningMessage
     
 # End IPython changes
 
@@ -131,7 +132,7 @@ def skipif(skip_condition, msg=None):
         import nose
 
         # Allow for both boolean or callable skip conditions.
-        if callable(skip_condition):
+        if isinstance(skip_condition, collections.Callable):
             skip_val = lambda : skip_condition()
         else:
             skip_val = lambda : skip_condition
@@ -207,7 +208,7 @@ def knownfailureif(fail_condition, msg=None):
         msg = 'Test skipped due to known failure'
 
     # Allow for both boolean or callable known failure conditions.
-    if callable(fail_condition):
+    if isinstance(fail_condition, collections.Callable):
         fail_val = lambda : fail_condition()
     else:
         fail_val = lambda : fail_condition
@@ -219,7 +220,7 @@ def knownfailureif(fail_condition, msg=None):
         from noseclasses import KnownFailureTest
         def knownfailer(*args, **kwargs):
             if fail_val():
-                raise KnownFailureTest, msg
+                raise KnownFailureTest(msg)
             else:
                 return f(*args, **kwargs)
         return nose.tools.make_decorator(f)(knownfailer)
@@ -273,7 +274,7 @@ def deprecated(conditional=True):
             finally:
                 ctx.__exit__()
 
-        if callable(conditional):
+        if isinstance(conditional, collections.Callable):
             cond = conditional()
         else:
             cond = conditional

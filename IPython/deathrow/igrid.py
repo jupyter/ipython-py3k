@@ -1,6 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 
-import ipipe, os, webbrowser, urllib
+import ipipe, os, webbrowser, urllib.request, urllib.parse, urllib.error
 from IPython.core import ipapi
 import wx
 import wx.grid, wx.html
@@ -8,7 +8,7 @@ import wx.grid, wx.html
 try:
     sorted
 except NameError:
-    from ipipe import sorted
+    from .ipipe import sorted
 try:
     set
 except:
@@ -154,7 +154,7 @@ class IGridRenderer(wx.grid.PyGridCellRenderer):
         try:
             value = self.table._displayattrs[col].value(self.table.items[row])
             (align, width, text) = ipipe.xformat(value, "cell", self.maxchars)
-        except Exception, exc:
+        except Exception as exc:
             (align, width, text) = ipipe.xformat(exc, "cell", self.maxchars)
         return (align, text)
 
@@ -286,13 +286,13 @@ class IGridTable(wx.grid.PyGridTableBase):
         have = len(self.items)
         while self.iterator is not None and have < count:
             try:
-                item = self.iterator.next()
+                item = next(self.iterator)
             except StopIteration:
                 self.iterator = None
                 break
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except Exception, exc:
+            except Exception as exc:
                 have += 1
                 self._append(exc)
                 self.iterator = None
@@ -383,10 +383,10 @@ class IGridGrid(wx.grid.Grid):
         # Internal update to the selection tracking lists
         if event.Selecting():
             # adding to the list...
-            self.current_selection.update(xrange(event.GetTopRow(), event.GetBottomRow()+1))
+            self.current_selection.update(range(event.GetTopRow(), event.GetBottomRow()+1))
         else:
             # removal from list
-            for index in xrange(event.GetTopRow(), event.GetBottomRow()+1):
+            for index in range(event.GetTopRow(), event.GetBottomRow()+1):
                 self.current_selection.discard(index)
         event.Skip()
 
@@ -413,7 +413,7 @@ class IGridGrid(wx.grid.Grid):
                 return None
         try:
             self.table.items = ipipe.deque(sorted(self.table.items, key=realkey, reverse=reverse))
-        except TypeError, exc:
+        except TypeError as exc:
             self.error_output("Exception encountered: %s" % exc)
             return
         # Find out where the object under the cursor went
@@ -478,7 +478,7 @@ class IGridGrid(wx.grid.Grid):
             (align, width, text) = ipipe.xformat(value, "cell", self.maxchars)
         except IndexError:
             raise IndexError
-        except Exception, exc:
+        except Exception as exc:
             (align, width, text) = ipipe.xformat(exc, "cell", self.maxchars)
         return text
 
@@ -505,7 +505,7 @@ class IGridGrid(wx.grid.Grid):
                                 break
                         except (KeyboardInterrupt, SystemExit):
                             raise
-                        except Exception, exc:
+                        except Exception as exc:
                             frame.SetStatusText(str(exc))
                             wx.Bell()
                             break  # break on error
@@ -529,7 +529,7 @@ class IGridGrid(wx.grid.Grid):
                                 break
                         except (KeyboardInterrupt, SystemExit):
                             raise
-                        except Exception, exc:
+                        except Exception as exc:
                             frame.SetStatusText(str(exc))
                             wx.Bell()
                             break  # break on error
@@ -554,7 +554,7 @@ class IGridGrid(wx.grid.Grid):
                     startcol = 0
                     row += 1
             while True:
-                for col in xrange(startcol, self.table.GetNumberCols()):
+                for col in range(startcol, self.table.GetNumberCols()):
                     try:
                         foo = self.table.GetValue(row, col)
                         text = self._getvalue(row, col)
@@ -576,7 +576,7 @@ class IGridGrid(wx.grid.Grid):
                     startcol = self.GetNumberCols() - 1
                     row -= 1
             while True:
-                for col in xrange(startcol, -1, -1):
+                for col in range(startcol, -1, -1):
                     try:
                         foo = self.table.GetValue(row, col)
                         text = self._getvalue(row, col)
@@ -631,7 +631,7 @@ class IGridGrid(wx.grid.Grid):
             col = self.GetGridCursorCol()
             attr = self.table._displayattrs[col]
             result = []
-            for i in xrange(self.GetNumberRows()):
+            for i in range(self.GetNumberRows()):
                 result.append(self.table._displayattrs[col].value(self.table.items[i]))
             self.quit(result)
         elif keycode in (wx.WXK_ESCAPE, ord("Q")) and not (ctrl or sh):
@@ -716,7 +716,7 @@ class IGridGrid(wx.grid.Grid):
         current = nb.GetSelection()
         count = nb.GetPageCount()
         if count > 1:
-            for i in xrange(count-1, current-1, -1):
+            for i in range(count-1, current-1, -1):
                 nb.DeletePage(i)
             nb.GetCurrentPage().grid.SetFocus()
         else:
@@ -736,10 +736,10 @@ class IGridGrid(wx.grid.Grid):
             if current + 1 == count and value is not self.input: # we have an event in the last tab
                 frame._add_notebook(value, *attrs)
             elif value != self.input: # we have to delete all tabs newer than [panel] first
-                for i in xrange(count-1, current, -1): # some tabs don't close if we don't close in *reverse* order
+                for i in range(count-1, current, -1): # some tabs don't close if we don't close in *reverse* order
                     nb.DeletePage(i)
                 frame._add_notebook(value)
-        except TypeError, exc:
+        except TypeError as exc:
             if exc.__class__.__module__ == "exceptions":
                 msg = "%s: %s" % (exc.__class__.__name__, exc)
             else:
@@ -750,7 +750,7 @@ class IGridGrid(wx.grid.Grid):
         try:
             attr = self.table._displayattrs[col]
             value = attr.value(self.table.items[row])
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             self._doenter(value)
@@ -762,7 +762,7 @@ class IGridGrid(wx.grid.Grid):
     def enter(self, row):
         try:
             value = self.table.items[row]
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             self._doenter(value)
@@ -774,7 +774,7 @@ class IGridGrid(wx.grid.Grid):
         try:
             attr = self.table._displayattrs[col]
             item = self.table.items[row]
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             attrs = [ipipe.AttributeDetail(item, attr) for attr in ipipe.xattrs(item, "detail")]
@@ -784,7 +784,7 @@ class IGridGrid(wx.grid.Grid):
         try:
             attr = self.table._displayattrs[col]
             item = attr.value(self.table.items[row])
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             attrs = [ipipe.AttributeDetail(item, attr) for attr in ipipe.xattrs(item, "detail")]
@@ -819,7 +819,7 @@ class IGridGrid(wx.grid.Grid):
         """
         try:
             value = self.table.items[row]
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             self.quit(value)
@@ -827,7 +827,7 @@ class IGridGrid(wx.grid.Grid):
     def pickinput(self, row):
         try:
             value = self.table.items[row]
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             api = ipapi.get()
@@ -838,7 +838,7 @@ class IGridGrid(wx.grid.Grid):
         try:
             attr = self.table._displayattrs[col]
             value = attr.value(self.table.items[row])
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             api = ipapi.get()
@@ -851,7 +851,7 @@ class IGridGrid(wx.grid.Grid):
         """
         try:
             value = [self.table.items[row] for row in rows]
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             self.quit(value)
@@ -870,7 +870,7 @@ class IGridGrid(wx.grid.Grid):
                     raise
                 except Exception:
                     raise #pass
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             self.quit(values)
@@ -879,7 +879,7 @@ class IGridGrid(wx.grid.Grid):
         try:
             attr = self.table._displayattrs[col]
             value = attr.value(self.table.items[row])
-        except Exception, exc:
+        except Exception as exc:
             self.error_output(str(exc))
         else:
             self.quit(value)
@@ -959,7 +959,7 @@ class IGridFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             try:
                 milliseconds = int(dlg.GetValue())
-            except ValueError, exc:
+            except ValueError as exc:
                 self.SetStatusText(str(exc))
             else:
                 table.timer.Start(milliseconds=milliseconds, oneShot=False)
@@ -969,7 +969,7 @@ class IGridFrame(wx.Frame):
         dlg.Destroy()
 
     def stop_refresh(self, event):
-        for i in xrange(self.notebook.GetPageCount()):
+        for i in range(self.notebook.GetPageCount()):
             nb = self.notebook.GetPage(i)
             nb.grid.table.timer.Stop()
             self.SetStatusText("Refreshing inactive", 1)
@@ -1039,7 +1039,7 @@ class IGridFrame(wx.Frame):
         Show the help-HTML in a browser (as a ``HtmlWindow`` does not understand
         CSS this looks better)
         """
-        filename = urllib.pathname2url(os.path.abspath(os.path.join(os.path.dirname(__file__), "igrid_help.html")))
+        filename = urllib.request.pathname2url(os.path.abspath(os.path.join(os.path.dirname(__file__), "igrid_help.html")))
         if not filename.startswith("file"):
             filename = "file:" + filename
         webbrowser.open(filename, new=1, autoraise=True)

@@ -9,7 +9,7 @@ IO related utilities.
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
 #-----------------------------------------------------------------------------
-from __future__ import print_function
+
 
 #-----------------------------------------------------------------------------
 # Imports
@@ -162,29 +162,29 @@ def raw_input_multi(header='', ps1='==> ', ps2='..> ',terminate_str = '.'):
     try:
         if header:
             header += '\n'
-        lines = [raw_input(header + ps1)]
+        lines = [input(header + ps1)]
     except EOFError:
         return []
     terminate = [terminate_str]
     try:
         while lines[-1:] != terminate:
-            new_line = raw_input(ps1)
+            new_line = input(ps1)
             while new_line.endswith('\\'):
-                new_line = new_line[:-1] + raw_input(ps2)
+                new_line = new_line[:-1] + input(ps2)
             lines.append(new_line)
 
         return lines[:-1]  # don't return the termination command
     except EOFError:
-        print
+        print()
         return lines
 
 
 def raw_input_ext(prompt='',  ps2='... '):
     """Similar to raw_input(), but accepts extended lines if input ends with \\."""
 
-    line = raw_input(prompt)
+    line = input(prompt)
     while line.endswith('\\'):
-        line = line[:-1] + raw_input(ps2)
+        line = line[:-1] + input(ps2)
     return line
 
 
@@ -201,17 +201,17 @@ def ask_yes_no(prompt,default=None):
 
     answers = {'y':True,'n':False,'yes':True,'no':False}
     ans = None
-    while ans not in answers.keys():
+    while ans not in list(answers.keys()):
         try:
-            ans = raw_input(prompt+' ').lower()
+            ans = input(prompt+' ').lower()
             if not ans:  # response was an empty string
                 ans = default
         except KeyboardInterrupt:
             pass
         except EOFError:
-            if default in answers.keys():
+            if default in list(answers.keys()):
                 ans = default
-                print
+                print()
             else:
                 raise
 
@@ -240,7 +240,7 @@ class NLprinter:
         # into a recursive call for a nested list.
         start = kw['start']; del kw['start']
         stop = kw['stop']; del kw['stop']
-        if self.depth == 0 and 'header' in kw.keys():
+        if self.depth == 0 and 'header' in list(kw.keys()):
             print(kw['header'])
 
         for idx in range(start,stop):

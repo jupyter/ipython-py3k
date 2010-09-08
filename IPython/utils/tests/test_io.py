@@ -14,7 +14,7 @@
 
 import sys
 
-from cStringIO import StringIO
+from io import StringIO
 
 import nose.tools as nt
 
@@ -31,7 +31,7 @@ def test_tee_simple():
     chan = StringIO()
     text = 'Hello'
     tee = Tee(chan, channel='stdout')
-    print >> chan, text,
+    print(text, end=' ', file=chan)
     nt.assert_equal(chan.getvalue(), text)
 
 
@@ -46,7 +46,7 @@ class TeeTestCase(dec.ParametricTestCase):
         setattr(sys, channel, trap)
 
         tee = Tee(chan, channel=channel)
-        print >> chan, text,
+        print(text, end=' ', file=chan)
         setattr(sys, channel, std_ori)
         trap_val = trap.getvalue()
         nt.assert_equals(chan.getvalue(), text)

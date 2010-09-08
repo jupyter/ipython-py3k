@@ -16,7 +16,7 @@ Test the output capture at the OS level, using file descriptors.
 # Tell nose to skip this module
 __test__ = {}
 
-from cStringIO import StringIO
+from io import StringIO
 import os
 import sys
 
@@ -41,8 +41,8 @@ class TestRedirector(unittest.TestCase):
             r.start()
             for i in range(10):
                 os.system('echo %ic' % i)
-                print >>out, r.getvalue(),
-                print >>out, i
+                print(r.getvalue(), end=' ', file=out)
+                print(i, file=out)
         except:
             r.stop()
             raise
@@ -67,8 +67,8 @@ class TestRedirector(unittest.TestCase):
             trap.set()
             for i in range(10):
                 os.system('echo %ic' % i)
-                print "%ip" % i
-                print >>out, i
+                print("%ip" % i)
+                print(i, file=out)
         except:
             trap.unset()
             raise

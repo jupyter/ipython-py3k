@@ -50,8 +50,8 @@ class ZopeDebug(object):
         if configfile is None:
             raise RuntimeError( "CONFIG_FILE env not set" )
 
-        print "CONFIG_FILE=", configfile
-        print "INSTANCE_HOME=", self.instancehome
+        print("CONFIG_FILE=", configfile)
+        print("INSTANCE_HOME=", self.instancehome)
 
         self.configfile = configfile
 
@@ -74,9 +74,9 @@ class ZopeDebug(object):
 
         try:
             self._make_permissive()
-            print "Permissive security installed"
+            print("Permissive security installed")
         except:
-            print "Permissive security NOT installed"
+            print("Permissive security NOT installed")
 
         self._pwd = self.portal or self.app
 
@@ -92,7 +92,7 @@ class ZopeDebug(object):
                 sm = getSiteManager()
 
                 if sm is gsm:
-                    print "ERROR SETTING SITE!"
+                    print("ERROR SETTING SITE!")
         except:
             pass
 
@@ -150,7 +150,7 @@ class ZopeDebug(object):
         # TODO Make it easy to change back to permissive security.
         user = self.portal.acl_users.getUser(username)
         if not user:
-            print "Can't find %s in %s" % (username, self.portal.acl_users)
+            print("Can't find %s in %s" % (username, self.portal.acl_users))
             return
 
         from AccessControl import ZopeSecurityPolicy
@@ -162,7 +162,7 @@ class ZopeDebug(object):
         self.oldpolicy = setSecurityPolicy(_policy)
         wrapped_user = user.__of__(self.portal.acl_users)
         newSecurityManager(None, user)
-        print 'User changed.'
+        print('User changed.')
         return getSecurityManager().getUser()
 
     def getCatalogInfo(self, obj=None, catalog='portal_catalog', query=None, sort_on='created', sort_order='reverse' ):
@@ -170,7 +170,7 @@ class ZopeDebug(object):
         default query on that object, or pass an explicit query.
         """
         if obj and query:
-            print "Ignoring %s, using query." % obj
+            print("Ignoring %s, using query." % obj)
 
         catalog = self.portal.get(catalog)
         if not catalog:
@@ -260,7 +260,7 @@ class ZopeDebug(object):
         if x is None:
             raise KeyError( "Can't cd to %s" % path )
 
-        print "%s -> %s" % ( self.pwd().getId(), x.getId() )
+        print("%s -> %s" % ( self.pwd().getId(), x.getId() ))
         self._pwd = x
 
     def ls( self, x=None ):
@@ -291,7 +291,7 @@ def main():
     
     SOFTWARE_HOME = os.environ.get( "SOFTWARE_HOME" )
     sys.path.append( SOFTWARE_HOME )
-    print "SOFTWARE_HOME=%s\n" % SOFTWARE_HOME
+    print("SOFTWARE_HOME=%s\n" % SOFTWARE_HOME)
 
     zope_debug = ZopeDebug()
 
@@ -303,7 +303,7 @@ def main():
     # I like my banner minimal.
     o.banner = "ZOPE Py %s IPy %s\n" % (sys.version.split('\n')[0],release.version)
 
-    print textwrap.dedent("""\
+    print(textwrap.dedent("""\
         ZOPE mode iPython shell.
 
           Bound names:
@@ -313,7 +313,7 @@ def main():
   
         Uses the $SOFTWARE_HOME and $CONFIG_FILE environment
         variables.
-        """ % ( ",".join([ x for x in dir(zope_debug.utils) if not x.startswith("_") ] ) ) )
+        """ % ( ",".join([ x for x in dir(zope_debug.utils) if not x.startswith("_") ] ) ) ))
 
 
     sys.stdin  = sys_oldstdin

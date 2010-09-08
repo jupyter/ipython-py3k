@@ -19,7 +19,7 @@ __docformat__ = "restructuredtext en"
 # Imports
 #-------------------------------------------------------------------------------
 
-import cPickle as pickle
+import pickle as pickle
 
 from twisted.python import components, log, failure
 from twisted.internet import defer, threads
@@ -170,7 +170,7 @@ class FCEngineReferenceFromService(Referenceable, object):
         return self.service.kill().addErrback(packageFailure)
     
     def remote_keys(self):
-        return self.service.keys().addErrback(packageFailure)
+        return list(self.service.keys()).addErrback(packageFailure)
     
     #---------------------------------------------------------------------------
     # push/pull_serialized

@@ -16,7 +16,7 @@ Job and task components for writing .xml files that the Windows HPC Server
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
+
 
 import os
 import re
@@ -212,7 +212,7 @@ class WinHPCTask(Configurable):
 
     def get_env_vars(self):
         env_vars = ET.Element('EnvironmentVariables')
-        for k, v in self.environment_variables.items():
+        for k, v in list(self.environment_variables.items()):
             variable = ET.SubElement(env_vars, "Variable")
             name = ET.SubElement(variable, "Name")
             name.text = k

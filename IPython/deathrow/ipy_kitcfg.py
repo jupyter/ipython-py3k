@@ -35,7 +35,7 @@ def kitroot():
 def main():
 
     if not kitroot():
-        print "Can't configure ipykit, IPYKITROOT should be set."
+        print("Can't configure ipykit, IPYKITROOT should be set.")
         return
         
     os.environ["PATH"] = os.environ["PATH"] + ";" + kitroot() + "\\bin;"
@@ -46,7 +46,7 @@ def main():
         cmds = ip.db.get('syscmdlist', [])
     #print cmds
     if 'sc1' in cmds:
-        print "Default editor: Sc1"
+        print("Default editor: Sc1")
         import ipy_editors
         ipy_editors.scite('sc1')
     
@@ -61,7 +61,7 @@ greeting = """\n\n === Welcome to ipykit ===
     
 def ipython_firstrun(ip):
 
-    print "First run of ipykit - configuring"
+    print("First run of ipykit - configuring")
 
     ip.define_alias('py',selflaunch)
     ip.define_alias('d','dir /w /og /on')
@@ -70,7 +70,7 @@ def ipython_firstrun(ip):
     
     bins = kitroot() +'/bin'
 
-    print greeting
+    print(greeting)
         
 def init_ipython(ipy):
     global ip

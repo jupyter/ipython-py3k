@@ -110,7 +110,7 @@ class InputHookManager(object):
         """
         if gui is None:
             self._apps = {}
-        elif self._apps.has_key(gui):
+        elif gui in self._apps:
             del self._apps[gui]
 
     def enable_wx(self):
@@ -154,7 +154,7 @@ class InputHookManager(object):
 
         This merely sets PyOS_InputHook to NULL.
         """
-        if self._apps.has_key(GUI_WX):
+        if GUI_WX in self._apps:
             self._apps[GUI_WX]._in_event_loop = False
         self.clear_inputhook()
 
@@ -203,7 +203,7 @@ class InputHookManager(object):
 
         This merely sets PyOS_InputHook to NULL.
         """
-        if self._apps.has_key(GUI_QT4):
+        if GUI_QT4 in self._apps:
             self._apps[GUI_QT4]._in_event_loop = False
         self.clear_inputhook()
 
@@ -254,8 +254,8 @@ class InputHookManager(object):
         """
         self._current_gui = GUI_TK
         if app:
-            import Tkinter
-            app = Tkinter.Tk()
+            import tkinter
+            app = tkinter.Tk()
             app.withdraw()
             self._apps[GUI_TK] = app
             return app
@@ -318,7 +318,7 @@ def enable_gui(gui=None):
     try:
         gui_hook = guis[gui]
     except KeyError:
-        e="Invalid GUI request %r, valid ones are:%s" % (gui, guis.keys())
+        e="Invalid GUI request %r, valid ones are:%s" % (gui, list(guis.keys()))
         raise ValueError(e)
     return gui_hook()
 

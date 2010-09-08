@@ -44,7 +44,7 @@ def mergesort(list_of_lists, key=None):
     heap = []
     for i, itr in enumerate(iter(pl) for pl in list_of_lists):
         try:
-            item = itr.next()
+            item = next(itr)
             if key:
                 toadd = (key(item), i, item, itr)
             else:
@@ -59,7 +59,7 @@ def mergesort(list_of_lists, key=None):
             _, idx, item, itr = heap[0]
             yield item
             try:
-                item = itr.next()
+                item = next(itr)
                 heapq.heapreplace(heap, (key(item), idx, item, itr) )
             except StopIteration:
                 heapq.heappop(heap)
@@ -69,7 +69,7 @@ def mergesort(list_of_lists, key=None):
             item, idx, itr = heap[0]
             yield item
             try:
-                heapq.heapreplace(heap, (itr.next(), idx, itr))
+                heapq.heapreplace(heap, (next(itr), idx, itr))
             except StopIteration:
                 heapq.heappop(heap)
 
@@ -86,7 +86,7 @@ def remote_iterator(rc,engine,name):
             rc.execute(tpl, targets=engine)
             result = rc.pull('_tmp', targets=engine)[0]
         # This causes the StopIteration exception to be raised.
-        except CompositeError, e:
+        except CompositeError as e:
             e.raise_exception()
         else:
             yield result
@@ -96,12 +96,12 @@ if __name__ == '__main__':
 
     from IPython.kernel import client
     ipc = client.MultiEngineClient()
-    print 'Engine IDs:',ipc.get_ids()
+    print('Engine IDs:',ipc.get_ids())
 
     # Make a set of 'sorted datasets'
-    a0 = range(5,20)
-    a1 = range(10)
-    a2 = range(15,25)
+    a0 = list(range(5,20))
+    a1 = list(range(10))
+    a2 = list(range(15,25))
 
     # Now, imagine these had been created in the remote engines by some long
     # computation.  In this simple example, we just send them over into the
@@ -116,8 +116,8 @@ if __name__ == '__main__':
     aa2 = remote_iterator(ipc,2,'a')
 
     # Let's merge them, both locally and remotely:
-    print 'Merge the local datasets:'
-    print list(mergesort([a0,a1,a2]))
+    print('Merge the local datasets:')
+    print(list(mergesort([a0,a1,a2])))
     
-    print 'Locally merge the remote sets:'
-    print list(mergesort([aa0,aa1,aa2]))
+    print('Locally merge the remote sets:')
+    print(list(mergesort([aa0,aa1,aa2])))

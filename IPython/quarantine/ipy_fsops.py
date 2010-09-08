@@ -87,7 +87,7 @@ def irm(ip,arg):
         raise UsageError("%irm paths...")
     import distutils.dir_util
     for p in paths:
-        print "rm",p
+        print("rm",p)
         if os.path.isdir(p):
             distutils.dir_util.remove_tree(p, verbose = 1)
         else:
@@ -124,10 +124,10 @@ def igrep(ip,arg):
         for l in open(f):
             if pat.lower() in l.lower():
                 if not found:
-                    print "[[",f,"]]"
+                    print("[[",f,"]]")
                     found = True
                     res.append(f)
-                print l.rstrip()
+                print(l.rstrip())
     return res
 
 ip.define_alias("igrep",igrep)    
@@ -151,13 +151,13 @@ def collect(ip,arg):
         f = path(f)
         trg = basedir / f.splitdrive()[1].lstrip('/\\')
         if f.isdir():
-            print "mkdir",trg
+            print("mkdir",trg)
             trg.makedirs()
             continue
         dname = trg.dirname()
         if not dname.isdir():
             dname.makedirs()
-        print f,"=>",trg
+        print(f,"=>",trg)
         shutil.copy2(f,trg)
 
 ip.define_alias("collect",collect)            
@@ -213,7 +213,7 @@ class PathObj(path):
             if os.path.isfile(tgt):
                 return path(tgt)
 
-        raise AttributeError, name  # <<< DON'T FORGET THIS LINE !!
+        raise AttributeError(name)  # <<< DON'T FORGET THIS LINE !!
     def __str__(self):
         return self.path
         
@@ -221,7 +221,7 @@ class PathObj(path):
         return "<PathObj to %s>" % self.path
     
     def __call__(self):
-        print "cd:",self.path
+        print("cd:",self.path)
         os.chdir(self.path)
         
 def complete_pathobj(obj, prev_completions):    

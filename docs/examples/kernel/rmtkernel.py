@@ -25,7 +25,7 @@ def ensembleDiffs(num, N):
     """Return an array of num eigenvalue differences for the NxN GOE
     ensemble."""
     diffs = numpy.empty(num)
-    for i in xrange(num):
+    for i in range(num):
         mat = GOE(N)
         diffs[i] = centerEigenvalueDiff(mat)
     return diffs

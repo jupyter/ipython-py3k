@@ -273,7 +273,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
     
     def _update_user_ns(self, result):
         """Update self.userNS from self.engine's namespace"""
-        d = self.engine.keys()
+        d = list(self.engine.keys())
         d.addCallback(self._get_engine_namespace_values_for_keys)
         
         return result
@@ -293,7 +293,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
     
     
     def update_cell_prompt(self, result, blockID=None):
-        print self.blockRanges
+        print(self.blockRanges)
         if(isinstance(result, Failure)):
             prompt = self.input_prompt()
             
@@ -325,7 +325,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
     
         
     def render_error(self, failure):
-        print failure
+        print(failure)
         blockID = failure.blockID
         inputRange = self.blockRanges[blockID].inputRange
         self.insert_text('\n' +
@@ -405,7 +405,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
         self.textView.replaceCharactersInRange_withString_(
             textRange, string)
             
-        for r in self.blockRanges.itervalues():
+        for r in self.blockRanges.values():
             r.update_ranges_for_insertion(string, textRange)
         
         self.textView.setSelectedRange_(textRange)
@@ -515,7 +515,7 @@ class IPythonCocoaController(NSObject, AsyncFrontEndBase):
                 self.current_block_range().inputRange.location):
                 return True
             else:
-                for r in self.blockRanges.itervalues():
+                for r in self.blockRanges.values():
                     deleteRange = textView.selectedRange
                     if(deleteRange.length == 0):
                         deleteRange.location -= 1

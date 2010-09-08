@@ -123,7 +123,7 @@ def system_shell(cmd, verbose=False, debug=False, header=''):
     """
 
     if verbose or debug: 
-        print header + cmd
+        print(header + cmd)
 
     # Flush stdout so we don't mangle python's buffering.
     sys.stdout.flush()
@@ -171,7 +171,7 @@ def getoutputerror(cmd, verbose=False, debug=False, header='', split=False):
     """
 
     if verbose or debug: 
-        print header+cmd
+        print(header+cmd)
 
     if not cmd:
         # Return empty lists or strings.

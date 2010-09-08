@@ -41,9 +41,9 @@ def warn(msg,level=2,exit_val=1):
 
     if level>0:
         header = ['','','WARNING: ','ERROR: ','FATAL ERROR: ']
-        print >> IPython.utils.io.Term.cerr, '%s%s' % (header[level],msg)
+        print('%s%s' % (header[level],msg), file=IPython.utils.io.Term.cerr)
         if level == 4:
-            print >> IPython.utils.io.Term.cerr,'Exiting.\n'
+            print('Exiting.\n', file=IPython.utils.io.Term.cerr)
             sys.exit(exit_val)
 
             

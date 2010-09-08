@@ -43,7 +43,7 @@ def svg_to_clipboard(string):
     string : str
         A Python string or QString containing a SVG document.
     """
-    if isinstance(string, basestring):
+    if isinstance(string, str):
         bytes = QtCore.QByteArray(string)
     else:
         bytes = string.toAscii()
@@ -72,7 +72,7 @@ def svg_to_image(string, size=None):
     --------
     A QImage of format QImage.Format_ARGB32.
     """
-    if isinstance(string, basestring):
+    if isinstance(string, str):
         bytes = QtCore.QByteArray.fromRawData(string) # shallow copy
     else:
         bytes = string.toAscii()

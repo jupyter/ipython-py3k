@@ -5,8 +5,8 @@ modifications IPython makes to system behavior don't send the doctest machinery
 into a fit.  This code should be considered a gross hack, but it gets the job
 done.
 """
-from __future__ import absolute_import
-from __future__ import print_function
+
+
 
 #-----------------------------------------------------------------------------
 #  Copyright (C) 2009-2010  The IPython Development Team
@@ -20,13 +20,13 @@ from __future__ import print_function
 #-----------------------------------------------------------------------------
 
 # stdlib
-import __builtin__
+import builtins
 import os
 import sys
 from types import MethodType
 
 # our own
-from . import tools
+from .. import tools
 
 from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
 
@@ -176,7 +176,7 @@ def start_ipython():
     # now return this without recursively calling here again.
     _ip = shell
     get_ipython = _ip.get_ipython
-    __builtin__._ip = _ip
-    __builtin__.get_ipython = get_ipython
+    builtins._ip = _ip
+    builtins.get_ipython = get_ipython
 
     return _ip

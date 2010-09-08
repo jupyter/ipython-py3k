@@ -12,7 +12,7 @@ import os,sys
 def restore_env(self):    
     ip = self.getapi()
     env = ip.db.get('stored_env', {'set' : {}, 'add' : [], 'pre' : []})
-    for k,v in env['set'].items():
+    for k,v in list(env['set'].items()):
         os.environ[k] = v
     for k,v in env['add']:
         os.environ[k] = os.environ.get(k,"") + v
@@ -62,30 +62,30 @@ def persist_env(self, parameter_s=''):
         env['add'] = [el for el in env['add'] if el[0] != k]
         env['pre'] = [el for el in env['pre'] if el[0] != k]
         
-        print "Forgot '%s' (for next session)" % k
+        print("Forgot '%s' (for next session)" % k)
         
     elif k.endswith('+'):
         k = k[:-1]
         env['add'].append((k,v))
         os.environ[k] += v
-        print k,"after append =",os.environ[k]
+        print(k,"after append =",os.environ[k])
     elif k.endswith('-'):
         k = k[:-1]
         env['pre'].append((k,v))
         os.environ[k] = v + os.environ.get(k,"")
-        print k,"after prepend =",os.environ[k]
+        print(k,"after prepend =",os.environ[k])
         
         
     else:
         env['set'][k] = v
-        print "Setting",k,"to",v
+        print("Setting",k,"to",v)
         os.environ[k] = v
         
     db['stored_env'] = env
 
 def env_completer(self,event):
     """ Custom completer that lists all env vars """
-    return os.environ.keys()
+    return list(os.environ.keys())
 
 ip.define_magic('env', persist_env)
 ip.set_hook('complete_command',env_completer, str_key = '%env')

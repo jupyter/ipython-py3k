@@ -12,7 +12,7 @@ __docformat__ = "restructuredtext en"
 #  in the file COPYING, distributed as part of this software.
 #-----------------------------------------------------------------------------
 
-from cStringIO import StringIO
+from io import StringIO
 from time import sleep
 import sys
 

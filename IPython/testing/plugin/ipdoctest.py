@@ -19,8 +19,8 @@ Limitations:
 # Module imports
 
 # From the standard library
-import __builtin__
-import commands
+import builtins
+import subprocess
 import doctest
 import inspect
 import logging
@@ -31,7 +31,7 @@ import traceback
 import unittest
 
 from inspect import getmodule
-from StringIO import StringIO
+from io import StringIO
 
 # We are overriding the default doctest runner, so we need to import a few
 # things from doctest directly
@@ -94,7 +94,7 @@ class DocTestFinder(doctest.DocTestFinder):
         if module is None:
             return True
         elif inspect.isfunction(object):
-            return module.__dict__ is object.func_globals
+            return module.__dict__ is object.__globals__
         elif inspect.isbuiltin(object):
             return module.__name__ == object.__module__
         elif inspect.isclass(object):
@@ -104,7 +104,7 @@ class DocTestFinder(doctest.DocTestFinder):
             # __module__ attribute of methods, but since the same error is easy
             # to make by extension code writers, having this safety in place
             # isn't such a bad idea
-            return module.__name__ == object.im_class.__module__
+            return module.__name__ == object.__self__.__class__.__module__
         elif inspect.getmodule(object) is not None:
             return module is inspect.getmodule(object)
         elif hasattr(object, '__module__'):
@@ -136,7 +136,7 @@ class DocTestFinder(doctest.DocTestFinder):
 
         # Look for tests in a module's contained objects.
         if inspect.ismodule(obj) and self._recurse:
-            for valname, val in obj.__dict__.items():
+            for valname, val in list(obj.__dict__.items()):
                 valname1 = '%s.%s' % (name, valname)
                 if ( (isroutine(val) or isclass(val))
                      and self._from_module(module, val) ):
@@ -147,12 +147,12 @@ class DocTestFinder(doctest.DocTestFinder):
         # Look for tests in a class's contained objects.
         if inspect.isclass(obj) and self._recurse:
             #print 'RECURSE into class:',obj  # dbg
-            for valname, val in obj.__dict__.items():
+            for valname, val in list(obj.__dict__.items()):
                 # Special handling for staticmethod/classmethod.
                 if isinstance(val, staticmethod):
                     val = getattr(obj, valname)
                 if isinstance(val, classmethod):
-                    val = getattr(obj, valname).im_func
+                    val = getattr(obj, valname).__func__
 
                 # Recurse to methods, properties, and nested classes.
                 if ((inspect.isfunction(val) or inspect.isclass(val) or
@@ -300,7 +300,7 @@ class DocTestCase(doctests.DocTestCase):
         # and letting any other error propagate.
         try:
             super(DocTestCase, self).tearDown()
-        except AttributeError, exc:
+        except AttributeError as exc:
             if exc.args[0] != self._result_var:
                 raise
 
@@ -607,7 +607,7 @@ class ExtensionDoctest(doctests.Doctest):
 
         if exclude_patterns is None:
             exclude_patterns = []
-        self.exclude_patterns = map(re.compile,exclude_patterns)
+        self.exclude_patterns = list(map(re.compile,exclude_patterns))
         doctests.Doctest.__init__(self)
 
     def options(self, parser, env=os.environ):
