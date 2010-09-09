@@ -2118,10 +2118,21 @@ class InteractiveShell(Configurable, Magic):
         # just feed the whole thing to runcode.
         # This seems like a reasonable usability design.
         last = blocks[-1]
+        
+        # Note: below, whenever we call runcode, we must sync history
+        # ourselves, because runcode is NOT meant to manage history at all.
         if len(last.splitlines()) < 2:
-            self.runcode(''.join(blocks[:-1]))
+            # Get the main body to run as a cell
+            body = ''.join(blocks[:-1])
+            self.input_hist.append(body)
+            self.input_hist_raw.append(body)
+            self.runcode(body, post_execute=False)
+            # And the last expression via runlines so it produces output
             self.runlines(last)
         else:
+            # Run the whole cell as one entity
+            self.input_hist.append(cell)
+            self.input_hist_raw.append(cell)
             self.runcode(cell)
 
     def runlines(self, lines, clean=False):
@@ -2229,7 +2240,7 @@ class InteractiveShell(Configurable, Magic):
         else:
             return None
 
-    def runcode(self, code_obj):
+    def runcode(self, code_obj, post_execute=True):
         """Execute a code object.
 
         When an exception occurs, self.showtraceback() is called to display a
@@ -2241,11 +2252,6 @@ class InteractiveShell(Configurable, Magic):
           - 0: successful execution.
           - 1: an error occurred.
         """
-
-        # It's also possible that we've been fed a plain string.  In that case,
-        # we must store it in the input history.
-        if isinstance(code_obj, basestring):
-            self.input_hist_raw.append(code_obj)
 
         # Set our own excepthook in case the user code tries to call it
         # directly, so that the IPython crash handler doesn't get triggered
@@ -2281,15 +2287,17 @@ class InteractiveShell(Configurable, Magic):
         # are reported only minimally and just on the terminal, because the
         # main exception channel may be occupied with a user traceback.
         # FIXME: we need to think this mechanism a little more carefully.
-        for func in self._post_execute:
-            try:
-                func()
-            except:
-                head = '[ ERROR ] Evaluating post_execute function: %s' % func
-                print >> io.Term.cout, head
-                print >> io.Term.cout, self._simple_error()
-                print >> io.Term.cout, 'Removing from post_execute'
-                self._post_execute.remove(func)
+        if post_execute:
+            for func in self._post_execute:
+                try:
+                    func()
+                except:
+                    head = '[ ERROR ] Evaluating post_execute function: %s' % \
+                           func
+                    print >> io.Term.cout, head
+                    print >> io.Term.cout, self._simple_error()
+                    print >> io.Term.cout, 'Removing from post_execute'
+                    self._post_execute.remove(func)
 
         # Flush out code object which has been run (and source)
         self.code_to_run = None
