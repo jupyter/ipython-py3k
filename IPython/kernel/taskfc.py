@@ -18,7 +18,7 @@ __docformat__ = "restructuredtext en"
 # Imports
 #-------------------------------------------------------------------------------
 
-import cPickle as pickle
+import pickle as pickle
 
 from zope.interface import Interface, implements
 from twisted.internet import defer

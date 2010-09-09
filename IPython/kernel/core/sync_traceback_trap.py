@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 #-------------------------------------------------------------------------------
 # Imports
 #-------------------------------------------------------------------------------
-from traceback_trap import TracebackTrap
+from .traceback_trap import TracebackTrap
 from IPython.core.ultratb import ColorTB
 
 class SyncTracebackTrap(TracebackTrap):
@@ -44,7 +44,7 @@ class SyncTracebackTrap(TracebackTrap):
         """
         self.args = args
         if not self.raiseException:
-            print self.sync_formatter(*self.args)
+            print(self.sync_formatter(*self.args))
         else:
             raise
 

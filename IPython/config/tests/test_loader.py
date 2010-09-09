@@ -58,7 +58,7 @@ class TestPyFileCL(TestCase):
         self.assertEquals(config.a, 10)
         self.assertEquals(config.b, 20)
         self.assertEquals(config.Foo.Bar.value, 10)
-        self.assertEquals(config.Foo.Bam.value, range(10))
+        self.assertEquals(config.Foo.Bam.value, list(range(10)))
         self.assertEquals(config.D.C.value, 'hi there')
 
 class MyLoader1(ArgParseConfigLoader):
@@ -87,8 +87,8 @@ class TestArgParseCL(TestCase):
         self.assertEquals(config.n, True)
         self.assertEquals(config.Global.bam, 'wow')
         config = cl.load_config(['wow'])
-        self.assertEquals(config.keys(), ['Global'])
-        self.assertEquals(config.Global.keys(), ['bam'])
+        self.assertEquals(list(config.keys()), ['Global'])
+        self.assertEquals(list(config.Global.keys()), ['bam'])
         self.assertEquals(config.Global.bam, 'wow')
 
     def test_add_arguments(self):
@@ -115,18 +115,18 @@ class TestConfig(TestCase):
         c = Config()
         c.a = 10
         self.assertEquals(c.a, 10)
-        self.assertEquals(c.has_key('b'), False)
+        self.assertEquals('b' in c, False)
 
     def test_auto_section(self):
         c = Config()
-        self.assertEquals(c.has_key('A'), True)
+        self.assertEquals('A' in c, True)
         self.assertEquals(c._has_section('A'), False)
         A = c.A
         A.foo = 'hi there'
         self.assertEquals(c._has_section('A'), True)
         self.assertEquals(c.A.foo, 'hi there')
         del c.A
-        self.assertEquals(len(c.A.keys()),0)
+        self.assertEquals(len(list(c.A.keys())),0)
 
     def test_merge_doesnt_exist(self):
         c1 = Config()
@@ -160,7 +160,7 @@ class TestConfig(TestCase):
         c1.Foo.bar = 10
         c1.Foo.bam = 30
         c1.a = 'asdf'
-        c1.b = range(10)
+        c1.b = list(range(10))
         import copy
         c2 = copy.deepcopy(c1)
         self.assertEquals(c1, c2)
@@ -169,6 +169,6 @@ class TestConfig(TestCase):
 
     def test_builtin(self):
         c1 = Config()
-        exec 'foo = True' in c1
+        exec('foo = True', c1)
         self.assertEquals(c1.foo, True)
         self.assertRaises(ConfigError, setattr, c1, 'ValueError', 10)

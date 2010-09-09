@@ -54,7 +54,7 @@ def json_clean(obj):
     """
     # types that are 'atomic' and ok in json as-is.  bool doesn't need to be
     # listed explicitly because bools pass as int instances
-    atomic_ok = (basestring, int, float, types.NoneType)
+    atomic_ok = (str, int, float, type(None))
     
     # containers that we need to convert into lists
     container_to_list = (tuple, set, types.GeneratorType)
@@ -80,7 +80,7 @@ def json_clean(obj):
                              'key collision would lead to dropped values')
         # If all OK, proceed by making the new dict that will be json-safe
         out = {}
-        for k,v in obj.iteritems():
+        for k,v in obj.items():
             out[str(k)] = json_clean(v)
         return out
 

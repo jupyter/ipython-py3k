@@ -9,7 +9,7 @@ import zmq
 from IPython.utils.traitlets import Type
 from IPython.zmq.kernelmanager import KernelManager, SubSocketChannel, \
     XReqSocketChannel, RepSocketChannel, HBSocketChannel
-from util import MetaQObjectHasTraits, SuperQObject
+from .util import MetaQObjectHasTraits, SuperQObject
 
 
 class SocketChannelQObject(SuperQObject):
@@ -150,11 +150,9 @@ class QtHBSocketChannel(SocketChannelQObject, HBSocketChannel):
         self.kernel_died.emit(since_last_heartbeat)
 
 
-class QtKernelManager(KernelManager, SuperQObject):
+class QtKernelManager(KernelManager, SuperQObject, metaclass=MetaQObjectHasTraits):
     """ A KernelManager that provides signals and slots.
     """
-
-    __metaclass__ = MetaQObjectHasTraits
 
     # Emitted when the kernel manager has started listening.
     started_channels = QtCore.pyqtSignal()

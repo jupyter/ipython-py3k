@@ -23,7 +23,7 @@ Notes
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import with_statement
+
 import __main__
 
 import sys
@@ -56,7 +56,7 @@ def kill_embedded(self,parameter_s=''):
                      "(y/n)? [y/N] ",'n')
     if kill:
         self.embedded_active = False
-        print "This embedded IPython will not reactivate anymore once you exit."
+        print("This embedded IPython will not reactivate anymore once you exit.")
 
 
 class InteractiveShellEmbed(TerminalInteractiveShell):
@@ -72,7 +72,7 @@ class InteractiveShellEmbed(TerminalInteractiveShell):
     def __init__(self, config=None, ipython_dir=None, user_ns=None,
                  user_global_ns=None, custom_exceptions=((),None),
                  usage=None, banner1=None, banner2=None,
-                 display_banner=None, exit_msg=u''):
+                 display_banner=None, exit_msg=''):
 
         super(InteractiveShellEmbed,self).__init__(
             config=config, ipython_dir=ipython_dir, user_ns=user_ns,
@@ -143,7 +143,7 @@ class InteractiveShellEmbed(TerminalInteractiveShell):
         self.banner2 = self.old_banner2
 
         if self.exit_msg is not None:
-            print self.exit_msg
+            print(self.exit_msg)
 
     def mainloop(self, local_ns=None, global_ns=None, stack_depth=0,
                  display_banner=None):
@@ -188,7 +188,7 @@ class InteractiveShellEmbed(TerminalInteractiveShell):
         # one, but will track what got copied so we can delete them at exit.
         # This is so that a later embedded call doesn't see locals from a
         # previous call (which most likely existed in a separate scope).
-        local_varnames = local_ns.keys()
+        local_varnames = list(local_ns.keys())
         self.user_ns.update(local_ns)
         #self.user_ns['local_ns'] = local_ns  # dbg
 
@@ -236,7 +236,7 @@ def embed(**kwargs):
     config argument.
     """
     config = kwargs.get('config')
-    header = kwargs.pop('header', u'')
+    header = kwargs.pop('header', '')
     if config is None:
         config = load_default_config()
         config.InteractiveShellEmbed = config.TerminalInteractiveShell

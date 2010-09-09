@@ -11,7 +11,7 @@
 
 import exceptions
 import sys
-from cStringIO import StringIO
+from io import StringIO
 
 class OutputTrapError(exceptions.Exception):
     """Exception for OutputTrap class."""
@@ -79,7 +79,7 @@ class OutputTrap:
     def trap_out(self):
         """Trap and log stdout."""
         if sys.stdout is self.out:
-            raise OutputTrapError,'You are already trapping stdout.'
+            raise OutputTrapError('You are already trapping stdout.')
         if not self.debug:
             self._out_save = sys.stdout
             sys.stdout = self.out
@@ -88,7 +88,7 @@ class OutputTrap:
         """Release stdout."""
         if not self.debug:
             if not sys.stdout is self.out:
-                raise OutputTrapError,'You are not trapping stdout.'
+                raise OutputTrapError('You are not trapping stdout.')
             sys.stdout = self._out_save
             self.out_save = None
 
@@ -112,7 +112,7 @@ class OutputTrap:
     def trap_err(self):
         """Trap and log stderr."""
         if sys.stderr is self.err:
-            raise OutputTrapError,'You are already trapping stderr.'
+            raise OutputTrapError('You are already trapping stderr.')
         if not self.debug:
             self._err_save = sys.stderr
             sys.stderr = self.err
@@ -121,7 +121,7 @@ class OutputTrap:
         """Release stderr."""
         if not self.debug:
             if not sys.stderr is self.err:
-                raise OutputTrapError,'You are not trapping stderr.'
+                raise OutputTrapError('You are not trapping stderr.')
             sys.stderr = self._err_save
             self.err_save = None
 
@@ -207,45 +207,45 @@ def _test_all():
 
     def _test_():
         name = ''
-        print '#'*50+'\nRunning test for ' + name
+        print('#'*50+'\nRunning test for ' + name)
         # ...
-        print 'Finished test for '+ name +'\n'+'#'*50
+        print('Finished test for '+ name +'\n'+'#'*50)
 
     def _test_OutputTrap():
         trap = OutputTrap(name = 'Test Trap', sum_sep = '.'*50+'\n',
                           out_head = 'SOut. ', err_head = 'SErr. ')
 
         name = 'OutputTrap class'
-        print '#'*50+'\nRunning test for ' + name
-        print 'Trapping out'
+        print('#'*50+'\nRunning test for ' + name)
+        print('Trapping out')
         trap.trap_out()
-        print >>sys.stdout, '>>stdout. stdout is trapped.'
-        print >>sys.stderr, '>>stderr. stdout is trapped.'
+        print('>>stdout. stdout is trapped.', file=sys.stdout)
+        print('>>stderr. stdout is trapped.', file=sys.stderr)
         trap.release_out()
-        print trap.summary_out()
+        print(trap.summary_out())
 
-        print 'Trapping err'
+        print('Trapping err')
         trap.trap_err()
-        print >>sys.stdout, '>>stdout. stderr is trapped.'
-        print >>sys.stderr, '>>stderr. stderr is trapped.'
+        print('>>stdout. stderr is trapped.', file=sys.stdout)
+        print('>>stderr. stderr is trapped.', file=sys.stderr)
         trap.release_err()
-        print trap.summary_err()
+        print(trap.summary_err())
 
-        print 'Trapping all (no flushing)'
+        print('Trapping all (no flushing)')
         trap.trap_all()
-        print >>sys.stdout, '>>stdout. stdout/err is trapped.'
-        print >>sys.stderr, '>>stderr. stdout/err is trapped.'
+        print('>>stdout. stdout/err is trapped.', file=sys.stdout)
+        print('>>stderr. stdout/err is trapped.', file=sys.stderr)
         trap.release_all()
-        print trap.summary_all()
+        print(trap.summary_all())
 
-        print 'Trapping all (flushing first)'
+        print('Trapping all (flushing first)')
         trap.flush()
         trap.trap_all()
-        print >>sys.stdout, '>>stdout. stdout/err is trapped.'
-        print >>sys.stderr, '>>stderr. stdout/err is trapped.'
+        print('>>stdout. stdout/err is trapped.', file=sys.stdout)
+        print('>>stderr. stdout/err is trapped.', file=sys.stderr)
         trap.release_all()
-        print trap.summary_all()
-        print 'Finished test for '+ name +'\n'+'#'*50
+        print(trap.summary_all())
+        print('Finished test for '+ name +'\n'+'#'*50)
 
     # call the actual tests here:
     _test_OutputTrap()

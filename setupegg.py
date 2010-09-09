@@ -3,4 +3,4 @@
 
 # Import setuptools and call the actual setup
 import setuptools
-execfile('setup.py')
+exec(compile(open('setup.py').read(), 'setup.py', 'exec'))

@@ -8,7 +8,7 @@ In [5]: %gui tk
 In [6]: %run gui-tk.py
 """
 
-from Tkinter import *
+from tkinter import *
 
 class MyApp:
 
@@ -20,7 +20,7 @@ class MyApp:
         self.button.pack(side=LEFT)
 
     def hello_world(self):
-        print "Hello World!"
+        print("Hello World!")
 
 root = Tk()
 

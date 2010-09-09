@@ -55,7 +55,7 @@ def magic_history(self, parameter_s = ''):
     """
 
     if not self.shell.displayhook.do_full_cache:
-        print 'This feature is only available if numbered prompts are in use.'
+        print('This feature is only available if numbered prompts are in use.')
         return
     opts,args = self.parse_options(parameter_s,'gnoptsrf:',mode='list')
 
@@ -69,7 +69,7 @@ def magic_history(self, parameter_s = ''):
     else:
         if os.path.exists(outfname):
             if not ask_yes_no("File %r exists. Overwrite?" % outfname): 
-                print 'Aborting.'
+                print('Aborting.')
                 return
 
         outfile = open(outfname,'w')
@@ -100,10 +100,10 @@ def magic_history(self, parameter_s = ''):
         final = len(input_hist)
         init = max(1, final-int(args[0]))
     elif len(args) == 2:
-        init, final = map(int, args)
+        init, final = list(map(int, args))
     else:
         warn('%hist takes 0, 1 or 2 arguments separated by spaces.')
-        print >> IPython.utils.io.Term.cout, self.magic_hist.__doc__
+        print(self.magic_hist.__doc__, file=IPython.utils.io.Term.cout)
         return
     
     width = len(str(final))
@@ -117,14 +117,13 @@ def magic_history(self, parameter_s = ''):
         sh = self.shell.shadowhist.all()
         for idx, s in sh:
             if fnmatch.fnmatch(s, pattern):
-                print >> outfile, "0%d: %s" %(idx, s.expandtabs(4))
+                print("0%d: %s" %(idx, s.expandtabs(4)), file=outfile)
                 found = True
     
     if found:
-        print >> outfile, "==="
-        print >> outfile, \
-              "shadow history ends, fetch by %rep <number> (must start with 0)"
-        print >> outfile, "=== start of normal history ==="
+        print("===", file=outfile)
+        print("shadow history ends, fetch by %rep <number> (must start with 0)", file=outfile)
+        print("=== start of normal history ===", file=outfile)
         
     for in_num in range(init, final):
         # Print user history with tabs expanded to 4 spaces.  The GUI clients
@@ -137,22 +136,21 @@ def magic_history(self, parameter_s = ''):
             
         multiline = int(inline.count('\n') > 1)
         if print_nums:
-            print >> outfile, \
-                  '%s:%s' % (str(in_num).ljust(width), line_sep[multiline]),
+            print('%s:%s' % (str(in_num).ljust(width), line_sep[multiline]), end=' ', file=outfile)
         if pyprompts:
-            print >> outfile, '>>>',
+            print('>>>', end=' ', file=outfile)
             if multiline:
                 lines = inline.splitlines()
-                print >> outfile, '\n... '.join(lines)
-                print >> outfile, '... '
+                print('\n... '.join(lines), file=outfile)
+                print('... ', file=outfile)
             else:
-                print >> outfile, inline,
+                print(inline, end=' ', file=outfile)
         else:
-            print >> outfile, inline,
+            print(inline, end=' ', file=outfile)
         if print_outputs:
             output = self.shell.output_hist.get(in_num)
             if output is not None:
-                print >> outfile, repr(output)
+                print(repr(output), file=outfile)
 
     if close_at_end:
         outfile.close()
@@ -223,10 +221,10 @@ def rep_f(self, arg):
         
     try:
         lines = self.extract_input_slices(args, True)
-        print "lines",lines
+        print("lines",lines)
         self.runlines(lines)
     except ValueError:
-        print "Not found in recent history:", args
+        print("Not found in recent history:", args)
         
 
 _sentinel = object()
@@ -255,12 +253,12 @@ class ShadowHist(object):
             self.db.hset('shadowhist',ent, newidx)
         except:
             ipapi.get().showtraceback()
-            print "WARNING: disabling shadow history"
+            print("WARNING: disabling shadow history")
             self.disabled = True
     
     def all(self):
         d = self.db.hdict('shadowhist')
-        items = [(i,s) for (s,i) in d.iteritems()]
+        items = [(i,s) for (s,i) in d.items()]
         items.sort()
         return items
 

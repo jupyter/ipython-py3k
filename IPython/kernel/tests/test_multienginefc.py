@@ -36,7 +36,7 @@ from IPython.kernel.util import printer
 def _raise_it(f):
     try:
         f.raiseException()
-    except CompositeError, e:
+    except CompositeError as e:
         e.raise_exception()
 
 
@@ -92,16 +92,16 @@ class FullSynchronousMultiEngineTestCase(
     def test_map_default(self):
         self.addEngine(4)
         m = self.multiengine.mapper()
-        d = m.map(lambda x: 2*x, range(10))
+        d = m.map(lambda x: 2*x, list(range(10)))
         d.addCallback(lambda r: self.assertEquals(r,[2*x for x in range(10)]))
-        d.addCallback(lambda _: self.multiengine.map(lambda x: 2*x, range(10)))
+        d.addCallback(lambda _: self.multiengine.map(lambda x: 2*x, list(range(10))))
         d.addCallback(lambda r: self.assertEquals(r,[2*x for x in range(10)]))
         return d
 
     def test_map_noblock(self):
         self.addEngine(4)
         m = self.multiengine.mapper(block=False)
-        d = m.map(lambda x: 2*x, range(10))
+        d = m.map(lambda x: 2*x, list(range(10)))
         d.addCallback(lambda did: self.multiengine.get_pending_deferred(did, True))
         d.addCallback(lambda r: self.assertEquals(r,[2*x for x in range(10)]))
         return d
@@ -109,7 +109,7 @@ class FullSynchronousMultiEngineTestCase(
     def test_mapper_fail(self):
         self.addEngine(4)
         m = self.multiengine.mapper()
-        d = m.map(lambda x: 1/0, range(10))
+        d = m.map(lambda x: 1/0, list(range(10)))
         d.addBoth(lambda f: self.assertRaises(ZeroDivisionError, _raise_it, f))
         return d
 
@@ -119,7 +119,7 @@ class FullSynchronousMultiEngineTestCase(
         self.assert_(isinstance(p, ParallelFunction))
         @p
         def f(x): return 2*x
-        d = f(range(10))
+        d = f(list(range(10)))
         d.addCallback(lambda r: self.assertEquals(r,[2*x for x in range(10)]))
         return d
 
@@ -129,7 +129,7 @@ class FullSynchronousMultiEngineTestCase(
         self.assert_(isinstance(p, ParallelFunction))
         @p
         def f(x): return 2*x
-        d = f(range(10))
+        d = f(list(range(10)))
         d.addCallback(lambda did: self.multiengine.get_pending_deferred(did, True))
         d.addCallback(lambda r: self.assertEquals(r,[2*x for x in range(10)]))
         return d
@@ -140,7 +140,7 @@ class FullSynchronousMultiEngineTestCase(
         self.assert_(isinstance(p, ParallelFunction))
         @p
         def f(x): return 1/0
-        d = f(range(10))
+        d = f(list(range(10)))
         d.addBoth(lambda f: self.assertRaises(ZeroDivisionError, _raise_it, f))
         return d
 

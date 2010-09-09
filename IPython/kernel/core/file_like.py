@@ -37,7 +37,7 @@ class FileLike(object):
         pass
 
     def writelines(self, lines):
-        map(self.write, lines)
+        list(map(self.write, lines))
 
     def isatty(self):
         """ This method is there for compatibility with other file-like

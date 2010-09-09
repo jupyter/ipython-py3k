@@ -27,7 +27,7 @@ Date:    9 Mar 2007
 #   - guess_content_type() method?
 #   - Perhaps support arguments to touch().
 
-from __future__ import generators
+
 
 import sys, warnings, os, fnmatch, glob, shutil, codecs
 from hashlib import md5
@@ -51,7 +51,7 @@ else:
 class TreeWalkWarning(Warning):
     pass
 
-class path(unicode):
+class path(str):
     """ Represents a filesystem path.
 
     For documentation on individual methods, consult their
@@ -61,12 +61,12 @@ class path(unicode):
     # --- Special Python methods.
 
     def __repr__(self):
-        return 'path(%s)' % unicode.__repr__(self)
+        return 'path(%s)' % str.__repr__(self)
 
     # Adding a path and a string yields a path.
     def __add__(self, more):
         try:
-            resultStr = unicode.__add__(self, more)
+            resultStr = str.__add__(self, more)
         except TypeError:  #Python bug
             resultStr = NotImplemented
         if resultStr is NotImplemented:
@@ -74,7 +74,7 @@ class path(unicode):
         return self.__class__(resultStr)
 
     def __radd__(self, other):
-        if isinstance(other, basestring):
+        if isinstance(other, str):
             return self.__class__(other.__add__(self))
         else:
             return NotImplemented
@@ -93,7 +93,7 @@ class path(unicode):
 
     def getcwd(cls):
         """ Return the current working directory as a path object. """
-        return cls(os.getcwdu())
+        return cls(os.getcwd())
     getcwd = classmethod(getcwd)
 
 
@@ -123,7 +123,7 @@ class path(unicode):
         return base
 
     def _get_ext(self):
-        f, ext = os.path.splitext(unicode(self))
+        f, ext = os.path.splitext(str(self))
         return ext
 
     def _get_drive(self):
@@ -484,7 +484,7 @@ class path(unicode):
         of all the files users have in their bin directories.
         """
         cls = self.__class__
-        return [cls(s) for s in glob.glob(unicode(self / pattern))]
+        return [cls(s) for s in glob.glob(str(self / pattern))]
 
 
     # --- Reading or writing an entire file at once.
@@ -548,11 +548,11 @@ class path(unicode):
                 t = f.read()
             finally:
                 f.close()
-            return (t.replace(u'\r\n', u'\n')
-                     .replace(u'\r\x85', u'\n')
-                     .replace(u'\r', u'\n')
-                     .replace(u'\x85', u'\n')
-                     .replace(u'\u2028', u'\n'))
+            return (t.replace('\r\n', '\n')
+                     .replace('\r\x85', '\n')
+                     .replace('\r', '\n')
+                     .replace('\x85', '\n')
+                     .replace('\u2028', '\n'))
 
     def write_text(self, text, encoding=None, errors='strict', linesep=os.linesep, append=False):
         r""" Write the given text to this file.
@@ -618,16 +618,16 @@ class path(unicode):
         conversion.
 
         """
-        if isinstance(text, unicode):
+        if isinstance(text, str):
             if linesep is not None:
                 # Convert all standard end-of-line sequences to
                 # ordinary newline characters.
-                text = (text.replace(u'\r\n', u'\n')
-                            .replace(u'\r\x85', u'\n')
-                            .replace(u'\r', u'\n')
-                            .replace(u'\x85', u'\n')
-                            .replace(u'\u2028', u'\n'))
-                text = text.replace(u'\n', linesep)
+                text = (text.replace('\r\n', '\n')
+                            .replace('\r\x85', '\n')
+                            .replace('\r', '\n')
+                            .replace('\x85', '\n')
+                            .replace('\u2028', '\n'))
+                text = text.replace('\n', linesep)
             if encoding is None:
                 encoding = sys.getdefaultencoding()
             bytes = text.encode(encoding, errors)
@@ -710,15 +710,15 @@ class path(unicode):
         f = self.open(mode)
         try:
             for line in lines:
-                isUnicode = isinstance(line, unicode)
+                isUnicode = isinstance(line, str)
                 if linesep is not None:
                     # Strip off any existing line-end and add the
                     # specified linesep string.
                     if isUnicode:
-                        if line[-2:] in (u'\r\n', u'\x0d\x85'):
+                        if line[-2:] in ('\r\n', '\x0d\x85'):
                             line = line[:-2]
-                        elif line[-1:] in (u'\r', u'\n',
-                                           u'\x85', u'\u2028'):
+                        elif line[-1:] in ('\r', '\n',
+                                           '\x85', '\u2028'):
                             line = line[:-1]
                     else:
                         if line[-2:] == '\r\n':
@@ -814,7 +814,7 @@ class path(unicode):
                 self, win32security.OWNER_SECURITY_INFORMATION)
             sid = desc.GetSecurityDescriptorOwner()
             account, domain, typecode = win32security.LookupAccountSid(None, sid)
-            return domain + u'\\' + account
+            return domain + '\\' + account
         else:
             if pwd is None:
                 raise NotImplementedError("path.owner is not implemented on this platform.")
@@ -857,10 +857,10 @@ class path(unicode):
 
     # --- Create/delete operations on directories
 
-    def mkdir(self, mode=0777):
+    def mkdir(self, mode=0o777):
         os.mkdir(self, mode)
 
-    def makedirs(self, mode=0777):
+    def makedirs(self, mode=0o777):
         os.makedirs(self, mode)
 
     def rmdir(self):
@@ -876,7 +876,7 @@ class path(unicode):
         """ Set the access/modified times of this file to the current time.
         Create the file if it does not exist.
         """
-        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0666)
+        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0o666)
         os.close(fd)
         os.utime(self, None)
 

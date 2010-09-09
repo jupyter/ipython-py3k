@@ -16,7 +16,7 @@ __docformat__ = "restructuredtext en"
 #-------------------------------------------------------------------------------
 
 import sys
-from cStringIO import StringIO
+from io import StringIO
 
 
 class OutputTrap(object):

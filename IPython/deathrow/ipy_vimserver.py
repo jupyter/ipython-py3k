@@ -97,7 +97,7 @@ class IpyServer(threading.Thread):
     def __handle_error(self, socket):
         if socket == self.socket.fileno():
             self.keep_running = False
-            for a in self.current_conns.values():
+            for a in list(self.current_conns.values()):
                 a.close()
             return False
         else:

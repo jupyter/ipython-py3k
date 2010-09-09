@@ -68,11 +68,11 @@ class ExtensionManager(Configurable):
 
     @property
     def ipython_extension_dir(self):
-        return os.path.join(self.shell.ipython_dir, u'extensions')
+        return os.path.join(self.shell.ipython_dir, 'extensions')
 
     def _on_ipython_dir_changed(self):
         if not os.path.isdir(self.ipython_extension_dir):
-            os.makedirs(self.ipython_extension_dir, mode = 0777)
+            os.makedirs(self.ipython_extension_dir, mode = 0o777)
 
     def load_extension(self, module_str):
         """Load an IPython extension by its module name.

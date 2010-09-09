@@ -16,8 +16,8 @@ for i in range(24):
 
 for i in range(6):
     time.sleep(1.0)
-    print "Queue status (vebose=False)"
-    print tc.queue_status()
+    print("Queue status (vebose=False)")
+    print(tc.queue_status())
     flush()
     
 for i in range(24):
@@ -25,15 +25,15 @@ for i in range(24):
 
 for i in range(6):
     time.sleep(1.0)
-    print "Queue status (vebose=True)"
-    print tc.queue_status(True)
+    print("Queue status (vebose=True)")
+    print(tc.queue_status(True))
     flush()
 
 for i in range(12):
     tc.run(client.StringTask('time.sleep(2)'))
 
-print "Queue status (vebose=True)"
-print tc.queue_status(True)
+print("Queue status (vebose=True)")
+print(tc.queue_status(True))
 flush()
 
 qs = tc.queue_status(True)
@@ -44,7 +44,7 @@ for tid in sched[-4:]:
 
 for i in range(6):
     time.sleep(1.0)
-    print "Queue status (vebose=True)"
-    print tc.queue_status(True)
+    print("Queue status (vebose=True)")
+    print(tc.queue_status(True))
     flush()
 

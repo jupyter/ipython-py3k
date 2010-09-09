@@ -14,7 +14,7 @@
 # Imports
 #-----------------------------------------------------------------------------
 
-import __builtin__
+import builtins
 import bdb
 from contextlib import nested
 import os
@@ -199,7 +199,7 @@ class TerminalInteractiveShell(InteractiveShell):
         more = 0
         
         # Mark activity in the builtins
-        __builtin__.__dict__['__IPYTHON__active'] += 1
+        builtins.__dict__['__IPYTHON__active'] += 1
         
         if self.has_readline:
             self.readline_startup_hook(self.pre_readline)
@@ -265,7 +265,7 @@ class TerminalInteractiveShell(InteractiveShell):
                     self.edit_syntax_error()
 
         # We are off again...
-        __builtin__.__dict__['__IPYTHON__active'] -= 1
+        builtins.__dict__['__IPYTHON__active'] -= 1
 
         # Turn off the exit flag, so the mainloop can be restarted if desired
         self.exit_now = False
@@ -530,7 +530,7 @@ class TerminalInteractiveShell(InteractiveShell):
         """Toggle autoindent on/off (if available)."""
 
         self.shell.set_autoindent()
-        print "Automatic indentation is:",['OFF','ON'][self.shell.autoindent]
+        print("Automatic indentation is:",['OFF','ON'][self.shell.autoindent])
 
     def magic_cpaste(self, parameter_s=''):
         """Paste & execute a pre-formatted code block from clipboard.
@@ -565,7 +565,7 @@ class TerminalInteractiveShell(InteractiveShell):
         
         opts,args = self.parse_options(parameter_s,'rs:',mode='string')
         par = args.strip()
-        if opts.has_key('r'):
+        if 'r' in opts:
             self._rerun_pasted()
             return
         
@@ -609,7 +609,7 @@ class TerminalInteractiveShell(InteractiveShell):
         """
         opts,args = self.parse_options(parameter_s,'rq',mode='string')
         par = args.strip()
-        if opts.has_key('r'):
+        if 'r' in opts:
             self._rerun_pasted()
             return
 
@@ -617,7 +617,7 @@ class TerminalInteractiveShell(InteractiveShell):
         block = self._strip_pasted_lines_for_code(text.splitlines())
 
         # By default, echo back to terminal unless quiet mode is requested
-        if not opts.has_key('q'):
+        if 'q' not in opts:
             write = self.shell.write
             write(self.shell.pycolorize(block))
             if not block.endswith('\n'):

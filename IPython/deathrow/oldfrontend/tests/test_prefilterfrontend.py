@@ -13,7 +13,7 @@ __docformat__ = "restructuredtext en"
 #-------------------------------------------------------------------------------
 
 from copy import copy, deepcopy
-from cStringIO import StringIO
+from io import StringIO
 import string
 import sys
 

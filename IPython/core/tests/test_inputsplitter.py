@@ -43,7 +43,7 @@ def mini_interactive_loop(raw_input):
     while isp.push_accepts_more():
         indent = ' '*isp.indent_spaces
         prompt = '>>> ' + indent
-        line = indent + raw_input(prompt)
+        line = indent + input(prompt)
         isp.push(line)
 
     # Here we just return input so we can use it in a test suite, but a real
@@ -108,7 +108,7 @@ def test_remove_comments():
 
 def test_get_input_encoding():
     encoding = isp.get_input_encoding()
-    nt.assert_true(isinstance(encoding, basestring))
+    nt.assert_true(isinstance(encoding, str))
     # simple-minded check that at least encoding a simple string works with the
     # encoding we got.
     nt.assert_equal('test'.encode(encoding), 'test')
@@ -345,11 +345,11 @@ class InteractiveLoopTestCase(unittest.TestCase):
         """
         src = mini_interactive_loop(pseudo_input(lines))
         test_ns = {}
-        exec src in test_ns
+        exec(src, test_ns)
         # We can't check that the provided ns is identical to the test_ns,
         # because Python fills test_ns with extra keys (copyright, etc).  But
         # we can check that the given dict is *contained* in test_ns
-        for k,v in ns.iteritems():
+        for k,v in ns.items():
             self.assertEqual(test_ns[k], v)
         
     def test_simple(self):
@@ -376,9 +376,9 @@ def test_LineInfo():
 
 def test_split_user_input():
     """Unicode test - split_user_input already has good doctests"""
-    line = u"Pérez Fernando"
+    line = "Pérez Fernando"
     parts = isp.split_user_input(line)
-    parts_expected = (u'', u'', u'', line)
+    parts_expected = ('', '', '', line)
     nt.assert_equal(parts, parts_expected)
 
 
@@ -562,7 +562,7 @@ class IPythonInputTestCase(InputSplitterTestCase):
     def test_syntax(self):
         """Call all single-line syntax tests from the main object"""
         isp = self.isp
-        for example in syntax.itervalues():
+        for example in syntax.values():
             for raw, out_t in example:
                 if raw.startswith(' '):
                     continue
@@ -573,7 +573,7 @@ class IPythonInputTestCase(InputSplitterTestCase):
 
     def test_syntax_multiline(self):
         isp = self.isp
-        for example in syntax_ml.itervalues():
+        for example in syntax_ml.values():
             out_t_parts = []
             for line_pairs in example:
                 for raw, out_t_part in line_pairs:
@@ -595,7 +595,7 @@ class BlockIPythonInputTestCase(IPythonInputTestCase):
 
     def test_syntax_multiline(self):
         isp = self.isp
-        for example in syntax_ml.itervalues():
+        for example in syntax_ml.values():
             raw_parts = []
             out_t_parts = []
             for line_pairs in example:
@@ -634,9 +634,9 @@ if __name__ == '__main__':
             while isp.push_accepts_more():
                 indent = ' '*isp.indent_spaces
                 if autoindent:
-                    line = indent + raw_input(prompt+indent)
+                    line = indent + input(prompt+indent)
                 else:
-                    line = raw_input(prompt)
+                    line = input(prompt)
                 isp.push(line)
                 prompt = '... '
 
@@ -644,6 +644,6 @@ if __name__ == '__main__':
             # real interpreter would instead send it for execution somewhere.
             #src = isp.source; raise EOFError # dbg
             src = isp.source_reset()
-            print 'Input source was:\n', src
+            print('Input source was:\n', src)
     except EOFError:
-        print 'Bye'
+        print('Bye')

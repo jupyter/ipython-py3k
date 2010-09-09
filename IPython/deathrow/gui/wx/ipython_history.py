@@ -124,7 +124,7 @@ class IPythonHistoryPanel(wx.Panel):
     
     def reloadOptions(self,options):
         self.options = options
-        for key in self.options.keys():
+        for key in list(self.options.keys()):
             value = self.options[key]['value']
             self.options[key]['checkbox'].SetValue(self.options[key][value])
             self.options[key]['setfunc'](value)

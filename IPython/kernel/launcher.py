@@ -87,9 +87,9 @@ class BaseLauncher(Configurable):
     # and controller. Instead, use their own config files or the
     # controller_args, engine_args attributes of the launchers to add
     # the --work-dir option.
-    work_dir = Unicode(u'')
+    work_dir = Unicode('')
 
-    def __init__(self, work_dir=u'', config=None):
+    def __init__(self, work_dir='', config=None):
         super(BaseLauncher, self).__init__(work_dir=work_dir, config=config)
         self.state = 'before' # can be before, running, after
         self.stop_deferreds = []
@@ -264,7 +264,7 @@ class LocalProcessLauncher(BaseLauncher):
     # spawnProcess.
     cmd_and_args = List([])
 
-    def __init__(self, work_dir=u'', config=None):
+    def __init__(self, work_dir='', config=None):
         super(LocalProcessLauncher, self).__init__(
             work_dir=work_dir, config=config
         )
@@ -323,7 +323,7 @@ class LocalControllerLauncher(LocalProcessLauncher):
     def start(self, cluster_dir):
         """Start the controller by cluster_dir."""
         self.controller_args.extend(['--cluster-dir', cluster_dir])
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         log.msg("Starting LocalControllerLauncher: %r" % self.args)
         return super(LocalControllerLauncher, self).start()
 
@@ -343,7 +343,7 @@ class LocalEngineLauncher(LocalProcessLauncher):
     def start(self, cluster_dir):
         """Start the engine by cluster_dir."""
         self.engine_args.extend(['--cluster-dir', cluster_dir])
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         return super(LocalEngineLauncher, self).start()
 
 
@@ -355,7 +355,7 @@ class LocalEngineSetLauncher(BaseLauncher):
         ['--log-to-file','--log-level', '40'], config=True
     )
 
-    def __init__(self, work_dir=u'', config=None):
+    def __init__(self, work_dir='', config=None):
         super(LocalEngineSetLauncher, self).__init__(
             work_dir=work_dir, config=config
         )
@@ -363,7 +363,7 @@ class LocalEngineSetLauncher(BaseLauncher):
 
     def start(self, n, cluster_dir):
         """Start n engines by profile or cluster_dir."""
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         dlist = []
         for i in range(n):
             el = LocalEngineLauncher(work_dir=self.work_dir, config=self.config)
@@ -450,7 +450,7 @@ class MPIExecControllerLauncher(MPIExecLauncher):
     def start(self, cluster_dir):
         """Start the controller by cluster_dir."""
         self.controller_args.extend(['--cluster-dir', cluster_dir])
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         log.msg("Starting MPIExecControllerLauncher: %r" % self.args)
         return super(MPIExecControllerLauncher, self).start(1)
 
@@ -471,7 +471,7 @@ class MPIExecEngineSetLauncher(MPIExecLauncher):
     def start(self, n, cluster_dir):
         """Start n engines by profile or cluster_dir."""
         self.engine_args.extend(['--cluster-dir', cluster_dir])
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         self.n = n
         log.msg('Starting MPIExecEngineSetLauncher: %r' % self.args)
         return super(MPIExecEngineSetLauncher, self).start(n)
@@ -551,15 +551,15 @@ class WindowsHPCLauncher(BaseLauncher):
     # submit_command.
     job_id_regexp = Str(r'\d+', config=True)
     # The filename of the instantiated job script.
-    job_file_name = Unicode(u'ipython_job.xml', config=True)
+    job_file_name = Unicode('ipython_job.xml', config=True)
     # The full path to the instantiated job script. This gets made dynamically
     # by combining the work_dir with the job_file_name.
-    job_file = Unicode(u'')
+    job_file = Unicode('')
     # The hostname of the scheduler to submit the job to
     scheduler = Str('', config=True)
     job_cmd = Str(find_job_cmd(), config=True)
 
-    def __init__(self, work_dir=u'', config=None):
+    def __init__(self, work_dir='', config=None):
         super(WindowsHPCLauncher, self).__init__(
             work_dir=work_dir, config=config
         )
@@ -598,7 +598,7 @@ class WindowsHPCLauncher(BaseLauncher):
         # Twisted will raise DeprecationWarnings if we try to pass unicode to this
         output = yield getProcessOutput(str(self.job_cmd),
             [str(a) for a in args],
-            env=dict((str(k),str(v)) for k,v in os.environ.items()),
+            env=dict((str(k),str(v)) for k,v in list(os.environ.items())),
             path=self.work_dir
         )
         job_id = self.parse_job_id(output)
@@ -617,7 +617,7 @@ class WindowsHPCLauncher(BaseLauncher):
             # Twisted will raise DeprecationWarnings if we try to pass unicode to this
             output = yield getProcessOutput(str(self.job_cmd),
                 [str(a) for a in args],
-                env=dict((str(k),str(v)) for k,v in os.environ.iteritems()),
+                env=dict((str(k),str(v)) for k,v in os.environ.items()),
                 path=self.work_dir
             )
         except:
@@ -628,7 +628,7 @@ class WindowsHPCLauncher(BaseLauncher):
 
 class WindowsHPCControllerLauncher(WindowsHPCLauncher):
 
-    job_file_name = Unicode(u'ipcontroller_job.xml', config=True)
+    job_file_name = Unicode('ipcontroller_job.xml', config=True)
     extra_args = List([], config=False)
 
     def write_job_file(self, n):
@@ -653,13 +653,13 @@ class WindowsHPCControllerLauncher(WindowsHPCLauncher):
     def start(self, cluster_dir):
         """Start the controller by cluster_dir."""
         self.extra_args = ['--cluster-dir', cluster_dir]
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         return super(WindowsHPCControllerLauncher, self).start(1)
 
 
 class WindowsHPCEngineSetLauncher(WindowsHPCLauncher):
 
-    job_file_name = Unicode(u'ipengineset_job.xml', config=True)
+    job_file_name = Unicode('ipengineset_job.xml', config=True)
     extra_args = List([], config=False)
 
     def write_job_file(self, n):
@@ -685,7 +685,7 @@ class WindowsHPCEngineSetLauncher(WindowsHPCLauncher):
     def start(self, n, cluster_dir):
         """Start the controller by cluster_dir."""
         self.extra_args = ['--cluster-dir', cluster_dir]
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         return super(WindowsHPCEngineSetLauncher, self).start(n)
 
 
@@ -720,11 +720,11 @@ class BatchSystemLauncher(BaseLauncher):
     # The string that is the batch script template itself.
     batch_template = Str('', config=True)
     # The filename of the instantiated batch script.
-    batch_file_name = Unicode(u'batch_script', config=True)
+    batch_file_name = Unicode('batch_script', config=True)
     # The full path to the instantiated batch script.
-    batch_file = Unicode(u'')
+    batch_file = Unicode('')
 
-    def __init__(self, work_dir=u'', config=None):
+    def __init__(self, work_dir='', config=None):
         super(BatchSystemLauncher, self).__init__(
             work_dir=work_dir, config=config
         )
@@ -777,14 +777,14 @@ class PBSLauncher(BatchSystemLauncher):
     delete_command = Str('qdel', config=True)
     job_id_regexp = Str(r'\d+', config=True)
     batch_template = Str('', config=True)
-    batch_file_name = Unicode(u'pbs_batch_script', config=True)
-    batch_file = Unicode(u'')
+    batch_file_name = Unicode('pbs_batch_script', config=True)
+    batch_file = Unicode('')
 
 
 class PBSControllerLauncher(PBSLauncher):
     """Launch a controller using PBS."""
 
-    batch_file_name = Unicode(u'pbs_batch_script_controller', config=True)
+    batch_file_name = Unicode('pbs_batch_script_controller', config=True)
 
     def start(self, cluster_dir):
         """Start the controller by profile or cluster_dir."""
@@ -792,19 +792,19 @@ class PBSControllerLauncher(PBSLauncher):
         # can be used in the batch script template as ${profile} and
         # ${cluster_dir}
         self.context['cluster_dir'] = cluster_dir
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         log.msg("Starting PBSControllerLauncher: %r" % self.args)
         return super(PBSControllerLauncher, self).start(1)
 
 
 class PBSEngineSetLauncher(PBSLauncher):
 
-    batch_file_name = Unicode(u'pbs_batch_script_engines', config=True)
+    batch_file_name = Unicode('pbs_batch_script_engines', config=True)
 
     def start(self, n, cluster_dir):
         """Start n engines by profile or cluster_dir."""
         self.program_args.extend(['--cluster-dir', cluster_dir])
-        self.cluster_dir = unicode(cluster_dir)
+        self.cluster_dir = str(cluster_dir)
         log.msg('Starting PBSEngineSetLauncher: %r' % self.args)
         return super(PBSEngineSetLauncher, self).start(n)
 

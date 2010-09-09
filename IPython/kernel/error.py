@@ -185,17 +185,17 @@ class CompositeError(KernelError):
     def print_tracebacks(self, excid=None):
         if excid is None:
             for (et,ev,etb) in self.elist:
-                print self._get_engine_str(ev)
-                print self._get_traceback(ev)
-                print
+                print(self._get_engine_str(ev))
+                print(self._get_traceback(ev))
+                print()
         else:
             try:
                 et,ev,etb = self.elist[excid]
             except:
                 raise IndexError("an exception with index %i does not exist"%excid)
             else:
-                print self._get_engine_str(ev)
-                print self._get_traceback(ev)
+                print(self._get_engine_str(ev))
+                print(self._get_traceback(ev))
     
     def raise_exception(self, excid=0):
         try:
@@ -203,7 +203,7 @@ class CompositeError(KernelError):
         except:
             raise IndexError("an exception with index %i does not exist"%excid)
         else:
-            raise et, ev, etb
+            raise et(ev).with_traceback(etb)
 
 
 def collect_exceptions(rlist, method):
@@ -229,6 +229,6 @@ def collect_exceptions(rlist, method):
         # instance (e in this case)
         try:
             raise CompositeError(msg, elist)
-        except CompositeError, e:
+        except CompositeError as e:
             raise e
 

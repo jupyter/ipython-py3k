@@ -54,32 +54,32 @@ def line_edit_f(self, cmd ):
     
     if not cmd:
         
-        print "Magic line editor (for lists of strings)"
+        print("Magic line editor (for lists of strings)")
         if curdata:
-            print "current data is:"
+            print("current data is:")
             pprint.pprint(curdata)
         else:
-            print "No current data, you should set it by running '%led s'"
-            print "When you have your data in _ (result of last computation)."
+            print("No current data, you should set it by running '%led s'")
+            print("When you have your data in _ (result of last computation).")
         return
         
     if cmd == 's':
         curdata = ip.ev('_')
-        print "Data set from last result (_)"
+        print("Data set from last result (_)")
         newlines = curdata
         
     else:
         # simple method call, e.g. upper
         if cmd.isalpha():
             cmd = 'l.' + cmd + '()'
-            print "cmd translated =>",cmd
+            print("cmd translated =>",cmd)
 
         newlines = []
         for l in curdata:
             try:
                 l2 = eval(cmd)
-            except Exception,e:
-                print "Dropping exception",e,"on line:",l
+            except Exception as e:
+                print("Dropping exception",e,"on line:",l)
                 continue
             newlines.append(l2)
 

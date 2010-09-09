@@ -24,6 +24,7 @@ import sys
 import time
 from timeit import default_timer as clock
 import wx
+import collections
 
 if os.name == 'posix':
     import select
@@ -135,7 +136,7 @@ def inputhook_wx3():
             # The import of wx on Linux sets the handler for signal.SIGINT
             # to 0.  This is a bug in wx or gtk.  We fix by just setting it
             # back to the Python default.
-            if not callable(signal.getsignal(signal.SIGINT)):
+            if not isinstance(signal.getsignal(signal.SIGINT), collections.Callable):
                 signal.signal(signal.SIGINT, signal.default_int_handler)
 
             evtloop = wx.EventLoop()

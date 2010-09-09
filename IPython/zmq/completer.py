@@ -2,14 +2,14 @@
 
 # Trying to get print statements to work during completion, not very
 # successfully...
-from __future__ import print_function
+
 
 import itertools
 import readline
 import rlcompleter
 import time
 
-import session
+from . import session
 
 class KernelCompleter(object):
     """Kernel-side completion machinery."""

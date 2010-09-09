@@ -138,7 +138,7 @@ else:
     __IPYTHON__.gnuplot = GRun.gp
     __IPYTHON__.gnuplot.shell_first_time = 1
 
-    print """*** Type `gphelp` for help on the Gnuplot integration features."""
+    print("""*** Type `gphelp` for help on the Gnuplot integration features.""")
 
     # Add the new magic functions to the class dict
     from IPython.core.iplib import InteractiveShell
