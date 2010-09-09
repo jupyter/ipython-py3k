@@ -712,7 +712,7 @@ class VerboseTB(TBTools):
             
             head = '%s%s%s\n%s%s%s\n%s' % (Colors.topline, '-'*75, ColorsNormal,
                                            exc, ' '*(75-len(str(etype))-len(pyver)),
-                                           pyver, string.rjust(date, 75) )
+                                           pyver, date.rjust(75) )
             head += "\nA problem occured executing Python code.  Here is the sequence of function"\
                     "\ncalls leading up to the error, with the most recent (innermost) call last."
         else:

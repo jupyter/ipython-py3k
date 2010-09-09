@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # module pyparsing.py
 #
 # Copyright (c) 2003-2009  Paul T. McGuire
@@ -422,7 +423,7 @@ class ParseResults(object):
         if other.__tokdict:
             offset = len(self.__toklist)
             addoffset = ( lambda a: (a<0 and offset) or (a+offset) )
-            otheritems = list(other.__tokdict.items())
+            otheritems = other.__tokdict.items()
             otherdictitems = [(k, _ParseResultsWithOffset(v[0],addoffset(v[1])) )
                                 for (k,vlist) in otheritems for v in vlist]
             for k,v in otherdictitems:
@@ -488,7 +489,7 @@ class ParseResults(object):
         """Returns the parse results as XML. Tags are created for tokens and lists that have defined results names."""
         nl = "\n"
         out = []
-        namedItems = dict( [ (v[1],k) for (k,vlist) in list(self.__tokdict.items())
+        namedItems = dict([(v[1],k) for (k,vlist) in self.__tokdict.items()
                                                             for v in vlist ] )
         nextLevelIndent = indent + "  "
 
@@ -3442,7 +3443,7 @@ def withAttribute(*args,**attrDict):
     if args:
         attrs = args[:]
     else:
-        attrs = list(attrDict.items())
+        attrs = attrDict.items()
     attrs = [(k,v) for k,v in attrs]
     def pa(s,l,tokens):
         for attrName,attrValue in attrs:
