@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # coding: utf-8
 """A simple configuration system.
 
@@ -73,7 +74,7 @@ class Config(dict):
 
     def _merge(self, other):
         to_update = {}
-        for k, v in list(other.items()):
+        for k, v in other.items():
             if k not in self:
                 to_update[k] = v
             else: # I have this key
@@ -92,16 +93,17 @@ class Config(dict):
         else:
             return False
 
-    # .has_key is deprecated for dictionaries.
-    def has_key(self, key):
+    def __contains__(self, key):
         if self._is_section_key(key):
             return True
         else:
-            return key in self
+            return super(Config, self).__contains__(key)
+    # .has_key is deprecated for dictionaries.
+    has_key = __contains__
 
     def _has_section(self, key):
         if self._is_section_key(key):
-            if key in self:
+            if super(Config, self).__contains__(key):
                 return True
         return False
 

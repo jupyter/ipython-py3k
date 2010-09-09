@@ -233,6 +233,11 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     # 'ConsoleWidget' public interface
     #---------------------------------------------------------------------------
 
+    def can_copy(self):
+        """ Returns whether text can be copied to the clipboard.
+        """
+        return self._control.textCursor().hasSelection()
+
     def can_cut(self):
         """ Returns whether text can be cut to the clipboard.
         """
@@ -240,11 +245,6 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         return (cursor.hasSelection() and 
                 self._in_buffer(cursor.anchor()) and 
                 self._in_buffer(cursor.position()))
-
-    def can_copy(self):
-        """ Returns whether text can be copied to the clipboard.
-        """
-        return self._control.textCursor().hasSelection()
         
     def can_paste(self):
         """ Returns whether text can be pasted from the clipboard.

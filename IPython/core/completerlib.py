@@ -336,7 +336,7 @@ def cd_completer(self, event):
             return [compress_user(relpath, tilde_expand, tilde_val)]
 
         # if no completions so far, try bookmarks
-        bks = list(self.db.get('bookmarks',{}).keys())
+        bks = iter(self.db.get('bookmarks',{}).keys())
         bkmatches = [s for s in bks if s.startswith(event.symbol)]
         if bkmatches:
             return bkmatches
