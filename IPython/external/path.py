@@ -47,6 +47,7 @@ else:
     except ImportError:
         pwd = None
 
+
 class TreeWalkWarning(Warning):
     pass
 

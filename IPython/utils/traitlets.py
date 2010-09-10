@@ -56,7 +56,6 @@ from types import (
     InstanceType, ClassType, FunctionType,
     ListType, TupleType
 )
-
 from .importstring import import_item
 import collections
 

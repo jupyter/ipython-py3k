@@ -20,6 +20,7 @@ Todo
 # Standard library imports.
 from queue import Queue, Empty
 from subprocess import Popen
+import sys
 from threading import Thread
 import time
 
@@ -165,15 +166,15 @@ class XReqSocketChannel(ZmqSocketChannel):
     command_queue = None
 
     def __init__(self, context, session, address):
-        self.command_queue = Queue()
         super(XReqSocketChannel, self).__init__(context, session, address)
+        self.command_queue = Queue()
+        self.ioloop = ioloop.IOLoop()
 
     def run(self):
         """The thread's main activity.  Call start() instead."""
         self.socket = self.context.socket(zmq.XREQ)
         self.socket.setsockopt(zmq.IDENTITY, self.session.session)
         self.socket.connect('tcp://%s:%i' % self.address)
-        self.ioloop = ioloop.IOLoop()
         self.iostate = POLLERR|POLLIN
         self.ioloop.add_handler(self.socket, self._handle_events, 
                                 self.iostate)
@@ -358,6 +359,7 @@ class SubSocketChannel(ZmqSocketChannel):
 
     def __init__(self, context, session, address):
         super(SubSocketChannel, self).__init__(context, session, address)
+        self.ioloop = ioloop.IOLoop()
 
     def run(self):
         """The thread's main activity.  Call start() instead."""
@@ -365,7 +367,6 @@ class SubSocketChannel(ZmqSocketChannel):
         self.socket.setsockopt(zmq.SUBSCRIBE,'')
         self.socket.setsockopt(zmq.IDENTITY, self.session.session)
         self.socket.connect('tcp://%s:%i' % self.address)
-        self.ioloop = ioloop.IOLoop()
         self.iostate = POLLIN|POLLERR
         self.ioloop.add_handler(self.socket, self._handle_events, 
                                 self.iostate)
@@ -443,15 +444,15 @@ class RepSocketChannel(ZmqSocketChannel):
     msg_queue = None
 
     def __init__(self, context, session, address):
-        self.msg_queue = Queue()
         super(RepSocketChannel, self).__init__(context, session, address)
+        self.ioloop = ioloop.IOLoop()
+        self.msg_queue = Queue()
 
     def run(self):
         """The thread's main activity.  Call start() instead."""
         self.socket = self.context.socket(zmq.XREQ)
         self.socket.setsockopt(zmq.IDENTITY, self.session.session)
         self.socket.connect('tcp://%s:%i' % self.address)
-        self.ioloop = ioloop.IOLoop()
         self.iostate = POLLERR|POLLIN
         self.ioloop.add_handler(self.socket, self._handle_events, 
                                 self.iostate)
@@ -722,6 +723,11 @@ class KernelManager(HasTraits):
         """ Attempts to the stop the kernel process cleanly. If the kernel
         cannot be stopped, it is killed, if possible.
         """
+        # FIXME: Shutdown does not work on Windows due to ZMQ errors!
+        if sys.platform == 'win32':
+            self.kill_kernel()
+            return
+
         self.xreq_channel.shutdown()
         # Don't send any additional kernel kill messages immediately, to give
         # the kernel a chance to properly execute shutdown actions. Wait for at
@@ -761,6 +767,11 @@ class KernelManager(HasTraits):
                 else:
                     self.shutdown_kernel()
             self.start_kernel(**self._launch_args)
+
+            # FIXME: Messages get dropped in Windows due to probable ZMQ bug
+            # unless there is some delay here.
+            if sys.platform == 'win32':
+                time.sleep(0.2)
 
     @property
     def has_kernel(self):
