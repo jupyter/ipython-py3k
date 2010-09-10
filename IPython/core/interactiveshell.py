@@ -504,7 +504,7 @@ class InteractiveShell(Configurable, Magic):
     def restore_sys_module_state(self):
         """Restore the state of the sys module."""
         try:
-            for k, v in self._orig_sys_module_state.items():
+            for k, v in list(self._orig_sys_module_state.items()):
                 setattr(sys, k, v)
         except AttributeError:
             pass

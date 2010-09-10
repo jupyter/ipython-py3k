@@ -366,7 +366,7 @@ class ArgParseConfigLoader(CommandLineConfigLoader):
 
     def _convert_to_config(self):
         """self.parsed_data->self.config"""
-        for k, v in list(vars(self.parsed_data).items()):
+        for k, v in vars(self.parsed_data).items():
             exec_str = 'self.config.' + k + '= v'
             exec(exec_str, locals(), globals())
 

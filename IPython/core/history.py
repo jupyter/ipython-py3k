@@ -258,7 +258,7 @@ class ShadowHist(object):
     
     def all(self):
         d = self.db.hdict('shadowhist')
-        items = [(i,s) for (s,i) in list(d.items())]
+        items = [(i,s) for (s,i) in d.items()]
         items.sort()
         return items
 

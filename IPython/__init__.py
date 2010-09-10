@@ -47,7 +47,7 @@ from .testing import test
 
 # Release data
 __author__ = ''
-for author, email in list(release.authors.values()):
+for author, email in release.authors.values():
     __author__ += author + ' <' + email + '>\n'
 __license__  = release.license
 __version__  = release.version

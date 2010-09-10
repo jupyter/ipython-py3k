@@ -785,7 +785,7 @@ class Section(dict):
         >>> c2
         {'section1': {'option1': 'False', 'subsection': {'more_options': 'False'}}}
         """
-        for key, val in list(indict.items()):
+        for key, val in indict.items():
             if (key in self and isinstance(self[key], dict) and
                                 isinstance(val, dict)):
                 self[key].merge(val)
@@ -1409,7 +1409,7 @@ class ConfigObj(Section):
             enc = BOM_LIST[self.encoding.lower()]
             if enc == 'utf_16':
                 # For UTF16 we try big endian and little endian
-                for BOM, (encoding, final_encoding) in list(BOMS.items()):
+                for BOM, (encoding, final_encoding) in BOMS.items():
                     if not final_encoding:
                         # skip UTF8
                         continue
@@ -1439,7 +1439,7 @@ class ConfigObj(Section):
             return self._decode(infile, self.encoding)
         
         # No encoding specified - so we need to check for UTF8/UTF16
-        for BOM, (encoding, final_encoding) in list(BOMS.items()):
+        for BOM, (encoding, final_encoding) in BOMS.items():
             if not line.startswith(BOM):
                 continue
             else:
@@ -2452,7 +2452,7 @@ def flatten_errors(cfg, res, levels=None, results=None):
         if levels:
             levels.pop()
         return results
-    for (key, val) in list(res.items()):
+    for (key, val) in res.items():
         if val == True:
             continue
         if isinstance(cfg.get(key), dict):

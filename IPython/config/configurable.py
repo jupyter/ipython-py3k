@@ -112,7 +112,7 @@ class Configurable(HasTraits):
             # dynamically create the section with name self.__class__.__name__.
             if new._has_section(sname):
                 my_config = new[sname]
-                for k, v in list(traits.items()):
+                for k, v in traits.items():
                     # Don't allow traitlets with config=True to start with
                     # uppercase.  Otherwise, they are confused with Config
                     # subsections.  But, developers shouldn't have uppercase
