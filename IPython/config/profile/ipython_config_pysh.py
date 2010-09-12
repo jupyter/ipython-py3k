@@ -4,7 +4,7 @@ c = get_config()
 # and merge it into the current one.
 load_subconfig('ipython_config.py')
 
-c.InteractiveShell.prompt_in1 = '\C_LightGreen\u@\h\C_LightBlue[\C_LightCyan\Y1\C_LightBlue]\C_Green|\#> '
+c.InteractiveShell.prompt_in1 = r'\C_LightGreen\u@\h\C_LightBlue[\C_LightCyan\Y1\C_LightBlue]\C_Green|\#> '
 c.InteractiveShell.prompt_in2 = '\C_Green|\C_LightGreen\D\C_Green> '
 c.InteractiveShell.prompt_out = '<\#> '
 

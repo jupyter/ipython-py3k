@@ -14,8 +14,6 @@
 # Imports
 #-----------------------------------------------------------------------------
 
-import new
-
 from IPython.core.plugin import Plugin
 from IPython.utils.traitlets import Bool, Any, Instance
 from IPython.utils.autoattr import auto_attr
@@ -145,9 +143,7 @@ class ParalleMagic(Plugin):
             return
 
         self._original_runsource = self.shell.runsource
-        self.shell.runsource = new.instancemethod(
-            self.pxrunsource, self.shell, self.shell.__class__
-        )
+        self.shell.runsource = types.MethodType(self.pxrunsource, self.shell)
         self.autopx = True
         print("%autopx enabled")
     

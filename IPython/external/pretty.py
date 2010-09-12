@@ -442,16 +442,13 @@ class GroupQueue(object):
             pass
 
 
-_baseclass_reprs = (object.__repr__, types.InstanceType.__repr__)
-
-
 def _default_pprint(obj, p, cycle):
     """
     The default print function.  Used if an object does not provide one and
     it's none of the builtin objects.
     """
     klass = getattr(obj, '__class__', None) or type(obj)
-    if getattr(klass, '__repr__', None) not in _baseclass_reprs:
+    if getattr(klass, '__repr__', None) != object.__repr__:
         # A user-provided repr.
         p.text(repr(obj))
         return
@@ -625,7 +622,6 @@ _type_pprinters = {
     tuple:                      _seq_pprinter_factory('(', ')'),
     list:                       _seq_pprinter_factory('[', ']'),
     dict:                       _dict_pprinter_factory('{', '}'),
-    types.DictProxyType:        _dict_pprinter_factory('<dictproxy {', '}>'),
     set:                        _seq_pprinter_factory('set([', '])'),
     frozenset:                  _seq_pprinter_factory('frozenset([', '])'),
     super:                      _super_pprint,
@@ -636,7 +632,7 @@ _type_pprinters = {
     types.BuiltinFunctionType:  _function_pprint,
     slice:            _repr_pprint,
     types.MethodType:           _repr_pprint,
-    xrange:                     _repr_pprint,
+    range:                     _repr_pprint,
     datetime.datetime:          _repr_pprint,
     datetime.timedelta:         _repr_pprint,
     _exception_base:            _exception_pprint
