@@ -138,7 +138,7 @@ class Config(dict):
 
     def __setitem__(self, key, value):
         # Don't allow names in __builtin__ to be modified.
-        if hasattr(__builtins__, key):
+        if hasattr(builtins, key):
             raise ConfigError('Config variable names cannot have the same name '
                               'as a Python builtin: %s' % key)
         if self._is_section_key(key):

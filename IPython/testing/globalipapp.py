@@ -91,13 +91,13 @@ class ipnsdict(dict):
         # is always 'clean' of it before it's used for test code execution.
         self.pop('_',None)
 
-        # The builtins namespace must *always* be the real __builtin__ module,
+        # The builtins namespace must *always* be the real __builtins__ module,
         # else weird stuff happens.  The main ipython code does have provisions
         # to ensure this after %run, but since in this class we do some
         # aggressive low-level cleaning of the execution namespace, we need to
         # correct for that ourselves, to ensure consitency with the 'real'
         # ipython.
-        self['__builtins__'] = __builtin__
+        self['__builtins__'] = __builtins__
 
 
 def get_ipython():
@@ -157,11 +157,10 @@ def start_ipython():
     # Modify the IPython system call with one that uses getoutput, so that we
     # can capture subcommands and print them to Python's stdout, otherwise the
     # doctest machinery would miss them.
-    shell.system = MethodType(xsys, shell, TerminalInteractiveShell)
+    shell.system = MethodType(xsys, shell)
                        
 
-    shell._showtraceback = MethodType(_showtraceback, shell,
-                                      TerminalInteractiveShell)
+    shell._showtraceback = MethodType(_showtraceback, shell)
 
     # IPython is ready, now clean up some global state...
     

@@ -283,7 +283,7 @@ def get_ipython_module_path(module_str):
     mod = import_item(module_str)
     the_path = mod.__file__.replace('.pyc', '.py')
     the_path = the_path.replace('.pyo', '.py')
-    return the_path.decode(sys.getfilesystemencoding())
+    return the_path
 
 
 def expand_path(s):

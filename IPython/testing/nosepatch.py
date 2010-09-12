@@ -58,7 +58,10 @@ def getTestCaseNames(self, testCaseClass):
     if not cases and hasattr(testCaseClass, 'runTest'):
         cases = ['runTest']
     if self.sortTestMethodsUsing:
-        cases.sort(self.sortTestMethodsUsing)
+        try:
+            cases.sort(key=self.sortTestMethodsUsing)
+        except TypeError: # Takes care of things trying to use old cmp functions.
+            cases.sort(key=unittest.CmpToKey(self.sortTestMethodsUsing))
     return cases
 
 
