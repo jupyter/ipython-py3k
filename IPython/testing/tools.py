@@ -46,7 +46,7 @@ from IPython.utils.process import find_cmd, getoutputerror
 from IPython.utils.text import list_strings
 from IPython.utils.io import temp_pyfile
 
-from .. import decorators as dec
+from . import decorators as dec
 
 #-----------------------------------------------------------------------------
 # Globals

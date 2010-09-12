@@ -26,7 +26,7 @@ import sys
 from types import MethodType
 
 # our own
-from .. import tools
+from . import tools
 
 from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
 
@@ -114,7 +114,7 @@ def xsys(self, cmd):
     """
     # We use getoutput, but we need to strip it because pexpect captures
     # the trailing newline differently from commands.getoutput
-    print(self.getoutput(cmd).rstrip(), end='', file=sys.stdout)
+    print(self.getoutput(cmd, split=False).rstrip(), end='', file=sys.stdout)
     sys.stdout.flush()
 
 

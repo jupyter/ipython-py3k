@@ -62,7 +62,7 @@ from IPython.utils.path import get_home_dir, get_ipython_dir, HomeDirError
 from IPython.utils.process import system, getoutput
 from IPython.utils.strdispatch import StrDispatch
 from IPython.utils.syspathcontext import prepended_to_syspath
-from IPython.utils.text import num_ini_spaces, format_screen
+from IPython.utils.text import num_ini_spaces, format_screen, LSString, SList
 from IPython.utils.traitlets import (Int, Str, CBool, CaselessStrEnum, Enum,
                                      List, Unicode, Instance, Type)
 from IPython.utils.warn import warn, error, fatal
@@ -227,6 +227,7 @@ class InteractiveShell(Configurable, Magic):
         # These are relatively independent and stateless
         self.init_ipython_dir(ipython_dir)
         self.init_instance_attrs()
+        self.init_environment()
 
         # Create namespaces (user_ns, user_global_ns, etc.)
         self.init_create_namespaces(user_ns, user_global_ns)
@@ -395,6 +396,10 @@ class InteractiveShell(Configurable, Magic):
         # Input splitter, to split entire cells of input into either individual
         # interactive statements or whole blocks.
         self.input_splitter = IPythonInputSplitter()
+
+    def init_environment(self):
+        """Any changes we need to make to the user's environment."""
+        pass
 
     def init_encoding(self):
         # Get system encoding at startup time.  Certain terminals (like Emacs
@@ -1762,7 +1767,7 @@ class InteractiveShell(Configurable, Magic):
         # even need a centralize colors management object.
         self.magic_colors(self.colors)
         # History was moved to a separate module
-        from ... import history
+        from . import history
         history.init_ipython(self)
 
     def magic(self,arg_s):
@@ -1845,7 +1850,14 @@ class InteractiveShell(Configurable, Magic):
     #-------------------------------------------------------------------------
 
     def system(self, cmd):
-        """Call the given cmd in a subprocess."""
+        """Call the given cmd in a subprocess.
+
+        Parameters
+        ----------
+        cmd : str
+          Command to execute (can not end in '&', as bacground processes are
+          not supported.
+        """
         # We do not support backgrounding processes because we either use
         # pexpect or pipes to read from.  Users can always just call
         # os.system() if they really want a background process.
@@ -1854,11 +1866,30 @@ class InteractiveShell(Configurable, Magic):
 
         return system(self.var_expand(cmd, depth=2))
 
-    def getoutput(self, cmd):
-        """Get output (possibly including stderr) from a subprocess."""
+    def getoutput(self, cmd, split=True):
+        """Get output (possibly including stderr) from a subprocess.
+
+        Parameters
+        ----------
+        cmd : str
+          Command to execute (can not end in '&', as background processes are
+          not supported.
+        split : bool, optional
+        
+          If True, split the output into an IPython SList.  Otherwise, an
+          IPython LSString is returned.  These are objects similar to normal
+          lists and strings, with a few convenience attributes for easier
+          manipulation of line-based output.  You can use '?' on them for
+          details.
+          """
         if cmd.endswith('&'):
             raise OSError("Background processes not supported.")
-        return getoutput(self.var_expand(cmd, depth=2))
+        out = getoutput(self.var_expand(cmd, depth=2))
+        if split:
+            out = SList(out.splitlines())
+        else:
+            out = LSString(out)
+        return out
 
     #-------------------------------------------------------------------------
     # Things related to aliases

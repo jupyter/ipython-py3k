@@ -203,6 +203,12 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     # 'QWidget' interface
     #---------------------------------------------------------------------------
 
+    def resizeEvent(self, event):
+        """ Adjust the scrollbars manually after a resize event.
+        """
+        super(ConsoleWidget, self).resizeEvent(event)
+        self._adjust_scrollbars()
+
     def sizeHint(self):
         """ Reimplemented to suggest a size that is 80 characters wide and
             25 lines high.
@@ -356,6 +362,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 # disable the undo/redo history, but just to be safe:
                 self._control.setUndoRedoEnabled(False)
 
+                # Perform actual execution.
                 self._execute(source, hidden)
             
             else:
@@ -461,6 +468,12 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """
         self._control.print_(printer)
 
+    def prompt_to_top(self):
+        """ Moves the prompt to the top of the viewport.
+        """
+        if not self._executing:
+            self._set_top_cursor(self._get_prompt_cursor())
+            
     def redo(self):
         """ Redo the last operation. If there is no operation to redo, nothing
             happens.
@@ -681,12 +694,6 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         
         return menu
 
-    def _context_menu_show(self, pos):
-        """ Shows a context menu at the given QPoint (in widget coordinates).
-        """
-        menu = self._context_menu_make(pos)
-        menu.exec_(self._control.mapToGlobal(pos))
-
     def _control_key_down(self, modifiers, include_command=True):
         """ Given a KeyboardModifiers flags object, return whether the Control
         key is down.
@@ -722,10 +729,19 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
         # Connect signals.
         control.cursorPositionChanged.connect(self._cursor_position_changed)
-        control.customContextMenuRequested.connect(self._context_menu_show)
+        control.customContextMenuRequested.connect(
+            self._custom_context_menu_requested)
         control.copyAvailable.connect(self.copy_available)
         control.redoAvailable.connect(self.redo_available)
         control.undoAvailable.connect(self.undo_available)
+
+        # Hijack the document size change signal to prevent Qt from adjusting
+        # the viewport's scrollbar. We are relying on an implementation detail
+        # of Q(Plain)TextEdit here, which is potentially dangerous, but without
+        # this functionality we cannot create a nice terminal interface.
+        layout = control.document().documentLayout()
+        layout.documentSizeChanged.disconnect()
+        layout.documentSizeChanged.connect(self._adjust_scrollbars)
 
         # Configure the control.
         control.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -829,14 +845,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 intercepted = True
 
             elif key == QtCore.Qt.Key_L:
-                # It would be better to simply move the prompt block to the top
-                # of the control viewport. QPlainTextEdit has a private method
-                # to do this (setTopBlock), but it cannot be duplicated here
-                # because it requires access to the QTextControl that underlies
-                # both QPlainTextEdit and QTextEdit. In short, this can only be
-                # achieved by appending newlines after the prompt, which is a
-                # gigantic hack and likely to cause other problems.
-                self.clear()
+                self.prompt_to_top()
                 intercepted = True
 
             elif key == QtCore.Qt.Key_O:
@@ -1257,10 +1266,22 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         if self.ansi_codes:
             for substring in self._ansi_processor.split_string(text):
                 for act in self._ansi_processor.actions:
-                    if ((act.action == 'erase' and act.area == 'screen') or
-                        (act.action == 'scroll' and act.unit == 'page')):
+
+                    # Unlike real terminal emulators, we don't distinguish
+                    # between the screen and the scrollback buffer. A screen
+                    # erase request clears everything.
+                    if act.action == 'erase' and act.area == 'screen':
                         cursor.select(QtGui.QTextCursor.Document)
                         cursor.removeSelectedText()
+
+                    # Simulate a form feed by scrolling just past the last line.
+                    elif act.action == 'scroll' and act.unit == 'page':
+                        cursor.insertText('\n')
+                        cursor.endEditBlock()
+                        self._set_top_cursor(cursor)
+                        cursor.joinPreviousEditBlock()
+                        cursor.deletePreviousChar()
+                        
                 format = self._ansi_processor.get_format()
                 cursor.insertText(substring, format)
         else:
@@ -1353,29 +1374,29 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             else:
                 self._append_plain_text(text)
 
+    def _prompt_finished(self):
+        """ Called immediately after a prompt is finished, i.e. when some input
+            will be processed and a new prompt displayed.
+        """
+        # Flush all state from the input splitter so the next round of
+        # reading input starts with a clean buffer.
+        self._input_splitter.reset()
+
+        self._control.setReadOnly(True)
+        self._prompt_finished_hook()
+
     def _prompt_started(self):
         """ Called immediately after a new prompt is displayed.
         """
         # Temporarily disable the maximum block count to permit undo/redo and 
         # to ensure that the prompt position does not change due to truncation.
-        # Because setting this property clears the undo/redo history, we only
-        # set it if we have to.
-        if self._control.document().maximumBlockCount() > 0:
-            self._control.document().setMaximumBlockCount(0)
+        self._control.document().setMaximumBlockCount(0)
         self._control.setUndoRedoEnabled(True)
 
         self._control.setReadOnly(False)
         self._control.moveCursor(QtGui.QTextCursor.End)
-
         self._executing = False
         self._prompt_started_hook()
-
-    def _prompt_finished(self):
-        """ Called immediately after a prompt is finished, i.e. when some input
-            will be processed and a new prompt displayed.
-        """
-        self._control.setReadOnly(True)
-        self._prompt_finished_hook()
 
     def _readline(self, prompt='', callback=None):
         """ Reads one line of input from the user. 
@@ -1440,6 +1461,16 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """
         self._control.setTextCursor(cursor)
 
+    def _set_top_cursor(self, cursor):
+        """ Scrolls the viewport so that the specified cursor is at the top.
+        """
+        scrollbar = self._control.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
+        original_cursor = self._control.textCursor()
+        self._control.setTextCursor(cursor)
+        self._control.ensureCursorVisible()
+        self._control.setTextCursor(original_cursor)
+
     def _show_prompt(self, prompt=None, html=False, newline=True):
         """ Writes a new prompt at the end of the buffer.
 
@@ -1487,6 +1518,23 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
     #------ Signal handlers ----------------------------------------------------
 
+    def _adjust_scrollbars(self):
+        """ Expands the vertical scrollbar beyond the range set by Qt.
+        """
+        # This code is adapted from _q_adjustScrollbars in qplaintextedit.cpp
+        # and qtextedit.cpp.
+        document = self._control.document()
+        scrollbar = self._control.verticalScrollBar()
+        viewport_height = self._control.viewport().height()
+        if isinstance(self._control, QtGui.QPlainTextEdit):
+            high = max(0, document.lineCount() - 1)
+            step = viewport_height / self._control.fontMetrics().lineSpacing()
+        else:
+            high = document.size().height()
+            step = viewport_height
+        scrollbar.setRange(0, high)
+        scrollbar.setPageStep(step)
+
     def _cursor_position_changed(self):
         """ Clears the temporary buffer based on the cursor position.
         """
@@ -1504,3 +1552,9 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             else:
                 self._clear_temporary_buffer()
                 self._text_completing_pos = 0
+
+    def _custom_context_menu_requested(self, pos):
+        """ Shows a context menu at the given QPoint (in widget coordinates).
+        """
+        menu = self._context_menu_make(pos)
+        menu.exec_(self._control.mapToGlobal(pos))
