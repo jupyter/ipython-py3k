@@ -11,7 +11,6 @@ from PyQt4 import QtCore, QtGui
 # Local imports
 from IPython.core.inputsplitter import InputSplitter, transform_classic_prompt
 from IPython.frontend.qt.base_frontend_mixin import BaseFrontendMixin
-from IPython.utils.io import raw_print
 from IPython.utils.traitlets import Bool
 from .bracket_matcher import BracketMatcher
 from .call_tip_widget import CallTipWidget
@@ -115,7 +114,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._copy_raw_action = QtGui.QAction('Copy (Raw Text)', None)
         self._hidden = False
         self._highlighter = FrontendHighlighter(self)
-        self._input_splitter = self._input_splitter_class(input_mode='block')
+        self._input_splitter = self._input_splitter_class(input_mode='cell')
         self._kernel_manager = None
         self._possible_kernel_restart = False
         self._request_info = {}
@@ -497,7 +496,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         for item in payload:
             if not self._process_execute_payload(item):
                 warning = 'Warning: received unknown payload of type %s'
-                raw_print(warning % repr(item['source']))
+                print(warning % repr(item['source']))
 
     def _process_execute_payload(self, item):
         """ Process a single payload item from the list of payload items in an
