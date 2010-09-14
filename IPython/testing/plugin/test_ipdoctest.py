@@ -13,7 +13,7 @@ def doctest_simple():
     In [1]: 1
     Out[1]: 1
 
-    In [2]: print 1
+    In [2]: print(1)
     1
     """
 
@@ -22,9 +22,9 @@ def doctest_multiline1():
     """The ipdoctest machinery must handle multiline examples gracefully.
 
     In [2]: for i in range(10):
-       ...:     print i,
+       ...:     print(i, end=" ")
        ...:      
-    0 1 2 3 4 5 6 7 8 9
+    0 1 2 3 4 5 6 7 8 9 
     """
 
     
@@ -39,7 +39,7 @@ def doctest_multiline2():
     Out[8]: 2
 
     In [9]: def g(x):
-       ...:     print 'x is:',x
+       ...:     print('x is:',x)
        ...:      
 
     In [10]: g(1)

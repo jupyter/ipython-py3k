@@ -37,7 +37,7 @@ def extract_vars(*names,**kw):
 
         In [2]: def func(x):
            ...:     y = 1
-           ...:     print extract_vars('x','y')
+           ...:     print(extract_vars('x','y'))
            ...:
 
         In [3]: func('hello')

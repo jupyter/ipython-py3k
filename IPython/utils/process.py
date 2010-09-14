@@ -114,8 +114,8 @@ def arg_split(s, posix=False):
     # http://bugs.python.org/issue1170
     # At least encoding the input when it's unicode seems to help, but there
     # may be more problems lurking.  Apparently this is fixed in python3.
-    if isinstance(s, str):
-        s = s.encode(sys.stdin.encoding)
+    #if isinstance(s, str):
+        #s = s.encode(sys.stdin.encoding)
     lex = shlex.shlex(s, posix=posix)
     lex.whitespace_split = True
     return list(lex)

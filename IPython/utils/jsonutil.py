@@ -57,13 +57,13 @@ def json_clean(obj):
     atomic_ok = (str, int, float, type(None))
     
     # containers that we need to convert into lists
-    container_to_list = (tuple, set, types.GeneratorType)
+    container_to_list = (tuple, set, range, types.GeneratorType)
     
     if isinstance(obj, atomic_ok):
         return obj
 
     if isinstance(obj, container_to_list) or (
-        hasattr(obj, '__iter__') and hasattr(obj, 'next')):
+        hasattr(obj, '__iter__') and hasattr(obj, '__next__')):
         obj = list(obj)
         
     if isinstance(obj, list):

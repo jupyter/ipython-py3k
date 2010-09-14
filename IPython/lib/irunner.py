@@ -31,12 +31,16 @@ NOTES:
 """
 
 # Stdlib imports
+import io
 import optparse
 import os
 import sys
 
 # Third-party modules.
-import pexpect
+try:
+    import pexpect
+except ImportError:
+    from IPython.external import pexpect
 
 # Global usage strings, to avoid indentation issues when typing it below.
 USAGE = """
@@ -188,7 +192,7 @@ class InteractiveRunner(object):
 
         # if the source is a string, chop it up in lines so we can iterate
         # over it just as if it were an open file.
-        if not isinstance(source,file):
+        if not isinstance(source,io.TextIOBase):
             source = source.splitlines(True)
 
         if self.echo:

@@ -53,7 +53,7 @@ from IPython.testing.ipunittest import ipdoctest, ipdocstring
 @ipdoctest
 def simple_dt():
     """
-    >>> print 1+1
+    >>> print(1+1)
     2
     """
 
@@ -61,14 +61,14 @@ def simple_dt():
 @ipdoctest
 def ipdt_flush():
     """
-In [20]: print 1
+In [20]: print(1)
 1
 
 In [26]: for i in range(10):
-   ....:     print i,
+   ....:     print(i, end=' ')
    ....:     
    ....:     
-0 1 2 3 4 5 6 7 8 9
+0 1 2 3 4 5 6 7 8 9 
 
 In [27]: 3+4
 Out[27]: 7
@@ -78,14 +78,14 @@ Out[27]: 7
 @ipdoctest
 def ipdt_indented_test():
     """
-    In [20]: print 1
+    In [20]: print(1)
     1
 
     In [26]: for i in range(10):
-       ....:     print i,
+       ....:     print(i, end=' ')
        ....:     
        ....:     
-    0 1 2 3 4 5 6 7 8 9
+    0 1 2 3 4 5 6 7 8 9 
 
     In [27]: 3+4
     Out[27]: 7
@@ -102,14 +102,14 @@ class Foo(object):
     @ipdocstring
     def ipdt_method(self):
         """
-        In [20]: print 1
+        In [20]: print(1)
         1
 
         In [26]: for i in range(10):
-           ....:     print i,
+           ....:     print(i, end=' ')
            ....:     
            ....:     
-        0 1 2 3 4 5 6 7 8 9
+        0 1 2 3 4 5 6 7 8 9 
 
         In [27]: 3+4
         Out[27]: 7
@@ -117,6 +117,6 @@ class Foo(object):
 
     def normaldt_method(self):
         """
-        >>> print 1+1
+        >>> print(1+1)
         2
         """

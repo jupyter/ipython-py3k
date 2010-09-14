@@ -117,7 +117,7 @@ def getoutput(cmd):
     out = process_handler(cmd, lambda p: p.communicate()[0], subprocess.STDOUT)
     if out is None:
         out = ''
-    return out
+    return out.decode()
 
 
 def getoutputerror(cmd):
@@ -137,6 +137,8 @@ def getoutputerror(cmd):
     """
 
     out_err = process_handler(cmd, lambda p: p.communicate())
-    if out_err is None:
+    if out_err:
+        out, err = out_err
+    else:
         out_err = '', ''
-    return out_err
+    return out.decode(), err.decode()

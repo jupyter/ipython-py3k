@@ -19,7 +19,6 @@ import __main__
 import os
 import re
 import shutil
-import types
 
 from IPython.external.path import path
 
@@ -29,8 +28,6 @@ from IPython.utils.data import flatten
 #-----------------------------------------------------------------------------
 # Code
 #-----------------------------------------------------------------------------
-
-StringTypes = str
 
 
 def unquote_ends(istr):
@@ -325,7 +322,7 @@ def qw(words,flat=0,sep=None,maxsplit=-1):
     ['a', 'b', '1', '2', 'm', 'n', 'p', 'q']
     """
 
-    if type(words) in StringTypes:
+    if type(words) == str:
         return [word.strip() for word in words.split(sep,maxsplit)
                 if word and not word.isspace() ]
     if flat:
@@ -345,7 +342,7 @@ def qw_lol(indata):
     We need this to make sure the modules_some keys *always* end up as a
     list of lists."""
 
-    if type(indata) in StringTypes:
+    if type(indata) == str:
         return [qw(indata)]
     else:
         return qw(indata)
@@ -470,7 +467,7 @@ def marquee(txt='',width=78,mark='*'):
     """
     if not txt:
         return (mark*width)[:width]
-    nmark = (width-len(txt)-2)/len(mark)/2
+    nmark = (width-len(txt)-2)//len(mark)//2
     if nmark < 0: nmark =0
     marks = mark*nmark
     return '%s %s %s' % (marks,txt,marks)

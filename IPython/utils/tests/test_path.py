@@ -33,9 +33,9 @@ try:
     import winreg as wreg
 except ImportError:
     #Fake _winreg module on none windows platforms
-    import new
-    sys.modules["_winreg"] = new.module("_winreg")
-    import winreg as wreg
+    from types import ModuleType
+    sys.modules["_winreg"] = ModuleType("_winreg")
+    import _winreg as wreg
     #Add entries that needs to be stubbed by the testing code
     (wreg.OpenKey, wreg.QueryValueEx,) = (None, None)
 

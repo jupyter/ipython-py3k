@@ -1798,7 +1798,7 @@ class InteractiveShell(Configurable, Magic):
             error("Magic function `%s` not found." % magic_name)
         else:
             magic_args = self.var_expand(magic_args,1)
-            with nested(self.builtin_trap,):
+            with self.builtin_trap:
                 result = fn(magic_args)
                 return result
 

@@ -63,7 +63,7 @@ import IPython.utils.io
 from IPython.utils.path import get_py_filename
 from IPython.utils.process import arg_split, abbrev_cwd
 from IPython.utils.terminal import set_term_title
-from IPython.utils.text import LSString, SList, StringTypes, format_screen
+from IPython.utils.text import LSString, SList, format_screen
 from IPython.utils.timing import clock, clock2
 from IPython.utils.warn import warn, error
 from IPython.utils.ipstruct import Struct
@@ -1664,7 +1664,7 @@ Currently the magic system has the following functions:\n"""
             # Since this seems to be done by the interpreter itself, the best
             # we can do is to at least restore __builtins__ for the user on
             # exit.
-            self.shell.user_ns['__builtins__'] = __builtin__
+            self.shell.user_ns['__builtins__'] = builtins
             
             # Ensure key global structures are restored
             sys.argv = save_argv
@@ -2247,7 +2247,7 @@ Currently the magic system has the following functions:\n"""
 
                 #print '*** args',args,'type',type(args)  # dbg
                 data = eval(args,self.shell.user_ns)
-                if not type(data) in StringTypes:
+                if not isinstance(data, str):
                     raise DataIsObject
 
             except (NameError,SyntaxError):

@@ -38,8 +38,7 @@ from ._process_common import getoutput
 def _find_cmd(cmd):
     """Find the full path to a command using which."""
 
-    return sp.Popen(['/usr/bin/env', 'which', cmd],
-                    stdout=sp.PIPE).communicate()[0]
+    return sp.getoutput("/usr/bin/env which {0}".format(cmd))
 
 
 class ProcessHandler(object):
@@ -94,7 +93,9 @@ class ProcessHandler(object):
         """
         pcmd = self._make_cmd(cmd)
         try:
-            return pexpect.run(pcmd).replace('\r\n', '\n')
+            temp =  pexpect.run(pcmd).replace('\r\n', '\n')
+            raise Exception(temp)
+            return temp
         except KeyboardInterrupt:
             print('^C', file=sys.stderr, end='')
 

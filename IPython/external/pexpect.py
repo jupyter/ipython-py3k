@@ -66,7 +66,6 @@ $Id: pexpect.py 507 2007-12-27 02:40:52Z noah $
 try:
     import os, sys, time
     import select
-    import string
     import re
     import struct
     import resource
@@ -230,16 +229,16 @@ def run (command, timeout=-1, withexitstatus=False, events=None, extra_args=None
     while 1:
         try:
             index = child.expect (patterns)
-            if type(child.after) in str:
+            if type(child.after) == str:
                 child_result_list.append(child.before + child.after)
             else: # child.after may have been a TIMEOUT or EOF, so don't cat those.
                 child_result_list.append(child.before)
-            if type(responses[index]) in str:
+            if type(responses[index]) == str:
                 child.send(responses[index])
             elif type(responses[index]) is types.FunctionType:
                 callback_result = responses[index](locals())
                 sys.stdout.flush()
-                if type(callback_result) in str:
+                if type(callback_result) == str:
                     child.send(callback_result)
                 elif callback_result:
                     break
@@ -829,7 +828,7 @@ class spawn (object):
             except OSError as e: # Linux does this
                 self.flag_eof = True
                 raise EOF ('End Of File (EOF) in read_nonblocking(). Exception style platform.')
-            if s == '': # BSD style
+            if s == b'': # BSD style
                 self.flag_eof = True
                 raise EOF ('End Of File (EOF) in read_nonblocking(). Empty string style platform.')
 
@@ -942,7 +941,9 @@ class spawn (object):
         """This sends a string to the child process. This returns the number of
         bytes written. If a log file was set then the data is also written to
         the log. """
-
+        
+        if isinstance(s, str):
+            s = s.encode()
         time.sleep(self.delaybeforesend)
         if self.logfile is not None:
             self.logfile.write (s)
@@ -1217,7 +1218,7 @@ class spawn (object):
             compile_flags = compile_flags | re.IGNORECASE
         compiled_pattern_list = []
         for p in patterns:
-            if type(p) in str:
+            if isinstance(p, str):
                 compiled_pattern_list.append(re.compile(p, compile_flags))
             elif p is EOF:
                 compiled_pattern_list.append(EOF)
@@ -1362,6 +1363,7 @@ class spawn (object):
         try:
             incoming = self.buffer
             freshlen = len(incoming)
+            a = 0
             while True: # Keep reading until exception or return.
                 index = searcher.search(incoming, freshlen, searchwindowsize)
                 if index >= 0:
@@ -1372,10 +1374,10 @@ class spawn (object):
                     self.match_index = index
                     return self.match_index
                 # No match at this point
-                if timeout < 0 and timeout is not None:
+                if timeout is not None and timeout < 0:
                     raise TIMEOUT ('Timeout exceeded in expect_any().')
                 # Still have time left, so read more data
-                c = self.read_nonblocking (self.maxread, timeout)
+                c = self.read_nonblocking (self.maxread, timeout).decode()
                 freshlen = len(c)
                 time.sleep (0.0001)
                 incoming = incoming + c
@@ -1701,7 +1703,7 @@ class searcher_re (object):
         self.eof_index = -1
         self.timeout_index = -1
         self._searches = []
-        for n, s in zip(list(range(len(patterns))), patterns):
+        for n, s in enumerate(patterns):
             if s is EOF:
                 self.eof_index = n
                 continue
@@ -1722,7 +1724,7 @@ class searcher_re (object):
         if self.timeout_index >= 0:
             ss.append ((self.timeout_index,'    %d: TIMEOUT' % self.timeout_index))
         ss.sort()
-        ss = zip(*ss)[1]
+        ss = [a[1] for a in ss]
         return '\n'.join(ss)
 
     def search(self, buffer, freshlen, searchwindowsize=None):
@@ -1778,8 +1780,9 @@ def which (filename):
 
     # Oddly enough this was the one line that made Pexpect
     # incompatible with Python 1.5.2.
-    #pathlist = p.split (os.pathsep)
-    pathlist = string.split (p, os.pathsep)
+    # TK: Let's hope changing it back gives us Py3k compatibility!
+    pathlist = p.split (os.pathsep)
+    #pathlist = string.split (p, os.pathsep)
 
     for path in pathlist:
         f = os.path.join(path, filename)

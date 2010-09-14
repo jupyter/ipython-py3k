@@ -98,7 +98,7 @@ class Tee(object):
         if channel not in ['stdout', 'stderr']:
             raise ValueError('Invalid channel spec %s' % channel)
         
-        if hasattr(file, 'write') and hasattr(file, 'seek'):
+        if hasattr(file_or_name, 'write') and hasattr(file_or_name, 'seek'):
             self.file = file_or_name
         else:
             self.file = open(file_or_name, mode)

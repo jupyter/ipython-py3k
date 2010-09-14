@@ -51,7 +51,7 @@ class RunnerTestCase(unittest.TestCase):
     def testIPython(self):
         """Test the IPython runner."""
         source = """
-print 'hello, this is python'
+print('hello, this is python')
 # some more code
 x=1;y=2
 x+y**2
@@ -65,14 +65,14 @@ cos pi
 cos(pi)
 
 for i in range(5):
-    print i,
+    print(i, end=" ")
 
-print "that's all folks!"
+print("that's all folks!")./
 
 %Exit
 """
         output = """\
-In [1]: print 'hello, this is python'
+In [1]: print('hello, this is python')
 hello, this is python
 
 
@@ -108,11 +108,11 @@ Out[9]: -1.0
 
 
 In [10]: for i in range(5):
-   ....:     print i,
+   ....:     print(i, end=" ")
    ....:
 0 1 2 3 4
 
-In [11]: print "that's all folks!"
+In [11]: print("that's all folks!")
 that's all folks!
 
 
@@ -125,7 +125,7 @@ In [12]: %Exit
         """Test the Python runner."""
         runner = irunner.PythonRunner(out=self.out)
         source = """
-print 'hello, this is python'
+print('hello, this is python')
 
 # some more code
 x=1;y=2
@@ -135,12 +135,12 @@ from math import *
 cos(pi)
 
 for i in range(5):
-    print i,
+    print(i, end=" ")
 
-print "that's all folks!"
+print("that's all folks!")
         """
         output = """\
->>> print 'hello, this is python'
+>>> print('hello, this is python')
 hello, this is python
 
 # some more code
@@ -153,10 +153,9 @@ hello, this is python
 -1.0
 
 >>> for i in range(5):
-...     print i,
+...     print(i, end=" ")
 ...
-0 1 2 3 4
->>> print "that's all folks!"
+0 1 2 3 4 >>> print("that's all folks!")
 that's all folks!
 """
         self._test_runner(runner,source,output)

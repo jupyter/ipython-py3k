@@ -31,7 +31,7 @@ def test_tee_simple():
     chan = StringIO()
     text = 'Hello'
     tee = Tee(chan, channel='stdout')
-    print(text, end=' ', file=chan)
+    print(text, end='', file=chan)
     nt.assert_equal(chan.getvalue(), text)
 
 
