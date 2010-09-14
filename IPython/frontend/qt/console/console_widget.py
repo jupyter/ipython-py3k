@@ -184,6 +184,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             self.paste(QtGui.QClipboard.Selection)
             return True
 
+        # Manually adjust the scrollbars *after* a resize event is dispatched.
+        elif etype == QtCore.QEvent.Resize:
+            QtCore.QTimer.singleShot(0, self._adjust_scrollbars)
+
         # Override shortcuts for all filtered widgets.
         elif etype == QtCore.QEvent.ShortcutOverride and \
                 self.override_shortcuts and \
@@ -202,12 +206,6 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     #---------------------------------------------------------------------------
     # 'QWidget' interface
     #---------------------------------------------------------------------------
-
-    def resizeEvent(self, event):
-        """ Adjust the scrollbars manually after a resize event.
-        """
-        super(ConsoleWidget, self).resizeEvent(event)
-        self._adjust_scrollbars()
 
     def sizeHint(self):
         """ Reimplemented to suggest a size that is 80 characters wide and
@@ -472,7 +470,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """ Moves the prompt to the top of the viewport.
         """
         if not self._executing:
-            self._set_top_cursor(self._get_prompt_cursor())
+            prompt_cursor = self._get_prompt_cursor()
+            if self._get_cursor().blockNumber() < prompt_cursor.blockNumber():
+                self._set_cursor(prompt_cursor)
+            self._set_top_cursor(prompt_cursor)
             
     def redo(self):
         """ Redo the last operation. If there is no operation to redo, nothing
@@ -753,7 +754,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     def _create_page_control(self):
         """ Creates and connects the underlying paging widget.
         """
-        control = QtGui.QPlainTextEdit()
+        if self.kind == 'plain':
+            control = QtGui.QPlainTextEdit()
+        elif self.kind == 'rich':
+            control = QtGui.QTextEdit()
         control.installEventFilter(self)
         control.setReadOnly(True)
         control.setUndoRedoEnabled(False)
@@ -801,13 +805,16 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                     if self._reading_callback:
                         self._reading_callback()
 
-                # If there is only whitespace after the cursor, execute.
-                # Otherwise, split the line with a continuation prompt.
+                # If the input buffer is a single line or there is only
+                # whitespace after the cursor, execute. Otherwise, split the
+                # line with a continuation prompt.
                 elif not self._executing:
                     cursor.movePosition(QtGui.QTextCursor.End,
                                         QtGui.QTextCursor.KeepAnchor)
                     at_end = cursor.selectedText().trimmed().isEmpty() 
-                    if (at_end or shift_down) and not ctrl_down:
+                    single_line = (self._get_end_cursor().blockNumber() ==
+                                   self._get_prompt_cursor().blockNumber())
+                    if (at_end or shift_down or single_line) and not ctrl_down:
                         self.execute(interactive = not shift_down)
                     else:
                         # Do this inside an edit block for clean undo/redo.
@@ -920,7 +927,27 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                     intercepted = not self._tab_pressed()
 
             elif key == QtCore.Qt.Key_Left:
-                intercepted = not self._in_buffer(position - 1)
+
+                # Move to the previous line
+                line, col = cursor.blockNumber(), cursor.columnNumber()
+                if line > self._get_prompt_cursor().blockNumber() and \
+                        col == len(self._continuation_prompt):
+                    self._control.moveCursor(QtGui.QTextCursor.PreviousBlock)
+                    self._control.moveCursor(QtGui.QTextCursor.EndOfBlock)
+                    intercepted = True
+
+                # Regular left movement
+                else:
+                    intercepted = not self._in_buffer(position - 1)
+                    
+            elif key == QtCore.Qt.Key_Right:
+                original_block_number = cursor.blockNumber()
+                cursor.movePosition(QtGui.QTextCursor.Right)
+                if cursor.blockNumber() != original_block_number:
+                    cursor.movePosition(QtGui.QTextCursor.Right,
+                                        n=len(self._continuation_prompt))
+                self._set_cursor(cursor)
+                intercepted = True
 
             elif key == QtCore.Qt.Key_Home:
                 start_line = cursor.blockNumber()
@@ -1135,8 +1162,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             return cursor.columnNumber() - len(prompt)
 
     def _get_input_buffer_cursor_line(self):
-        """ Returns line of the input buffer that contains the cursor, or None
-            if there is no such line.
+        """ Returns the text of the line of the input buffer that contains the
+            cursor, or None if there is no such line.
         """
         prompt = self._get_input_buffer_cursor_prompt()
         if prompt is None:
@@ -1347,32 +1374,40 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         else:
             self.input_buffer = ''
         
-    def _page(self, text):
+    def _page(self, text, html=False):
         """ Displays text using the pager if it exceeds the height of the
-            visible area.
-        """
-        if self.paging == 'none':
-            self._append_plain_text(text)
-        else:
-            line_height = QtGui.QFontMetrics(self.font).height()
-            minlines = self._control.viewport().height() / line_height
-            if re.match("(?:[^\n]*\n){%i}" % minlines, text):
-                if self.paging == 'custom':
-                    self.custom_page_requested.emit(text)
-                else:
-                    self._page_control.clear()
-                    cursor = self._page_control.textCursor()
-                    self._insert_plain_text(cursor, text)
-                    self._page_control.moveCursor(QtGui.QTextCursor.Start)
+        viewport.
 
-                    self._page_control.viewport().resize(self._control.size())
-                    if self._splitter:
-                        self._page_control.show()
-                        self._page_control.setFocus()
-                    else:
-                        self.layout().setCurrentWidget(self._page_control)
+        Parameters:
+        -----------
+        html : bool, optional (default False)
+            If set, the text will be interpreted as HTML instead of plain text.
+        """
+        line_height = QtGui.QFontMetrics(self.font).height()
+        minlines = self._control.viewport().height() / line_height
+        if self.paging != 'none' and \
+                re.match("(?:[^\n]*\n){%i}" % minlines, text):
+            if self.paging == 'custom':
+                self.custom_page_requested.emit(text)
             else:
-                self._append_plain_text(text)
+                self._page_control.clear()
+                cursor = self._page_control.textCursor()
+                if html:
+                    self._insert_html(cursor, text)
+                else:
+                    self._insert_plain_text(cursor, text)
+                self._page_control.moveCursor(QtGui.QTextCursor.Start)
+
+                self._page_control.viewport().resize(self._control.size())
+                if self._splitter:
+                    self._page_control.show()
+                    self._page_control.setFocus()
+                else:
+                    self.layout().setCurrentWidget(self._page_control)
+        elif html:
+            self._append_plain_html(text)
+        else:
+            self._append_plain_text(text)
 
     def _prompt_finished(self):
         """ Called immediately after a prompt is finished, i.e. when some input
@@ -1527,13 +1562,21 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         scrollbar = self._control.verticalScrollBar()
         viewport_height = self._control.viewport().height()
         if isinstance(self._control, QtGui.QPlainTextEdit):
-            high = max(0, document.lineCount() - 1)
+            maximum = max(0, document.lineCount() - 1)
             step = viewport_height / self._control.fontMetrics().lineSpacing()
         else:
-            high = document.size().height()
+            # QTextEdit does not do line-based layout and blocks will not in
+            # general have the same height. Therefore it does not make sense to
+            # attempt to scroll in line height increments.
+            maximum = document.size().height()
             step = viewport_height
-        scrollbar.setRange(0, high)
+        diff = maximum - scrollbar.maximum()
+        scrollbar.setRange(0, maximum)
         scrollbar.setPageStep(step)
+        # Compensate for undesirable scrolling that occurs automatically due to
+        # maximumBlockCount() text truncation.
+        if diff < 0 and document.blockCount() == document.maximumBlockCount():
+            scrollbar.setValue(scrollbar.value() + diff)
 
     def _cursor_position_changed(self):
         """ Clears the temporary buffer based on the cursor position.
