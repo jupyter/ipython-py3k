@@ -21,7 +21,7 @@ from PyQt4 import QtCore, QtGui
 # Local imports
 from IPython.core.inputsplitter import IPythonInputSplitter, \
     transform_ipy_prompt
-from IPython.core.usage import default_banner
+from IPython.core.usage import default_gui_banner
 from IPython.utils.traitlets import Bool, Str
 from .frontend_widget import FrontendWidget
 
@@ -208,11 +208,9 @@ class IPythonWidget(FrontendWidget):
         """
         text = str(self._control.textCursor().selection().toPlainText())
         if text:
-            # Remove prompts.
             lines = list(map(transform_ipy_prompt, text.splitlines()))
             text = '\n'.join(lines)
-            # Expand tabs so that we respect PEP-8.
-            QtGui.QApplication.clipboard().setText(text.expandtabs(4))
+            QtGui.QApplication.clipboard().setText(text)
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' public interface
@@ -248,7 +246,7 @@ class IPythonWidget(FrontendWidget):
     def _get_banner(self):
         """ Reimplemented to return IPython's default banner.
         """
-        return default_banner + '\n'
+        return default_gui_banner
 
     def _process_execute_error(self, msg):
         """ Reimplemented for IPython-style traceback formatting.
@@ -430,7 +428,13 @@ class IPythonWidget(FrontendWidget):
         self.exit_requested.emit()
 
     def _handle_payload_page(self, item):
-        self._page(item['data'])
+        # Since the plain text widget supports only a very small subset of HTML
+        # and we have no control over the HTML source, we only page HTML
+        # payloads in the rich text widget.
+        if item['html'] and self.kind == 'rich':
+            self._page(item['html'], html=True)
+        else:
+            self._page(item['text'], html=False)
 
     #------ Trait change handlers ---------------------------------------------
 
