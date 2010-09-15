@@ -549,36 +549,34 @@ class ListTB(TBTools):
             list.append( str(stype) + '\n')
         else:
             if etype is SyntaxError:
-                try:
-                    msg, (filename, lineno, offset, line) = value
-                except:
+                if not value.text: # Don't know if this could actually still occur.
                     have_filedata = False
                 else:
                     have_filedata = True
-                    #print 'filename is',filename  # dbg
+                    #print 'filename is',value.filename  # dbg
+                    filename = value.filename
                     if not filename: filename = "<string>"
                     list.append('%s  File %s"%s"%s, line %s%d%s\n' % \
                             (Colors.normalEm,
                              Colors.filenameEm, filename, Colors.normalEm,
-                             Colors.linenoEm, lineno, Colors.Normal  ))
-                    if line is not None:
+                             Colors.linenoEm, value.lineno, Colors.Normal  ))
+                    if value.text is not None:
                         i = 0
-                        while i < len(line) and line[i].isspace():
+                        while i < len(value.text) and value.text[i].isspace():
                             i = i+1
                         list.append('%s    %s%s\n' % (Colors.line,
-                                                      line.strip(), 
+                                                      value.text.strip(), 
                                                       Colors.Normal))
-                        if offset is not None:
+                        if value.offset is not None:
                             s = '    '
-                            for c in line[i:offset-1]:
+                            for c in value.text[i:value.offset-1]:
                                 if c.isspace():
                                     s = s + c
                                 else:
                                     s = s + ' '
                             list.append('%s%s^%s\n' % (Colors.caret, s,
                                                        Colors.Normal) )
-                        value = msg
-            s = self._some_str(value)
+            s = self._some_str(value.msg)
             if s:
                 list.append('%s%s:%s %s\n' % (str(stype), Colors.excName,
                                               Colors.Normal, s))
@@ -589,7 +587,7 @@ class ListTB(TBTools):
         if have_filedata:
             ipinst = ipapi.get()
             if ipinst is not None:
-                ipinst.hooks.synchronize_with_editor(filename, lineno, 0)
+                ipinst.hooks.synchronize_with_editor(value.filename, value.lineno, 0)
 
         return list
 

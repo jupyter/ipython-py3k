@@ -1454,7 +1454,7 @@ class InteractiveShell(Configurable, Magic):
     
             if etype is SyntaxError:
                 # Though this won't be called by syntax errors in the input
-                # line, there may be SyntaxError cases whith imported code.
+                # line, there may be SyntaxError cases with imported code.
                 self.showsyntaxerror(filename)
             elif etype is UsageError:
                 print("UsageError:", value)
@@ -1518,21 +1518,9 @@ class InteractiveShell(Configurable, Magic):
         sys.last_value = value
         sys.last_traceback = last_traceback
         
-        if filename and etype is SyntaxError:
-            # Work hard to stuff the correct filename in the exception
-            try:
-                msg, (dummy_filename, lineno, offset, line) = value
-            except:
-                # Not the format we expect; leave it alone
-                pass
-            else:
-                # Stuff in the right filename
-                try:
-                    # Assume SyntaxError is a class exception
-                    value = SyntaxError(msg, (filename, lineno, offset, line))
-                except:
-                    # If that failed, assume SyntaxError is a string
-                    value = msg, (filename, lineno, offset, line)
+        # Can no longer unpack Exceptions (code removed).
+        # The removed code was responsible for 'stuffing the filename in'.
+        # I'm not sure of the context in which that's useful.
         stb = self.SyntaxTB.structured_traceback(etype, value, [])
         self._showtraceback(etype, value, stb)
 

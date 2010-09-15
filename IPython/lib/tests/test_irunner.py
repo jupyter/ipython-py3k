@@ -67,7 +67,7 @@ cos(pi)
 for i in range(5):
     print(i, end=" ")
 
-print("that's all folks!")./
+print("that's all folks!")
 
 %Exit
 """
