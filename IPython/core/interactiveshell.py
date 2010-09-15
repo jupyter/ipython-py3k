@@ -1518,9 +1518,9 @@ class InteractiveShell(Configurable, Magic):
         sys.last_value = value
         sys.last_traceback = last_traceback
         
-        # Can no longer unpack Exceptions (code removed).
-        # The removed code was responsible for 'stuffing the filename in'.
-        # I'm not sure of the context in which that's useful.
+        # Is this stuffing still needed? We don't now know what required it.
+        if filename and etype is SyntaxError:
+            value.filename = filename
         stb = self.SyntaxTB.structured_traceback(etype, value, [])
         self._showtraceback(etype, value, stb)
 
