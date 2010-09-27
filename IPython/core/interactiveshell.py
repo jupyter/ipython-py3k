@@ -2269,7 +2269,7 @@ class InteractiveShell(Configurable, Magic):
         sys.ps2 to prompt the next line."""
 
         # We need to ensure that the source is unicode from here on.
-        if type(source)==str:
+        if type(source)==bytes:
             source = source.decode(self.stdin_encoding)
         
         # if the source code has leading blanks, add 'if 1:\n' to it

@@ -58,7 +58,7 @@ def split_user_input(line, pattern=None):
     manner.
     """
     # We need to ensure that the rest of this routine deals only with unicode
-    if type(line)==str:
+    if type(line)==bytes:
         codec = sys.stdin.encoding
         if codec is None:
             codec = 'utf-8'
