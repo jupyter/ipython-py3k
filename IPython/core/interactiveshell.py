@@ -61,7 +61,7 @@ from IPython.utils.strdispatch import StrDispatch
 from IPython.utils.syspathcontext import prepended_to_syspath
 from IPython.utils.text import num_ini_spaces, format_screen, LSString, SList
 from IPython.utils.traitlets import (Int, Str, CBool, CaselessStrEnum, Enum,
-                                     List, Unicode, Instance, Type)
+                                     List, Instance, Type)
 from IPython.utils.warn import warn, error, fatal
 import IPython.core.hooks
 import collections
@@ -151,7 +151,7 @@ class InteractiveShell(Configurable, Magic):
     displayhook_class = Type(DisplayHook)
     exit_now = CBool(False)
     filename = Str("<ipython console>")
-    ipython_dir= Unicode('', config=True) # Set to get_ipython_dir() in __init__
+    ipython_dir= Str('', config=True) # Set to get_ipython_dir() in __init__
 
     # Input splitter, to split entire cells of input into either individual
     # interactive statements or whole blocks.

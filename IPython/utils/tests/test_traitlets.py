@@ -26,7 +26,7 @@ from unittest import TestCase
 
 from IPython.utils.traitlets import (
     HasTraits, MetaHasTraits, TraitType, Any,
-    Int, Long, Float, Complex, Str, Unicode, TraitError,
+    Int, Float, Complex, Str, TraitError,
     Undefined, Type, This, Instance, TCPAddress
 )
 
@@ -613,25 +613,9 @@ class TestInt(TraitTestBase):
     obj = IntTrait()
     _default_value = 99
     _good_values   = [10, -10]
-    _bad_values    = ['ten', 'ten', [10], {'ten': 10},(10,), None, 1j, 10,
-                      -10, 10.1, -10.1, '10L', '-10L', '10.1', '-10.1', '10L',
+    _bad_values    = ['ten', 'ten', [10], {'ten': 10},(10,), None, 1j,
+                      10.1, -10.1, '10L', '-10L', '10.1', '-10.1', '10L',
                       '-10L', '10.1', '-10.1',  '10', '-10', '10', '-10']
-
-
-class LongTrait(HasTraits):
-
-    value = Long(99)
-
-class TestLong(TraitTestBase):
-
-    obj = LongTrait()
-
-    _default_value = 99
-    _good_values   = [10, -10, 10, -10]
-    _bad_values    = ['ten', 'ten', [10], [10], {'ten': 10},(10,),(10,),
-                      None, 1j, 10.1, -10.1, '10', '-10', '10L', '-10L', '10.1',
-                      '-10.1', '10', '-10', '10L', '-10L', '10.1',
-                      '-10.1']
 
 
 class FloatTrait(HasTraits):
@@ -644,7 +628,7 @@ class TestFloat(TraitTestBase):
 
     _default_value = 99.0
     _good_values   = [10, -10, 10.1, -10.1]
-    _bad_values    = [10, -10, 'ten', 'ten', [10], {'ten': 10},(10,), None,
+    _bad_values    = ['ten', [10], {'ten': 10},(10,), None,
                       1j, '10', '-10', '10L', '-10L', '10.1', '-10.1', '10',
                       '-10', '10L', '-10L', '10.1', '-10.1']
 
@@ -660,7 +644,7 @@ class TestComplex(TraitTestBase):
     _default_value = 99.0-99.0j
     _good_values   = [10, -10, 10.1, -10.1, 10j, 10+10j, 10-10j, 
                       10.1j, 10.1+10.1j, 10.1-10.1j]
-    _bad_values    = [10, -10, '10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
+    _bad_values    = ['10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
 
 
 class StringTrait(HasTraits):
@@ -674,23 +658,8 @@ class TestString(TraitTestBase):
     _default_value = 'string'
     _good_values   = ['10', '-10', '10L',
                       '-10L', '10.1', '-10.1', 'string']
-    _bad_values    = [10, -10, 10, -10, 10.1, -10.1, 1j, [10],
-                      ['ten'],{'ten': 10},(10,), None,  'string']
-
-
-class UnicodeTrait(HasTraits):
-
-    value = Unicode('unicode')
-
-class TestUnicode(TraitTestBase):
-
-    obj = UnicodeTrait()
-
-    _default_value = 'unicode'
-    _good_values   = ['10', '-10', '10L', '-10L', '10.1', 
-                      '-10.1', '', '', 'string', 'string', ]
-    _bad_values    = [10, -10, 10, -10, 10.1, -10.1, 1j,
-                      [10], ['ten'], ['ten'], {'ten': 10},(10,), None]
+    _bad_values    = [10, -10, 10.1, -10.1, 1j, [10],
+                      ['ten'],{'ten': 10},(10,), None]
 
 
 class TCPAddressTrait(HasTraits):

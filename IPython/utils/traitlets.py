@@ -796,31 +796,6 @@ class CInt(Int):
         except:
             self.error(obj, value)
 
-
-class Long(TraitType):
-    """A long integer trait."""
-
-    default_value = 0
-    info_text = 'a long'
-
-    def validate(self, obj, value):
-        if isinstance(value, int):
-            return value
-        if isinstance(value, int):
-            return int(value)
-        self.error(obj, value)
-
-
-class CLong(Long):
-    """A casting version of the long integer trait."""
-
-    def validate(self, obj, value):
-        try:
-            return int(value)
-        except:
-            self.error(obj, value)
-
-
 class Float(TraitType):
     """A float trait."""
 
@@ -891,31 +866,6 @@ class CStr(Str):
                 return str(value)
             except:
                 self.error(obj, value)
-
-
-class Unicode(TraitType):
-    """A trait for unicode strings."""
-
-    default_value = ''
-    info_text = 'a unicode string'
-
-    def validate(self, obj, value):
-        if isinstance(value, str):
-            return value
-        if isinstance(value, str):
-            return str(value)
-        self.error(obj, value)
-
-
-class CUnicode(Unicode):
-    """A casting version of the unicode trait."""
-
-    def validate(self, obj, value):
-        try:
-            return str(value)
-        except:
-            self.error(obj, value)
-
 
 class Bool(TraitType):
     """A boolean (True, False) trait."""
