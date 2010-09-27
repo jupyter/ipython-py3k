@@ -172,6 +172,14 @@ class Kernel(Configurable):
         self.pub_socket.send_json(pyin_msg)
 
     def execute_request(self, ident, parent):
+        
+        status_msg = self.session.msg(
+            'status',
+            {'execution_state':'busy'},
+            parent=parent
+        )
+        self.pub_socket.send_json(status_msg)
+        
         try:
             content = parent['content']
             code = content['code']
@@ -242,9 +250,9 @@ class Kernel(Configurable):
         # or not.  If it did, we proceed to evaluate user_variables/expressions
         if reply_content['status'] == 'ok':
             reply_content['user_variables'] = \
-                         shell.get_user_variables(content['user_variables'])
+                         shell.user_variables(content['user_variables'])
             reply_content['user_expressions'] = \
-                         shell.eval_expressions(content['user_expressions'])
+                         shell.user_expressions(content['user_expressions'])
         else:
             # If there was an error, don't even try to compute variables or
             # expressions
@@ -277,6 +285,13 @@ class Kernel(Configurable):
         if reply_msg['content']['status'] == 'error':
             self._abort_queue()
 
+        status_msg = self.session.msg(
+            'status',
+            {'execution_state':'idle'},
+            parent=parent
+        )
+        self.pub_socket.send_json(status_msg)
+
     def complete_request(self, ident, parent):
         txt, matches = self._complete(parent)
         matches = {'matches' : matches,
@@ -288,9 +303,8 @@ class Kernel(Configurable):
 
     def object_info_request(self, ident, parent):
         object_info = self.shell.object_inspect(parent['content']['oname'])
-        # Before we send this object over, we turn it into a dict and we scrub
-        # it for JSON usage
-        oinfo = json_clean(object_info._asdict())
+        # Before we send this object over, we scrub it for JSON usage
+        oinfo = json_clean(object_info)
         msg = self.session.send(self.reply_socket, 'object_info_reply',
                                 oinfo, parent, ident)
         io.raw_print(msg)

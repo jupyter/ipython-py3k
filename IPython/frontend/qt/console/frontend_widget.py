@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Standard library imports
 from collections import namedtuple
-import signal
 import sys
 
 # System library imports
@@ -10,6 +9,7 @@ from PyQt4 import QtCore, QtGui
 
 # Local imports
 from IPython.core.inputsplitter import InputSplitter, transform_classic_prompt
+from IPython.core.oinspect import call_tip
 from IPython.frontend.qt.base_frontend_mixin import BaseFrontendMixin
 from IPython.utils.traitlets import Bool
 from .bracket_matcher import BracketMatcher
@@ -116,12 +116,15 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._highlighter = FrontendHighlighter(self)
         self._input_splitter = self._input_splitter_class(input_mode='cell')
         self._kernel_manager = None
-        self._possible_kernel_restart = False
         self._request_info = {}
 
         # Configure the ConsoleWidget.
         self.tab_width = 4
         self._set_continuation_prompt('... ')
+
+        # Configure the CallTipWidget.
+        self._call_tip_widget.setFont(self.font)
+        self.font_changed.connect(self._call_tip_widget.setFont)
 
         # Configure actions.
         action = self._copy_raw_action
@@ -228,7 +231,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
 
             elif key == QtCore.Qt.Key_Period:
                 message = 'Are you sure you want to restart the kernel?'
-                self.restart_kernel(message, instant_death=False)
+                self.restart_kernel(message, now=False)
                 return True
 
         elif not event.modifiers() & QtCore.Qt.AltModifier:
@@ -315,14 +318,14 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     def _handle_kernel_died(self, since_last_heartbeat):
         """ Handle the kernel's death by asking if the user wants to restart.
         """
-        message = 'The kernel heartbeat has been inactive for %.2f ' \
-                  'seconds. Do you want to restart the kernel? You may ' \
-                  'first want to check the network connection.' % \
-                  since_last_heartbeat
         if self.custom_restart:
             self.custom_restart_kernel_died.emit(since_last_heartbeat)
         else:
-            self.restart_kernel(message, instant_death=True)
+            message = 'The kernel heartbeat has been inactive for %.2f ' \
+                'seconds. Do you want to restart the kernel? You may ' \
+                'first want to check the network connection.' % \
+                since_last_heartbeat
+            self.restart_kernel(message, now=True)
 
     def _handle_object_info_reply(self, rep):
         """ Handle replies for call tips.
@@ -331,9 +334,13 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         info = self._request_info.get('call_tip')
         if info and info.id == rep['parent_header']['msg_id'] and \
                 info.pos == cursor.position():
-            doc = rep['content']['docstring']
-            if doc:
-                self._call_tip_widget.show_docstring(doc)
+            # Get the information for a call tip.  For now we format the call
+            # line as string, later we can pass False to format_call and
+            # syntax-highlight it ourselves for nicer formatting in the
+            # calltip.
+            call_info, doc = call_tip(rep['content'], format_call=True)
+            if call_info or doc:
+                self._call_tip_widget.show_call_info(call_info, doc)
 
     def _handle_pyout(self, msg):
         """ Handle display hook output.
@@ -352,21 +359,12 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             
             self._append_plain_text(text)
             self._control.moveCursor(QtGui.QTextCursor.End)
-    
+
     def _started_channels(self):
         """ Called when the KernelManager channels have started listening or 
             when the frontend is assigned an already listening KernelManager.
         """
-        self._control.clear()
-        self._append_plain_text(self._get_banner())
-        self._show_interpreter_prompt()
-
-    def _stopped_channels(self):
-        """ Called when the KernelManager channels have stopped listening or
-            when a listening KernelManager is removed from the frontend.
-        """
-        self._executing = self._reading = False
-        self._highlighter.highlighting_on = False
+        self.reset()
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' public interface
@@ -390,51 +388,61 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         if self.custom_interrupt:
             self.custom_interrupt_requested.emit()
         elif self.kernel_manager.has_kernel:
-            self.kernel_manager.signal_kernel(signal.SIGINT)
+            self.kernel_manager.interrupt_kernel()
         else:
             self._append_plain_text('Kernel process is either remote or '
                                     'unspecified. Cannot interrupt.\n')
 
-    def restart_kernel(self, message, instant_death=False):
+    def reset(self):
+        """ Resets the widget to its initial state. Similar to ``clear``, but
+            also re-writes the banner and aborts execution if necessary.
+        """ 
+        if self._executing:
+            self._executing = False
+            self._request_info['execute'] = None
+        self._reading = False
+        self._highlighter.highlighting_on = False
+
+        self._control.clear()
+        self._append_plain_text(self._get_banner())
+        self._show_interpreter_prompt()
+
+    def restart_kernel(self, message, now=False):
         """ Attempts to restart the running kernel.
         """
-        # FIXME: instant_death should be configurable via a checkbox in the
-        # dialog.  Right now at least the heartbeat path sets it to True and
-        # the manual restart to False.  But those should just be the
-        # pre-selected states of a checkbox that the user could override if so
-        # desired.  But I don't know enough Qt to go implementing the checkbox
-        # now.
+        # FIXME: now should be configurable via a checkbox in the dialog.  Right
+        # now at least the heartbeat path sets it to True and the manual restart
+        # to False.  But those should just be the pre-selected states of a
+        # checkbox that the user could override if so desired.  But I don't know
+        # enough Qt to go implementing the checkbox now.
 
-        # We want to make sure that if this dialog is already happening, that
-        # other signals don't trigger it again. This can happen when the 
-        # kernel_died heartbeat signal is emitted and the user is slow to
-        # respond to the dialog.
-        if not self._possible_kernel_restart:
-            if self.custom_restart:
-                self.custom_restart_requested.emit()
-            elif self.kernel_manager.has_kernel:
-                # Setting this to True will prevent this logic from happening
-                # again until the current pass is completed.
-                self._possible_kernel_restart = True
-                buttons = QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
-                result = QtGui.QMessageBox.question(self, 'Restart kernel?',
-                                                    message, buttons)
-                if result == QtGui.QMessageBox.Yes:
-                    try:
-                        self.kernel_manager.restart_kernel(
-                            instant_death=instant_death)
-                    except RuntimeError:
-                        message = 'Kernel started externally. Cannot restart.\n'
-                        self._append_plain_text(message)
-                    else:
-                        self._stopped_channels()
-                        self._append_plain_text('Kernel restarting...\n')
-                        self._show_interpreter_prompt()
-                # This might need to be moved to another location?
-                self._possible_kernel_restart = False
+        if self.custom_restart:
+            self.custom_restart_requested.emit()
+
+        elif self.kernel_manager.has_kernel:
+            # Pause the heart beat channel to prevent further warnings.
+            self.kernel_manager.hb_channel.pause()
+
+            # Prompt the user to restart the kernel. Un-pause the heartbeat if
+            # they decline. (If they accept, the heartbeat will be un-paused
+            # automatically when the kernel is restarted.)
+            buttons = QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
+            result = QtGui.QMessageBox.question(self, 'Restart kernel?',
+                                                message, buttons)
+            if result == QtGui.QMessageBox.Yes:
+                try:
+                    self.kernel_manager.restart_kernel(now=now)
+                except RuntimeError:
+                    self._append_plain_text('Kernel started externally. '
+                                            'Cannot restart.\n')
+                else:
+                    self.reset()
             else:
-                self._append_plain_text('Kernel process is either remote or '
-                                        'unspecified. Cannot restart.\n')
+                self.kernel_manager.hb_channel.unpause()
+
+        else:
+            self._append_plain_text('Kernel process is either remote or '
+                                    'unspecified. Cannot restart.\n')
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' protected interface

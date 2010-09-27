@@ -14,6 +14,7 @@
 from collections import namedtuple
 import re
 from subprocess import Popen
+from textwrap import dedent
 
 # System library imports
 from PyQt4 import QtCore, QtGui
@@ -58,6 +59,9 @@ default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
 default_input_sep = '\n'
 default_output_sep = ''
 default_output_sep2 = ''
+
+# Base path for most payload sources.
+zmq_shell_source = 'IPython.zmq.zmqshell.ZMQInteractiveShell'
 
 #-----------------------------------------------------------------------------
 # IPythonWidget class
@@ -106,8 +110,9 @@ class IPythonWidget(FrontendWidget):
 
     # IPythonWidget protected class variables.
     _PromptBlock = namedtuple('_PromptBlock', ['block', 'length', 'number'])
-    _payload_source_edit = 'IPython.zmq.zmqshell.ZMQInteractiveShell.edit_magic'
-    _payload_source_exit = 'IPython.zmq.zmqshell.ZMQInteractiveShell.ask_exit'
+    _payload_source_edit = zmq_shell_source + '.edit_magic'
+    _payload_source_exit = zmq_shell_source + '.ask_exit'
+    _payload_source_loadpy = zmq_shell_source + '.magic_loadpy'
     _payload_source_page = 'IPython.zmq.page.page'
 
     #---------------------------------------------------------------------------
@@ -118,10 +123,12 @@ class IPythonWidget(FrontendWidget):
         super(IPythonWidget, self).__init__(*args, **kw)
 
         # IPythonWidget protected variables.
+        self._code_to_load = None
         self._payload_handlers = { 
             self._payload_source_edit : self._handle_payload_edit,
             self._payload_source_exit : self._handle_payload_exit,
-            self._payload_source_page : self._handle_payload_page }
+            self._payload_source_page : self._handle_payload_page,
+            self._payload_source_loadpy : self._handle_payload_loadpy }
         self._previous_prompt_obj = None
 
         # Initialize widget styling.
@@ -302,6 +309,11 @@ class IPythonWidget(FrontendWidget):
         self._set_continuation_prompt(
             self._make_continuation_prompt(self._prompt), html=True)
 
+        # Load code from the %loadpy magic, if necessary.
+        if self._code_to_load is not None:
+            self.input_buffer = dedent(str(self._code_to_load).rstrip())
+            self._code_to_load = None
+
     def _show_interpreter_prompt_for_reply(self, msg):
         """ Reimplemented for IPython-style prompts.
         """
@@ -331,7 +343,7 @@ class IPythonWidget(FrontendWidget):
             self._previous_prompt_obj = None
 
         # Show a new prompt with the kernel's estimated prompt number.
-        self._show_interpreter_prompt(previous_prompt_number+1)
+        self._show_interpreter_prompt(previous_prompt_number + 1)
 
     #---------------------------------------------------------------------------
     # 'IPythonWidget' interface
@@ -426,6 +438,11 @@ class IPythonWidget(FrontendWidget):
 
     def _handle_payload_exit(self, item):
         self.exit_requested.emit()
+
+    def _handle_payload_loadpy(self, item):
+        # Simple save the text of the .py file for later. The text is written
+        # to the buffer when _prompt_started_hook is called.
+        self._code_to_load = item['text']
 
     def _handle_payload_page(self, item):
         # Since the plain text widget supports only a very small subset of HTML

@@ -22,6 +22,7 @@ Authors:
 #-----------------------------------------------------------------------------
 
 import re
+import sys
 
 #-----------------------------------------------------------------------------
 # Main function
@@ -56,7 +57,13 @@ def split_user_input(line, pattern=None):
     This is currently handles lines with '=' in them in a very inconsistent
     manner.
     """
-
+    # We need to ensure that the rest of this routine deals only with unicode
+    if type(line)==str:
+        codec = sys.stdin.encoding
+        if codec is None:
+            codec = 'utf-8'
+        line = line.decode(codec)
+        
     if pattern is None:
         pattern = line_split
     match = pattern.match(line)
@@ -66,7 +73,7 @@ def split_user_input(line, pattern=None):
             ifun, the_rest = line.split(None,1)
         except ValueError:
             # print "split failed for line '%s'" % line
-            ifun, the_rest = line,''
+            ifun, the_rest = line, ''
         pre = re.match('^(\s*)(.*)',line).groups()[0]
     else:
         pre,ifun,the_rest = match.groups()
