@@ -1,4 +1,4 @@
-"""A base class for console-type widgets.
+""" An abstract base class for console-type widgets.
 """
 #-----------------------------------------------------------------------------
 # Imports
@@ -38,6 +38,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         convenient to implementors of a console-style widget.
     """
 
+    #------ Configuration ------------------------------------------------------
+
     # Whether to process ANSI escape codes.
     ansi_codes = Bool(True, config=True)
 
@@ -54,7 +56,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     kind = Enum(['plain', 'rich'], default_value='plain', config=True)
 
     # The type of paging to use. Valid values are:
-    #     'inside' : The widget pages like a traditional terminal pager.
+    #     'inside' : The widget pages like a traditional terminal.
     #     'hsplit' : When paging is requested, the widget is split
     #                horizontally. The top pane contains the console, and the
     #                bottom pane contains the paged text.
@@ -71,6 +73,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     # priority (when it has focus) over, e.g., window-level menu shortcuts.
     override_shortcuts = Bool(False)
 
+    #------ Signals ------------------------------------------------------------
+
     # Signals that indicate ConsoleWidget state.
     copy_available = QtCore.pyqtSignal(bool)
     redo_available = QtCore.pyqtSignal(bool)
@@ -80,7 +84,11 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     # specified as 'custom'.
     custom_page_requested = QtCore.pyqtSignal(object)
 
-    # Protected class variables.
+    # Signal emitted when the font is changed.
+    font_changed = QtCore.pyqtSignal(QtGui.QFont)
+
+    #------ Protected class variables ------------------------------------------
+
     _ctrl_down_remap = { QtCore.Qt.Key_B : QtCore.Qt.Key_Left,
                          QtCore.Qt.Key_F : QtCore.Qt.Key_Right,
                          QtCore.Qt.Key_A : QtCore.Qt.Key_Home,
@@ -88,6 +96,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                          QtCore.Qt.Key_P : QtCore.Qt.Key_Up,
                          QtCore.Qt.Key_N : QtCore.Qt.Key_Down,
                          QtCore.Qt.Key_D : QtCore.Qt.Key_Delete, }
+
     _shortcuts = set(list(_ctrl_down_remap.keys()) +
                      [ QtCore.Qt.Key_C, QtCore.Qt.Key_G, QtCore.Qt.Key_O,
                        QtCore.Qt.Key_V ])
@@ -140,6 +149,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         self._continuation_prompt = '> '
         self._continuation_prompt_html = None
         self._executing = False
+        self._filter_drag = False
+        self._filter_resize = False
         self._prompt = ''
         self._prompt_html = None
         self._prompt_pos = 0
@@ -185,8 +196,12 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             return True
 
         # Manually adjust the scrollbars *after* a resize event is dispatched.
-        elif etype == QtCore.QEvent.Resize:
-            QtCore.QTimer.singleShot(0, self._adjust_scrollbars)
+        elif etype == QtCore.QEvent.Resize and not self._filter_resize:
+            self._filter_resize = True
+            QtGui.qApp.sendEvent(obj, event)
+            self._adjust_scrollbars()
+            self._filter_resize = False
+            return True
 
         # Override shortcuts for all filtered widgets.
         elif etype == QtCore.QEvent.ShortcutOverride and \
@@ -194,11 +209,38 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 self._control_key_down(event.modifiers()) and \
                 event.key() in self._shortcuts:
             event.accept()
-            return False
 
-        # Prevent text from being moved by drag and drop.
-        elif etype in (QtCore.QEvent.DragEnter, QtCore.QEvent.DragLeave, 
-                       QtCore.QEvent.DragMove, QtCore.QEvent.Drop):
+        # Ensure that drags are safe. The problem is that the drag starting
+        # logic, which determines whether the drag is a Copy or Move, is locked
+        # down in QTextControl. If the widget is editable, which it must be if
+        # we're not executing, the drag will be a Move. The following hack
+        # prevents QTextControl from deleting the text by clearing the selection
+        # when a drag leave event originating from this widget is dispatched.
+        # The fact that we have to clear the user's selection is unfortunate,
+        # but the alternative--trying to prevent Qt from using its hardwired
+        # drag logic and writing our own--is worse.
+        elif etype == QtCore.QEvent.DragEnter and \
+                obj == self._control.viewport() and \
+                event.source() == self._control.viewport():
+            self._filter_drag = True
+        elif etype == QtCore.QEvent.DragLeave and \
+                obj == self._control.viewport() and \
+                self._filter_drag:
+            cursor = self._control.textCursor()
+            cursor.clearSelection()
+            self._control.setTextCursor(cursor)
+            self._filter_drag = False
+
+        # Ensure that drops are safe.
+        elif etype == QtCore.QEvent.Drop and obj == self._control.viewport():
+            cursor = self._control.cursorForPosition(event.pos())
+            if self._in_buffer(cursor.position()):
+                text = str(event.mimeData().text())
+                self._insert_plain_text_into_buffer(cursor, text)
+
+            # Qt is expecting to get something here--drag and drop occurs in its
+            # own event loop. Send a DragLeave event to end it.
+            QtGui.qApp.sendEvent(obj, QtGui.QDragLeaveEvent())
             return True
 
         return super(ConsoleWidget, self).eventFilter(obj, event)
@@ -253,27 +295,27 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     def can_paste(self):
         """ Returns whether text can be pasted from the clipboard.
         """
-        # Only accept text that can be ASCII encoded.
         if self._control.textInteractionFlags() & QtCore.Qt.TextEditable:
-            text = QtGui.QApplication.clipboard().text()
-            if not text.isEmpty():
-                try:
-                    str(text)
-                    return True
-                except UnicodeEncodeError:
-                    pass
+            return not QtGui.QApplication.clipboard().text().isEmpty()
         return False
 
     def clear(self, keep_input=True):
-        """ Clear the console, then write a new prompt. If 'keep_input' is set,
-            restores the old input buffer when the new prompt is written.
+        """ Clear the console. 
+
+        Parameters:
+        -----------
+        keep_input : bool, optional (default True)
+            If set, restores the old input buffer if a new prompt is written.
         """
-        if keep_input:
-            input_buffer = self.input_buffer
-        self._control.clear()
-        self._show_prompt()
-        if keep_input:
-            self.input_buffer = input_buffer
+        if self._executing:
+            self._control.clear()
+        else:
+            if keep_input:
+                input_buffer = self.input_buffer
+            self._control.clear()
+            self._show_prompt()
+            if keep_input:
+                self.input_buffer = input_buffer
 
     def copy(self):
         """ Copy the currently selected text to the clipboard.
@@ -408,15 +450,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         cursor.removeSelectedText()
 
         # Insert new text with continuation prompts.
-        lines = string.splitlines(True)
-        if lines:
-            self._append_plain_text(lines[0])
-            for i in range(1, len(lines)):
-                if self._continuation_prompt_html is None:
-                    self._append_plain_text(self._continuation_prompt)
-                else:
-                    self._append_html(self._continuation_prompt_html)
-                self._append_plain_text(lines[i])
+        self._insert_plain_text_into_buffer(self._get_prompt_cursor(), string)
         cursor.endEditBlock()
         self._control.moveCursor(QtGui.QTextCursor.End)
 
@@ -438,6 +472,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         if self._page_control:
             self._page_control.document().setDefaultFont(font)
 
+        self.font_changed.emit(font)
+
     font = property(_get_font, _set_font)
 
     def paste(self, mode=QtGui.QClipboard.Clipboard):
@@ -452,14 +488,14 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             in Mac OS. By default, the regular clipboard is used.
         """
         if self._control.textInteractionFlags() & QtCore.Qt.TextEditable:
-            try:
-                # Remove any trailing newline, which confuses the GUI and
-                # forces the user to backspace.
-                text = str(QtGui.QApplication.clipboard().text(mode)).rstrip()
-            except UnicodeEncodeError:
-                pass
-            else:
-                self._insert_plain_text_into_buffer(dedent(text))
+            # Make sure the paste is safe.
+            self._keep_cursor_in_buffer()
+            cursor = self._control.textCursor()
+
+            # Remove any trailing newline, which confuses the GUI and forces the
+            # user to backspace.
+            text = str(QtGui.QApplication.clipboard().text(mode)).rstrip()
+            self._insert_plain_text_into_buffer(cursor, dedent(text))
 
     def print_(self, printer):
         """ Print the contents of the ConsoleWidget to the specified QPrinter.
@@ -1088,7 +1124,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         if size == 0: 
             return '\n'
         elif size == 1:
-            return '%s\n' % str(items[0])
+            return '%s\n' % items[0]
 
         # Try every row count from 1 upwards
         array_index = lambda nrows, row, col: nrows*col + row
@@ -1126,7 +1162,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 del texts[-1]
             for col in range(len(texts)):
                 texts[col] = texts[col].ljust(colwidths[col])
-            string += '%s\n' % str(separator.join(texts))
+            string += '%s\n' % separator.join(texts)
         return string
 
     def _get_block_plain_text(self, block):
@@ -1315,14 +1351,13 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             cursor.insertText(text)
         cursor.endEditBlock()
 
-    def _insert_plain_text_into_buffer(self, text):
-        """ Inserts text into the input buffer at the current cursor position,
-            ensuring that continuation prompts are inserted as necessary.
+    def _insert_plain_text_into_buffer(self, cursor, text):
+        """ Inserts text into the input buffer using the specified cursor (which
+            must be in the input buffer), ensuring that continuation prompts are
+            inserted as necessary.
         """
         lines = str(text).splitlines(True)
         if lines:
-            self._keep_cursor_in_buffer()
-            cursor = self._control.textCursor()
             cursor.beginEditBlock()
             cursor.insertText(lines[0])
             for line in lines[1:]:
@@ -1334,7 +1369,6 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                             cursor, self._continuation_prompt_html)
                 cursor.insertText(line)
             cursor.endEditBlock()
-            self._control.setTextCursor(cursor)
 
     def _in_buffer(self, position=None):
         """ Returns whether the current cursor (or, if specified, a position) is

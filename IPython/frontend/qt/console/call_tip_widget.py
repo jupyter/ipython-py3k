@@ -105,6 +105,11 @@ class CallTipWidget(QtGui.QLabel):
 
         super(CallTipWidget, self).paintEvent(event)
 
+    def setFont(self, font):
+        """ Reimplemented to allow use of this method as a slot.
+        """
+        super(CallTipWidget, self).setFont(font)
+
     def showEvent(self, event):
         """ Reimplemented to connect signal handlers and event filter.
         """
@@ -117,15 +122,20 @@ class CallTipWidget(QtGui.QLabel):
     # 'CallTipWidget' interface
     #--------------------------------------------------------------------------
 
-    def show_docstring(self, doc, maxlines=20):
-        """ Attempts to show the specified docstring at the current cursor
-            location. The docstring is dedented and possibly truncated for
+    def show_call_info(self, call_line=None, doc=None, maxlines=20):
+        """ Attempts to show the specified call line and docstring at the
+            current cursor location. The docstring is possibly truncated for
             length.
         """
-        doc = dedent(doc.rstrip()).lstrip()
-        match = re.match("(?:[^\n]*\n){%i}" % maxlines, doc)
-        if match:
-            doc = doc[:match.end()] + '\n[Documentation continues...]'
+        if doc:
+            match = re.match("(?:[^\n]*\n){%i}" % maxlines, doc)
+            if match:
+                doc = doc[:match.end()] + '\n[Documentation continues...]'
+        else:
+            doc = ''
+            
+        if call_line:
+            doc = '\n\n'.join([call_line, doc])
         return self.show_tip(doc)
 
     def show_tip(self, tip):

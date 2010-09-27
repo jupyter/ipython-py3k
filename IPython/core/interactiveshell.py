@@ -155,7 +155,11 @@ class InteractiveShell(Configurable, Magic):
     exit_now = CBool(False)
     filename = Str("<ipython console>")
     ipython_dir= Unicode('', config=True) # Set to get_ipython_dir() in __init__
-    input_splitter = Instance('IPython.core.inputsplitter.IPythonInputSplitter')
+
+    # Input splitter, to split entire cells of input into either individual
+    # interactive statements or whole blocks.
+    input_splitter = Instance('IPython.core.inputsplitter.IPythonInputSplitter',
+                              (), {})
     logstart = CBool(False, config=True)
     logfile = Str('', config=True)
     logappend = Str('', config=True)
@@ -392,10 +396,6 @@ class InteractiveShell(Configurable, Magic):
 
         # Indentation management
         self.indent_current_nsp = 0
-
-        # Input splitter, to split entire cells of input into either individual
-        # interactive statements or whole blocks.
-        self.input_splitter = IPythonInputSplitter()
 
     def init_environment(self):
         """Any changes we need to make to the user's environment."""
@@ -1058,6 +1058,7 @@ class InteractiveShell(Configurable, Magic):
     #-------------------------------------------------------------------------
     # Things related to object introspection
     #-------------------------------------------------------------------------
+
     def _ofind(self, oname, namespaces=None):
         """Find an object in the available namespaces.
 
@@ -1195,10 +1196,10 @@ class InteractiveShell(Configurable, Magic):
     def object_inspect(self, oname):
         info = self._object_find(oname)
         if info.found:
-            return self.inspector.info(info.obj, info=info)
+            return self.inspector.info(info.obj, oname, info=info)
         else:
-            return oinspect.mk_object_info({'found' : False})
-        
+            return oinspect.object_info(name=oname, found=False)
+
     #-------------------------------------------------------------------------
     # Things related to history management
     #-------------------------------------------------------------------------
@@ -1961,10 +1962,17 @@ class InteractiveShell(Configurable, Magic):
         etype, value = sys.exc_info()[:2]
         return '[ERROR] {e.__name__}: {v}'.format(e=etype, v=value)
 
-    def get_user_variables(self, names):
+    def user_variables(self, names):
         """Get a list of variable names from the user's namespace.
 
-        The return value is a dict with the repr() of each value.
+        Parameters
+        ----------
+        names : list of strings
+          A list of names of variables to be read from the user namespace.
+
+        Returns
+        -------
+        A dict, keyed by the input names and with the repr() of each value.
         """
         out = {}
         user_ns = self.user_ns
@@ -1976,10 +1984,20 @@ class InteractiveShell(Configurable, Magic):
             out[varname] = value
         return out
         
-    def eval_expressions(self, expressions):
+    def user_expressions(self, expressions):
         """Evaluate a dict of expressions in the user's namespace.
 
-        The return value is a dict with the repr() of each value.
+        Parameters
+        ----------
+        expressions : dict
+          A dict with string keys and string values.  The expression values
+          should be valid Python expressions, each of which will be evaluated
+          in the user namespace.
+        
+        Returns
+        -------
+        A dict, keyed like the input expressions dict, with the repr() of each
+        value.
         """
         out = {}
         user_ns = self.user_ns
@@ -2118,10 +2136,10 @@ class InteractiveShell(Configurable, Magic):
 
         If there's more than one block, it depends:
 
-        - if the last one is a single line long, run all but the last in
-        'exec' mode and the very last one in 'single' mode.  This makes it
-        easy to type simple expressions at the end to see computed values.
-        - otherwise (last one is also multiline), run all in 'exec' mode
+        - if the last one is no more than two lines long, run all but the last
+        in 'exec' mode and the very last one in 'single' mode.  This makes it
+        easy to type simple expressions at the end to see computed values.  -
+        otherwise (last one is also multiline), run all in 'exec' mode
 
         When code is executed in 'single' mode, :func:`sys.displayhook` fires,
         results are displayed and output prompts are computed.  In 'exec' mode,
@@ -2133,6 +2151,28 @@ class InteractiveShell(Configurable, Magic):
         cell : str
           A single or multiline string.
         """
+        #################################################################
+        # FIXME
+        # =====
+        # This execution logic should stop calling runlines altogether, and
+        # instead we should do what runlines does, in a controlled manner, here
+        # (runlines mutates lots of state as it goes calling sub-methods that
+        # also mutate state).  Basically we should:
+        # - apply dynamic transforms for single-line input (the ones that
+        # split_blocks won't apply since they need context).
+        # - increment the global execution counter (we need to pull that out
+        # from outputcache's control; outputcache should instead read it from
+        # the main object).
+        # - do any logging of input
+        # - update histories (raw/translated)
+        # - then, call plain runsource (for single blocks, so displayhook is
+        # triggered) or runcode (for multiline blocks in exec mode).
+        #
+        # Once this is done, we'll be able to stop using runlines and we'll
+        # also have a much cleaner separation of logging, input history and
+        # output cache management.
+        #################################################################
+        
         # We need to break up the input into executable blocks that can be run
         # in 'single' mode, to provide comfortable user behavior.
         blocks = self.input_splitter.split_blocks(cell)
@@ -2158,9 +2198,10 @@ class InteractiveShell(Configurable, Magic):
             body = ''.join(blocks[:-1])
             self.input_hist.append(body)
             self.input_hist_raw.append(body)
-            self.runcode(body, post_execute=False)
-            # And the last expression via runlines so it produces output
-            self.runlines(last)
+            retcode = self.runcode(body, post_execute=False)
+            if retcode==0:
+                # And the last expression via runlines so it produces output
+                self.runlines(last)
         else:
             # Run the whole cell as one entity
             self.input_hist.append(cell)
@@ -2241,11 +2282,15 @@ class InteractiveShell(Configurable, Magic):
         The return value can be used to decide whether to use sys.ps1 or
         sys.ps2 to prompt the next line."""
 
+        # We need to ensure that the source is unicode from here on.
+        if type(source)==str:
+            source = source.decode(self.stdin_encoding)
+        
         # if the source code has leading blanks, add 'if 1:\n' to it
         # this allows execution of indented pasted code. It is tempting
         # to add '\n' at the end of source to run commands like ' a=1'
         # directly, but this fails for more complicated scenarios
-        source=source.encode(self.stdin_encoding)
+
         if source[:1] in [' ', '\t']:
             source = 'if 1:\n%s' % source
 
