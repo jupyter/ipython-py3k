@@ -576,7 +576,10 @@ class ListTB(TBTools):
                                     s = s + ' '
                             list.append('%s%s^%s\n' % (Colors.caret, s,
                                                        Colors.Normal) )
-            s = self._some_str(value.msg)
+            try:
+                s = self._some_str(value.msg)
+            except AttributeError:
+                s = self._some_str(value)
             if s:
                 list.append('%s%s:%s %s\n' % (str(stype), Colors.excName,
                                               Colors.Normal, s))

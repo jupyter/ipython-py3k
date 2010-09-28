@@ -118,10 +118,10 @@ def doctest_hist_op():
     In [10]: ssrr=sr()
 
     In [11]: bb
-    Out[11]: <...b instance at ...>
+    Out[11]: <...b object at ...>
 
     In [12]: ss
-    Out[12]: <...s instance at ...>
+    Out[12]: <...s object at ...>
 
     In [13]: 
 
@@ -145,9 +145,9 @@ def doctest_hist_op():
     >>> rr=r()
     >>> ssrr=sr()
     >>> bb
-    <...b instance at ...>
+    <...b object at ...>
     >>> ss
-    <...s instance at ...>
+    <...s object at ...>
     >>> 
     """
 

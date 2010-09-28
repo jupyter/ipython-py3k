@@ -186,7 +186,7 @@ def split_blocks(python):
         Separate commands that can be exec'ed independently.
     """
 
-    import compiler
+    import ast
     
     # compiler.parse treats trailing spaces after a newline as a
     # SyntaxError.  This is different than codeop.CommandCompiler, which
@@ -197,22 +197,15 @@ def split_blocks(python):
     python_ori = python # save original in case we bail on error
     python = python.strip()
 
-    # The compiler module does not like unicode. We need to convert
-    # it encode it:
-    if isinstance(python, str):
-        # Use the utf-8-sig BOM so the compiler detects this a UTF-8
-        # encode string.
-        python = '\xef\xbb\xbf' + python.encode('utf-8')
-
     # The compiler module will parse the code into an abstract syntax tree.
     # This has a bug with str("a\nb"), but not str("""a\nb""")!!!
     try:
-        ast = compiler.parse(python)
+        code_ast = ast.parse(python)
     except:
         return [python_ori]
 
     # Uncomment to help debug the ast tree
-    # for n in ast.node:
+    # for n in code_ast.node:
     #     print n.lineno,'->',n
 
     # Each separate command is available by iterating over ast.node. The
@@ -223,7 +216,7 @@ def split_blocks(python):
     # other situations that cause Discard nodes that shouldn't be discarded.
     # We might eventually discover other cases where lineno is None and have
     # to put in a more sophisticated test.
-    linenos = [x.lineno-1 for x in ast.node if x.lineno is not None]
+    linenos = [x.lineno-1 for x in code_ast.body if x.lineno is not None]
 
     # When we finally get the slices, we will need to slice all the way to
     # the end even though we don't have a line number for it. Fortunately,
@@ -613,7 +606,7 @@ class InputSplitter(object):
         self._set_source()
 
     def _set_source(self):
-        self.source = ''.join(self._buffer).encode(self.encoding)
+        self.source = ''.join(self._buffer)
 
 
 #-----------------------------------------------------------------------------
@@ -690,14 +683,7 @@ def split_user_input(line):
         lspace = re.match('^(\s*)(.*)', line).groups()[0]
         esc = ''
 
-    # fpart has to be a valid python identifier, so it better be only pure
-    # ascii, no unicode:
-    try:
-        fpart = fpart.encode('ascii')
-    except UnicodeEncodeError:
-        lspace = str(lspace)
-        rest = fpart + ' ' + rest
-        fpart = ''
+    # Python identifiers no longer limited to ASCII (code removed)
 
     #print 'line:<%s>' % line # dbg
     #print 'esc <%s> fpart <%s> rest <%s>' % (esc,fpart.strip(),rest) # dbg

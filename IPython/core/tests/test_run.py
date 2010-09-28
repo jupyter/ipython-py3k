@@ -57,6 +57,7 @@ def doctest_run_builtins():
     In [3]: f = open(fname,'w')
 
     In [4]: f.write('pass\n')
+    Out[4]: 5
 
     In [5]: f.flush()
 
@@ -149,7 +150,7 @@ class TestMagicRunSimple(tt.TempFileMixin):
         # See ticket https://bugs.launchpad.net/bugs/366334
         src = ("class A(object):\n"
                "    def __del__(self):\n"
-               "        print 'object A deleted'\n"
+               "        print('object A deleted')\n"
                "a = A()\n")
         self.mktmp(src)
         tt.ipexec_validate(self.fname, 'object A deleted')

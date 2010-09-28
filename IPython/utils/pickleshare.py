@@ -54,6 +54,11 @@ class PickleShareDB(dict):
         # cache has { 'key' : (obj, orig_mod_time) }
         self.cache = {}
         
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def __getitem__(self,key):
         """ db['key'] reading """

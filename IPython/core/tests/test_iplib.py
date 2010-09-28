@@ -75,7 +75,7 @@ Traceback (most recent call last):
     div0()
   ...line 8, in div0
     x/y
-ZeroDivisionError: integer division or modulo by zero
+ZeroDivisionError: int division or modulo by zero
     """
 
 
@@ -109,7 +109,7 @@ ZeroDivisionError                         Traceback (most recent call last)
       9 
      10 def sysexit(stat, mode):
 <BLANKLINE>
-ZeroDivisionError: integer division or modulo by zero
+ZeroDivisionError: int division or modulo by zero
 """
 
 
@@ -148,7 +148,7 @@ ZeroDivisionError                         Traceback (most recent call last)
       9 
      10 def sysexit(stat, mode):
 <BLANKLINE>
-ZeroDivisionError: integer division or modulo by zero
+ZeroDivisionError: int division or modulo by zero
       """
 
 

@@ -26,7 +26,7 @@ def doctest_autocall():
 
     In [6]: assert _ == 'abc'
 
-    In [7]: print _
+    In [7]: print(_)
     abc
 
     In [8]: /f1 1,2,3

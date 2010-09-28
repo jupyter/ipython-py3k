@@ -767,7 +767,7 @@ Currently the magic system has the following functions:\n"""
         command line to see how python prints type names.  For example:
 
           In [1]: type('hello')\\
-          Out[1]: <type 'str'>
+          Out[1]: <class 'str'>
 
         indicates that the type name for strings is 'str'.
 

@@ -2214,7 +2214,7 @@ class InteractiveShell(Configurable, Magic):
         self.resetbuffer()
         lines = lines.splitlines()
         more = 0
-        with nested(self.builtin_trap, self.display_trap):
+        with self.builtin_trap, self.display_trap:
             for line in lines:
                 # skip blank lines so we don't mess up the prompt counter, but
                 # do NOT skip even a blank line if we are in a code block (more
