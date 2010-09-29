@@ -133,7 +133,7 @@ class Parser:
         
         string_output = 0
         if out == 'str' or self.out == 'str' or \
-           isinstance(self.out,io.OutputType):
+           isinstance(self.out,io.TextIOBase):
             # XXX - I don't really like this state handling logic, but at this
             # point I don't want to make major changes, so adding the
             # isinstance() check is the simplest I can do to ensure correct
