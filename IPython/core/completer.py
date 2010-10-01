@@ -84,6 +84,7 @@ from IPython.core.prefilter import ESC_MAGIC
 from IPython.utils import generics
 from IPython.utils import io
 from IPython.utils.dir2 import dir2
+from IPython.utils.process import arg_split
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -474,7 +475,7 @@ class IPCompleter(Completer):
         current (as of Python 2.3) Python readline it's possible to do
         better."""
 
-        #io.rprint('Completer->file_matches: <%s>' % text) # dbg
+        #io.rprint('Completer->file_matches: <%r>' % text) # dbg
 
         # chars that require escaping with backslash - i.e. chars
         # that readline treats incorrectly as delimiters, but we
@@ -489,7 +490,8 @@ class IPCompleter(Completer):
         text_until_cursor = self.text_until_cursor
         open_quotes = 0  # track strings with open quotes
         try:
-            lsplit = shlex.split(text_until_cursor)[-1]
+            # arg_split ~ shlex.split, but with unicode bugs fixed by us
+            lsplit = arg_split(text_until_cursor)[-1]
         except ValueError:
             # typically an unmatched ", or backslash without escaped char.
             if text_until_cursor.count('"')==1:
@@ -766,7 +768,12 @@ class IPCompleter(Completer):
             if self.merge_completions:
                 self.matches = []
                 for matcher in self.matchers:
-                    self.matches.extend(matcher(text))
+                    try:
+                        self.matches.extend(matcher(text))
+                    except:
+                        # Show the ugly traceback if the matcher causes an
+                        # exception, but do NOT crash the kernel!
+                        sys.excepthook()
             else:
                 for matcher in self.matchers:
                     self.matches = matcher(text)
