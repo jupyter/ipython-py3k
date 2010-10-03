@@ -135,13 +135,13 @@ prompt_specials_color = {
     # mainly in continuation prompts (prompt_in2)
     #r'\D': '${"."*len(str(self.cache.prompt_count))}',
 
-    # More robust form of the above expression, that uses the __builtin__
-    # module.  Note that we can NOT use __builtins__ (note the 's'), because
+    # More robust form of the above expression, that uses the builtins
+    # module.  Note that we can NOT use __builtins__, because
     # that can either be a dict or a module, and can even mutate at runtime,
     # depending on the context (Python makes no guarantees on it).  In
-    # contrast, __builtin__ is always a module object, though it must be
+    # contrast, builtins is always a module object, though it must be
     # explicitly imported.
-    r'\D': '${"."*__builtin__.len(__builtin__.str(self.cache.prompt_count))}',
+    r'\D': '${"."*builtins.len(builtins.str(self.cache.prompt_count))}',
 
     # Current working directory
     r'\w': '${os.getcwd()}',

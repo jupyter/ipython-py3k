@@ -119,11 +119,11 @@ class Config(dict):
 
     def __getitem__(self, key):
         # Because we use this for an exec namespace, we need to delegate
-        # the lookup of names in __builtin__ to itself.  This means
+        # the lookup of names in builtins to itself.  This means
         # that you can't have section or attribute names that are 
         # builtins.
         try:
-            return getattr(__builtins__, key)
+            return getattr(builtins, key)
         except AttributeError:
             pass
         if self._is_section_key(key):
@@ -137,7 +137,7 @@ class Config(dict):
             return dict.__getitem__(self, key)
 
     def __setitem__(self, key, value):
-        # Don't allow names in __builtin__ to be modified.
+        # Don't allow names in builtins to be modified.
         if hasattr(builtins, key):
             raise ConfigError('Config variable names cannot have the same name '
                               'as a Python builtin: %s' % key)

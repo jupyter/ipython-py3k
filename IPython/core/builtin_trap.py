@@ -1,5 +1,5 @@
 """
-A context manager for managing things injected into :mod:`__builtin__`.
+A context manager for managing things injected into :mod:`builtins`.
 
 Authors:
 
@@ -93,7 +93,7 @@ class BuiltinTrap(Configurable):
                 builtins.__dict__[key] = orig
 
     def activate(self):
-        """Store ipython references in the __builtin__ namespace."""
+        """Store ipython references in the builtins namespace."""
 
         add_builtin = self.add_builtin
         for name, func in self.auto_builtins.items():

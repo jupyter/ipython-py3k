@@ -744,7 +744,7 @@ class InteractiveShell(Configurable, Magic):
         # or a module, and it's been that way for a long time. Whether it's
         # intentional (or sensible), I don't know. In any case, the idea is
         # that if you need to access the built-in namespace directly, you
-        # should start with "import __builtin__" (note, no 's') which will
+        # should start with "import builtins" (in Python 3) which will
         # definitely give you a module. Yeah, it's somewhat confusing:-(.
 
         # These routines return properly built dicts as needed by the rest of
@@ -845,20 +845,20 @@ class InteractiveShell(Configurable, Magic):
         """
 
 
-        # We must ensure that __builtin__ (without the final 's') is always
-        # available and pointing to the __builtin__ *module*.  For more details:
+        # We must ensure that builtins (without the '__') is always
+        # available and pointing to the builtins *module*.  For more details:
         # http://mail.python.org/pipermail/python-dev/2001-April/014068.html
 
         if user_ns is None:
             # Set __name__ to __main__ to better match the behavior of the
             # normal interpreter.
             user_ns = {'__name__'     :'__main__',
-                       '__builtin__' : builtins,
+                       'builtins' : builtins,
                        '__builtins__' : builtins,
                       }
         else:
             user_ns.setdefault('__name__','__main__')
-            user_ns.setdefault('__builtin__',builtins)
+            user_ns.setdefault('builtins',builtins)
             user_ns.setdefault('__builtins__',builtins)
 
         if user_global_ns is None:
@@ -912,18 +912,18 @@ class InteractiveShell(Configurable, Magic):
         # rest of what we *do* want the user to see with %who even on a new
         # session (probably nothing, so theye really only see their own stuff)
 
-        # The user dict must *always* have a __builtin__ reference to the
-        # Python standard __builtin__ namespace,  which must be imported.
+        # The user dict must *always* have a builtins reference to the
+        # Python standard builtins namespace,  which must be imported.
         # This is so that certain operations in prompt evaluation can be
         # reliably executed with builtins.  Note that we can NOT use
         # __builtins__ (note the 's'),  because that can either be a dict or a
         # module, and can even mutate at runtime, depending on the context
-        # (Python makes no guarantees on it).  In contrast, __builtin__ is
+        # (Python makes no guarantees on it).  In contrast, builtins is
         # always a module object, though it must be explicitly imported.
         
         # For more details:
         # http://mail.python.org/pipermail/python-dev/2001-April/014068.html
-        ns = dict(__builtin__ = builtins)
+        ns = dict(builtins = builtins)
         
         # Put 'help' in the user namespace
         try:
@@ -1718,7 +1718,7 @@ class InteractiveShell(Configurable, Magic):
         Out[2]: ('x.l', ['x.ljust', 'x.lower', 'x.lstrip'])
         """
 
-        # Inject names into __builtin__ so we can complete on the added names.
+        # Inject names into builtins so we can complete on the added names.
         with self.builtin_trap:
             return self.Completer.complete(text, line, cursor_pos)
 

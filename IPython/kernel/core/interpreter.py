@@ -625,7 +625,7 @@ class Interpreter(object):
         """
 
         self.user_ns.setdefault('__name__', '__main__')
-        self.user_ns.setdefault('__builtins__', __builtin__)
+        self.user_ns.setdefault('__builtins__', builtins)
         self.user_ns['__IP'] = self
         if self.raw_input_builtin is not None:
             self.user_ns['raw_input'] = self.raw_input_builtin

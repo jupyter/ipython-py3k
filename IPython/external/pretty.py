@@ -565,7 +565,7 @@ def _re_pattern_pprint(obj, p, cycle):
 
 def _type_pprint(obj, p, cycle):
     """The pprint for classes and types."""
-    if obj.__module__ in ('__builtin__', 'exceptions'):
+    if obj.__module__ in ('builtins', 'exceptions'):
         name = obj.__name__
     else:
         name = obj.__module__ + '.' + obj.__name__
@@ -579,7 +579,7 @@ def _repr_pprint(obj, p, cycle):
 
 def _function_pprint(obj, p, cycle):
     """Base pprint for all functions and builtin functions."""
-    if obj.__module__ in ('__builtin__', 'exceptions') or not obj.__module__:
+    if obj.__module__ in ('builtins', 'exceptions') or not obj.__module__:
         name = obj.__name__
     else:
         name = obj.__module__ + '.' + obj.__name__

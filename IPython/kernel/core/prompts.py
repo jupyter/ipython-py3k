@@ -491,7 +491,7 @@ class CachedOutput:
         This is invoked everytime the interpreter needs to print, and is
         activated by setting the variable sys.displayhook to it."""
 
-        # If something injected a '_' variable in __builtin__, delete
+        # If something injected a '_' variable in builtins, delete
         # ipython's automatic one so we don't clobber that.  gettext() in
         # particular uses _, so we need to stay away from it.
         if '_' in builtins.__dict__:
@@ -552,7 +552,7 @@ class CachedOutput:
                  'with the current result.')
 
             self.flush()
-        # Don't overwrite '_' and friends if '_' is in __builtin__ (otherwise
+        # Don't overwrite '_' and friends if '_' is in builtins (otherwise
         # we cause buggy behavior for things like gettext).
         if '_' not in builtins.__dict__:
             self.___ = self.__

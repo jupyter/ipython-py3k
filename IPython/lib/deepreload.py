@@ -3,16 +3,16 @@
 A module to change reload() so that it acts recursively.
 To enable it type::
 
-    import __builtin__, deepreload
-    __builtin__.reload = deepreload.reload
+    import builtins, deepreload
+    builtins.reload = deepreload.reload
 
 You can then disable it with::
 
-    __builtin__.reload = deepreload.original_reload
+    builtins.reload = deepreload.original_reload
     
 Alternatively, you can add a dreload builtin alongside normal reload with::
 
-    __builtin__.dreload = deepreload.reload
+    builtins.dreload = deepreload.reload
     
 This code is almost entirely based on knee.py from the standard library.
 """
@@ -162,10 +162,10 @@ def deep_reload_hook(module):
 original_reload = imp.reload
 
 # Replacement for reload()
-def reload(module, exclude=['sys', '__builtin__', '__main__']):
+def reload(module, exclude=['sys', 'builtins', '__main__']):
     """Recursively reload all modules used in the given module.  Optionally
     takes a list of modules to exclude from reloading.  The default exclude
-    list contains sys, __main__, and __builtin__, to prevent, e.g., resetting 
+    list contains sys, __main__, and builtins, to prevent, e.g., resetting 
     display, exception, and io hooks.
     """
     global found_now
@@ -182,4 +182,4 @@ def reload(module, exclude=['sys', '__builtin__', '__main__']):
 
 # Uncomment the following to automatically activate deep reloading whenever
 # this module is imported
-#__builtin__.reload = reload
+#builtins.reload = reload
