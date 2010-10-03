@@ -91,13 +91,13 @@ class ipnsdict(dict):
         # is always 'clean' of it before it's used for test code execution.
         self.pop('_',None)
 
-        # The builtins namespace must *always* be the real __builtins__ module,
+        # The builtins namespace must *always* be the real builtins module,
         # else weird stuff happens.  The main ipython code does have provisions
         # to ensure this after %run, but since in this class we do some
         # aggressive low-level cleaning of the execution namespace, we need to
         # correct for that ourselves, to ensure consitency with the 'real'
         # ipython.
-        self['__builtins__'] = __builtins__
+        self['__builtins__'] = builtins
 
 
 def get_ipython():

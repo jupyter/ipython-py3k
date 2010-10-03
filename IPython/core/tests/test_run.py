@@ -54,30 +54,30 @@ def doctest_run_builtins():
 
     In [3]: fname = tempfile.mkstemp('.py')[1]
 
-    In [3]: f = open(fname,'w')
+    In [4]: f = open(fname,'w')
 
-    In [4]: f.write('pass\n')
-    Out[4]: 5
+    In [5]: f.write('pass\n')
+    Out[5]: 5
 
-    In [5]: f.flush()
+    In [6]: f.flush()
 
-    In [6]: t1 = type(__builtins__)
+    In [7]: t1 = type(__builtins__)
 
-    In [7]: %run $fname
+    In [8]: %run $fname
 
-    In [7]: f.close()
+    In [9]: f.close()
 
-    In [8]: bid2 = id(__builtins__)
+    In [10]: bid2 = id(__builtins__)
 
-    In [9]: t2 = type(__builtins__)
+    In [11]: t2 = type(__builtins__)
 
-    In [10]: t1 == t2
-    Out[10]: True
+    In [12]: t1 == t2
+    Out[12]: True
 
-    In [10]: bid1 == bid2
-    Out[10]: True
+    In [13]: bid1 == bid2
+    Out[13]: True
 
-    In [12]: try:
+    In [14]: try:
        ....:     os.unlink(fname)
        ....: except:
        ....:     pass
