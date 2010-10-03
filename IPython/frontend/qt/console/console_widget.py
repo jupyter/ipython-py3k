@@ -847,7 +847,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 elif not self._executing:
                     cursor.movePosition(QtGui.QTextCursor.End,
                                         QtGui.QTextCursor.KeepAnchor)
-                    at_end = cursor.selectedText().trimmed().isEmpty() 
+                    at_end = not(cursor.selectedText().strip())
                     single_line = (self._get_end_cursor().blockNumber() ==
                                    self._get_prompt_cursor().blockNumber())
                     if (at_end or shift_down or single_line) and not ctrl_down:

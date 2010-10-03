@@ -454,7 +454,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         # Decide if it makes sense to show a call tip
         cursor = self._get_cursor()
         cursor.movePosition(QtGui.QTextCursor.Left)
-        if cursor.document().characterAt(cursor.position()).toAscii() != '(':
+        if cursor.document().characterAt(cursor.position()) != '(':
             return False
         context = self._get_context(cursor)
         if not context:

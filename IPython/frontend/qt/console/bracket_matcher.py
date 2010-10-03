@@ -43,7 +43,7 @@ class BracketMatcher(QtCore.QObject):
         # Decide what character to search for and what direction to search in.
         document = self._text_edit.document()
         qchar = document.characterAt(position)
-        start_char = qchar.toAscii()
+        start_char = qchar #.toAscii()
         search_char = self._opening_map.get(start_char)
         if search_char:
             increment = 1

@@ -30,7 +30,6 @@ from IPython.core.macro import Macro
 from IPython.core.payloadpage import install_payload_page
 from IPython.utils import io
 from IPython.utils.path import get_py_filename
-from IPython.utils.text import StringTypes
 from IPython.utils.traitlets import Instance, Type, Dict
 from IPython.utils.warn import warn
 from IPython.zmq.session import extract_header
@@ -417,7 +416,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
                 #print '*** args',args,'type',type(args)  # dbg
                 data = eval(args,self.shell.user_ns)
-                if not type(data) in StringTypes:
+                if not isinstance(data, str):
                     raise DataIsObject
 
             except (NameError,SyntaxError):
