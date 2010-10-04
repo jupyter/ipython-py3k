@@ -67,7 +67,7 @@ class Session(object):
     def __init__(self, username=os.environ.get('USER','username'), session=None):
         self.username = username
         if session is None:
-            self.session = str(uuid.uuid4())
+            self.session = bytes(str(uuid.uuid4()), 'ascii')
         else:
             self.session = session
         self.msg_id = 0

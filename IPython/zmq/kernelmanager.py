@@ -364,7 +364,7 @@ class SubSocketChannel(ZmqSocketChannel):
     def run(self):
         """The thread's main activity.  Call start() instead."""
         self.socket = self.context.socket(zmq.SUB)
-        self.socket.setsockopt(zmq.SUBSCRIBE,'')
+        self.socket.setsockopt(zmq.SUBSCRIBE,b'')
         self.socket.setsockopt(zmq.IDENTITY, self.session.session)
         self.socket.connect('tcp://%s:%i' % self.address)
         self.iostate = POLLIN|POLLERR
