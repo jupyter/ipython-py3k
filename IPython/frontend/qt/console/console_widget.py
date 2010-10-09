@@ -497,9 +497,13 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             text = str(QtGui.QApplication.clipboard().text(mode)).rstrip()
             self._insert_plain_text_into_buffer(cursor, dedent(text))
 
-    def print_(self, printer):
+    def print_(self, printer = None):
         """ Print the contents of the ConsoleWidget to the specified QPrinter.
         """
+        if(printer is None):
+            printer = QtGui.QPrinter()
+            if(QtGui.QPrintDialog(printer).exec_() != QtGui.QDialog.Accepted):
+                return
         self._control.print_(printer)
 
     def prompt_to_top(self):
@@ -533,6 +537,13 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         font = get_font(family, fallback)
         font.setPointSize(QtGui.qApp.font().pointSize())
         font.setStyleHint(QtGui.QFont.TypeWriter)
+        self._set_font(font)
+
+    def change_font_size(self, delta):
+        """Change the font size by the specified amount (in points).
+        """
+        font = self.font
+        font.setPointSize(font.pointSize() + delta)
         self._set_font(font)
 
     def select_all(self):
@@ -728,6 +739,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
         menu.addSeparator()
         menu.addAction('Select All', self.select_all)
+
+        menu.addSeparator()
+        print_action = menu.addAction('Print', self.print_)
+        print_action.setEnabled(True)
         
         return menu
 
@@ -894,13 +909,21 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             elif key == QtCore.Qt.Key_O:
                 if self._page_control and self._page_control.isVisible():
                     self._page_control.setFocus()
-                intercept = True
+                intercepted = True
 
             elif key == QtCore.Qt.Key_Y:
                 self.paste()
                 intercepted = True
 
             elif key in (QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete):
+                intercepted = True
+
+            elif key == QtCore.Qt.Key_Plus:
+                self.change_font_size(1)
+                intercepted = True
+
+            elif key == QtCore.Qt.Key_Minus:
+                self.change_font_size(-1)
                 intercepted = True
 
         #------ Alt modifier ---------------------------------------------------
@@ -940,6 +963,11 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         #------ No modifiers ---------------------------------------------------
 
         else:
+            if shift_down:
+                anchormode=QtGui.QTextCursor.KeepAnchor
+            else:
+                anchormode=QtGui.QTextCursor.MoveAnchor
+            
             if key == QtCore.Qt.Key_Escape:
                 self._keyboard_quit()
                 intercepted = True
@@ -968,8 +996,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 line, col = cursor.blockNumber(), cursor.columnNumber()
                 if line > self._get_prompt_cursor().blockNumber() and \
                         col == len(self._continuation_prompt):
-                    self._control.moveCursor(QtGui.QTextCursor.PreviousBlock)
-                    self._control.moveCursor(QtGui.QTextCursor.EndOfBlock)
+                    self._control.moveCursor(QtGui.QTextCursor.PreviousBlock, 
+                                    mode=anchormode)
+                    self._control.moveCursor(QtGui.QTextCursor.EndOfBlock, 
+                                    mode=anchormode)
                     intercepted = True
 
                 # Regular left movement
@@ -978,10 +1008,12 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                     
             elif key == QtCore.Qt.Key_Right:
                 original_block_number = cursor.blockNumber()
-                cursor.movePosition(QtGui.QTextCursor.Right)
+                cursor.movePosition(QtGui.QTextCursor.Right, 
+                                mode=anchormode)
                 if cursor.blockNumber() != original_block_number:
                     cursor.movePosition(QtGui.QTextCursor.Right,
-                                        n=len(self._continuation_prompt))
+                                        n=len(self._continuation_prompt),
+                                        mode=anchormode)
                 self._set_cursor(cursor)
                 intercepted = True
 
