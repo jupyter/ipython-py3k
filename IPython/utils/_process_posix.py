@@ -93,9 +93,7 @@ class ProcessHandler(object):
         """
         pcmd = self._make_cmd(cmd)
         try:
-            temp =  pexpect.run(pcmd).replace('\r\n', '\n')
-            raise Exception(temp)
-            return temp
+            return pexpect.run(pcmd).replace('\r\n', '\n')
         except KeyboardInterrupt:
             print('^C', file=sys.stderr, end='')
 

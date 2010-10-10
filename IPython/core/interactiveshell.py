@@ -1102,16 +1102,6 @@ class InteractiveShell(Configurable, Magic):
         found = False; obj = None;  ospace = None;  ds = None;
         ismagic = False; isalias = False; parent = None
 
-        # We need to special-case 'print', which as of python2.6 registers as a
-        # function but should only be treated as one if print_function was
-        # loaded with a future import.  In this case, just bail.
-
-        # In Python 3, print is always a function. Commented out to allow introspection.
-        #if (oname == 'print' and not (self.compile.compiler.flags &
-                                      #__future__.CO_FUTURE_PRINT_FUNCTION)):
-            #return {'found':found, 'obj':obj, 'namespace':ospace,
-                    #'ismagic':ismagic, 'isalias':isalias, 'parent':parent}
-
         # Look for the given name by splitting it in parts.  If the head is
         # found, then we look for all the remaining parts as members, and only
         # declare success if we can find them all.

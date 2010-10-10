@@ -307,7 +307,7 @@ class Completer(object):
         match_append = matches.append
         n = len(text)
         for lst in [keyword.kwlist,
-                    list(__builtins__.keys()),
+                    list(builtins.__dict__.keys()),
                     list(self.namespace.keys()),
                     list(self.global_namespace.keys())]:
             for word in lst:
