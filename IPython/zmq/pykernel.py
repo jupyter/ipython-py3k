@@ -60,7 +60,7 @@ class Kernel(HasTraits):
 
         # Build dict of handlers for message types
         msg_types = [ 'execute_request', 'complete_request', 
-                      'object_info_request' ]
+                      'object_info_request', 'shutdown_request' ]
         self.handlers = {}
         for msg_type in msg_types:
             self.handlers[msg_type] = getattr(self, msg_type)
@@ -162,6 +162,16 @@ class Kernel(HasTraits):
         msg = self.session.send(self.reply_socket, 'object_info_reply',
                                 object_info, parent, ident)
         print(msg, file=sys.__stdout__)
+
+    def shutdown_request(self, ident, parent):
+        content = dict(parent['content'])
+        msg = self.session.send(self.reply_socket, 'shutdown_reply',
+                                content, parent, ident)
+        msg = self.session.send(self.pub_socket, 'shutdown_reply',
+                                content, parent, ident)
+        print(msg, file=sys.__stdout__)
+        time.sleep(0.1)
+        sys.exit(0)
 
     #---------------------------------------------------------------------------
     # Protected interface
