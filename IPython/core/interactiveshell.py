@@ -984,7 +984,7 @@ class InteractiveShell(Configurable, Magic):
         # would cause errors in many object's __del__ methods.
         for ns in [self.user_ns, self.user_global_ns]:
             drop_keys = set(ns.keys())
-            drop_keys.discard('__builtin__')
+            drop_keys.discard('builtins')
             drop_keys.discard('__builtins__')
             for k in drop_keys:
                 del ns[k]
