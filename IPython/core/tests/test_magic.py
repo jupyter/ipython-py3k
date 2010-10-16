@@ -161,7 +161,7 @@ def test_shist():
     tfile = tempfile.mktemp('','tmp-ipython-')
     
     db = pickleshare.PickleShareDB(tfile)
-    s = ShadowHist(db)
+    s = ShadowHist(db, get_ipython())
     s.add('hello')
     s.add('world')
     s.add('hello')
@@ -355,3 +355,10 @@ def test_cpaste():
 
     for code in tests['fail']:
         check_cpaste(code, should_fail=True)
+
+def test_xmode():
+    # Calling xmode three times should be a no-op
+    xmode = _ip.InteractiveTB.mode
+    for i in range(3):
+        _ip.magic("xmode")
+    nt.assert_equal(_ip.InteractiveTB.mode, xmode)
