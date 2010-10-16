@@ -19,13 +19,12 @@ import __future__
 import abc
 import atexit
 import codeop
-import exceptions
-import new
 import os
 import re
 import string
 import sys
 import tempfile
+import types
 from contextlib import nested
 
 from IPython.config.configurable import Configurable
@@ -101,7 +100,7 @@ def softspace(file, newvalue):
 
 def no_op(*a, **kw): pass
 
-class SpaceInInput(exceptions.Exception): pass
+class SpaceInInput(Exception): pass
 
 class Bunch: pass
 
@@ -557,7 +556,7 @@ class InteractiveShell(Configurable, Magic):
         # accepts it.  Probably at least check that the hook takes the number
         # of args it's supposed to.
         
-        f = new.instancemethod(hook,self,self.__class__)
+        f = types.MethodType(hook,self)
 
         # check if the hook is for strdispatcher first
         if str_key is not None:
@@ -1299,7 +1298,7 @@ class InteractiveShell(Configurable, Magic):
                 # The return value must be
                 return structured_traceback
 
-          This will be made into an instance method (via new.instancemethod)
+          This will be made into an instance method (via types.MethodType)
           of IPython itself, and it will be called if any of the exceptions
           listed in the exc_tuple are caught.  If the handler is None, an
           internal basic one is used, which just prints basic info.
@@ -1320,7 +1319,7 @@ class InteractiveShell(Configurable, Magic):
 
         if handler is None: handler = dummy_handler
 
-        self.CustomTB = new.instancemethod(handler,self,self.__class__)
+        self.CustomTB = types.MethodType(handler,self)
         self.custom_exceptions = exc_tuple
 
     def excepthook(self, etype, value, tb):
@@ -1649,8 +1648,7 @@ class InteractiveShell(Configurable, Magic):
         The position argument (defaults to 0) is the index in the completers
         list where you want the completer to be inserted."""
 
-        newcomp = new.instancemethod(completer,self.Completer,
-                                     self.Completer.__class__)
+        newcomp = types.MethodType(completer,self.Completer)
         self.Completer.matchers.insert(pos,newcomp)
 
     def set_readline_completer(self):
@@ -1724,9 +1722,7 @@ class InteractiveShell(Configurable, Magic):
     
         self.define_magic('foo',foo_impl)
         """
-        
-        import new
-        im = new.instancemethod(func,self, self.__class__)
+        im = types.MethodType(func,self)
         old = getattr(self, "magic_" + magicname, None)
         setattr(self, "magic_" + magicname, im)
         return old
@@ -2084,9 +2080,7 @@ class InteractiveShell(Configurable, Magic):
                 print('Stack:\n', stack)
                 list.append(self, val)
 
-            import new
-            self.input_hist.append = new.instancemethod(myapp, self.input_hist,
-                                                        list)
+            self.input_hist.append = types.MethodType(myapp, self.input_hist)
         # End dbg
 
         # All user code execution must happen with our context managers active
