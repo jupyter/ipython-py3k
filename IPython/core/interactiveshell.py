@@ -2084,7 +2084,7 @@ class InteractiveShell(Configurable, Magic):
         # End dbg
 
         # All user code execution must happen with our context managers active
-        with nested(self.builtin_trap, self.display_trap):
+        with self.builtin_trap, self.display_trap:
 
             # Single-block input should behave like an interactive prompt
             if len(blocks) == 1:

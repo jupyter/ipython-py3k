@@ -371,7 +371,7 @@ class TerminalInteractiveShell(InteractiveShell):
             self.set_readline_completer()
         
         try:
-            line = raw_input_original(prompt).decode(self.stdin_encoding)
+            line = raw_input_original(prompt)
         except ValueError:
             warn("\n********\nYou or a %run:ed script called sys.stdin.close()"
                  " or sys.stdout.close()!\nExiting IPython!")

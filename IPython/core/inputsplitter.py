@@ -945,7 +945,7 @@ class IPythonInputSplitter(InputSplitter):
             return super(IPythonInputSplitter, self).push(lines)
 
         # We must ensure all input is pure unicode
-        if type(lines)==str:
+        if type(lines)==bytes:
             lines = lines.decode(self.encoding)
 
         lines_list = lines.splitlines()
