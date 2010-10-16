@@ -42,11 +42,6 @@ except ImportError:
     except ImportError:
         profile = pstats = None
 
-# print_function was added to __future__ in Python2.6, remove this when we drop
-# 2.5 compatibility
-if not hasattr(__future__,'CO_FUTURE_PRINT_FUNCTION'):
-    __future__.CO_FUTURE_PRINT_FUNCTION = 65536
-
 import IPython
 from IPython.core import debugger, oinspect
 from IPython.core.error import TryNext
@@ -1557,7 +1552,7 @@ Currently the magic system has the following functions:\n"""
         
         stats = None
         try:
-            self.shell.savehist()
+            self.shell.save_hist()
 
             if 'p' in opts:
                 stats = self.magic_prun('',0,opts,arg_lst,prog_ns)
@@ -1676,7 +1671,7 @@ Currently the magic system has the following functions:\n"""
                 # contained therein.
                 del sys.modules[main_mod_name]
 
-            self.shell.reloadhist()
+            self.shell.reload_hist()
                 
         return stats
 
@@ -2332,7 +2327,7 @@ Currently the magic system has the following functions:\n"""
         else:
             print('done. Executing edited code...')
             if opts_r:
-                self.shell.runlines(file_read(filename))
+                self.shell.run_cell(file_read(filename))
             else:
                 self.shell.safe_execfile(filename,self.shell.user_ns,
                                          self.shell.user_ns)
@@ -2993,7 +2988,7 @@ Defaulting color scheme to 'NoColor'"""
                    (input.startswith(start) or input.startswith(start_magic)):
                 #print 'match',`input`  # dbg
                 print('Executing:',input, end=' ')
-                self.shell.runlines(input)
+                self.shell.run_cell(input)
                 return
         print('No previous input matching `%s` found.' % start)
 

@@ -247,7 +247,7 @@ class Demo(object):
         self.ip_ns       = ip.user_ns
         self.ip_colorize = ip.pycolorize
         self.ip_showtb   = ip.showtraceback
-        self.ip_runlines = ip.runlines
+        self.ip_run_cell = ip.run_cell
         self.shell       = ip
 
         # load user data and initialize data structures
@@ -410,7 +410,7 @@ class Demo(object):
             print(block, end=' ', file=IPython.utils.io.Term.cout)
         sys.stdout.flush()
 
-    def runlines(self,source):
+    def run_cell(self,source):
         """Execute a string with one or more lines of code"""
 
         exec(source, self.user_ns)
@@ -448,7 +448,7 @@ class Demo(object):
             try:
                 save_argv = sys.argv
                 sys.argv = self.sys_argv
-                self.runlines(next_block)
+                self.run_cell(next_block)
                 self.post_cmd()
             finally:
                 sys.argv = save_argv
@@ -495,10 +495,10 @@ class IPythonDemo(Demo):
     class requires the input to be valid, pure Python code.
     """
 
-    def runlines(self,source):
+    def run_cell(self,source):
         """Execute a string with one or more lines of code"""
 
-        self.shell.runlines(source)
+        self.shell.run_cell(source)
         
 class LineDemo(Demo):
     """Demo where each line is executed as a separate block.
