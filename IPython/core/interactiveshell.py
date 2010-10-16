@@ -25,7 +25,6 @@ import string
 import sys
 import tempfile
 import types
-from contextlib import nested
 
 from IPython.config.configurable import Configurable
 from IPython.core import debugger, oinspect
@@ -1920,7 +1919,7 @@ class InteractiveShell(Configurable, Magic):
 
     def ex(self, cmd):
         """Execute a normal python statement in user namespace."""
-        with nested(self.builtin_trap,):
+        with self.builtin_trap:
             exec(cmd, self.user_global_ns, self.user_ns)
 
     def ev(self, expr):
@@ -1928,7 +1927,7 @@ class InteractiveShell(Configurable, Magic):
 
         Returns the result of evaluation
         """
-        with nested(self.builtin_trap,):
+        with self.builtin_trap:
             return eval(expr, self.user_global_ns, self.user_ns)
 
     def safe_execfile(self, fname, *where, **kw):

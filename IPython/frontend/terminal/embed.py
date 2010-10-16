@@ -27,7 +27,6 @@ Notes
 import __main__
 
 import sys
-from contextlib import nested
 
 from IPython.core import ultratb
 from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
@@ -202,7 +201,7 @@ class InteractiveShellEmbed(TerminalInteractiveShell):
         # actually completes using the frame's locals/globals
         self.set_completer_frame()
 
-        with nested(self.builtin_trap, self.display_trap):
+        with self.builtin_trap, self.display_trap:
             self.interact(display_banner=display_banner)
         
             # now, purge out the user namespace from anything we might have added
