@@ -1780,9 +1780,7 @@ def which (filename):
 
     # Oddly enough this was the one line that made Pexpect
     # incompatible with Python 1.5.2.
-    # TK: Let's hope changing it back gives us Py3k compatibility!
-    pathlist = p.split (os.pathsep)
-    #pathlist = string.split (p, os.pathsep)
+    pathlist = p.split(os.pathsep)
 
     for path in pathlist:
         f = os.path.join(path, filename)
