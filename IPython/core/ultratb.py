@@ -272,15 +272,7 @@ def _format_traceback_lines(lnum, index, lines, Colors, lvals=None,scheme=None):
 
     _line_format = _parser.format2
 
-    for line in lines:
-        # FIXME: we need to ensure the source is a pure string at this point,
-        # else the coloring code makes a  royal mess.  This is in need of a
-        # serious refactoring, so that all of the ultratb and PyColorize code
-        # is unicode-safe.  So for now this is rather an ugly hack, but
-        # necessary to at least have readable tracebacks. Improvements welcome!
-        if type(line)==str:
-            line = line.encode('utf-8', 'replace')
-            
+    for line in lines:         
         new_line, err = _line_format(line, 'str', scheme)
         if not err: line = new_line
         

@@ -89,7 +89,7 @@ def doctest_reset_del():
 
     In [2]: class A(object):
        ...:     def __del__(self):
-       ...:         print str("Hi")
+       ...:         print(str("Hi"))
        ...: 
 
     In [3]: a = A()
