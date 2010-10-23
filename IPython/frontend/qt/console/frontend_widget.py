@@ -52,7 +52,7 @@ class FrontendHighlighter(PygmentsHighlighter):
         # Don't highlight the part of the string that contains the prompt.
         if string.startswith(prompt):
             self._current_offset = len(prompt)
-            qstring.remove(0, len(prompt))
+            qstring = qstring[len(prompt):] #.remove(0, len(prompt))
         else:
             self._current_offset = 0
 
