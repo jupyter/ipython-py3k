@@ -24,7 +24,7 @@ import collections
 # Our version:
 try:
     from numpy.testing.utils import WarningManager, WarningMessage
-except ImportError:
+except (ImportError, SyntaxError):
     from ._numpy_testing_utils import WarningManager, WarningMessage
     
 # End IPython changes

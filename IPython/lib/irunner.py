@@ -39,7 +39,7 @@ import sys
 # Third-party modules.
 try:
     import pexpect
-except ImportError:
+except (ImportError, SyntaxError):
     from IPython.external import pexpect
 
 # Global usage strings, to avoid indentation issues when typing it below.

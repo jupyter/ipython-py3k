@@ -24,7 +24,7 @@ import sys
 # for users, but it's only used if we don't find the system copy.
 try:
     import pexpect
-except ImportError:
+except (ImportError, SyntaxError):
     from IPython.external import pexpect
 
 # Our own
