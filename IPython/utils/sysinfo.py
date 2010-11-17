@@ -118,7 +118,7 @@ def sys_info():
 
     Example
     -------
-    In [2]: print sys_info()
+    In [2]: print(sys_info())
     {'commit_hash': '144fdae',      # random
      'commit_source': 'repository',
      'ipython_path': '/home/fperez/usr/lib/python2.6/site-packages/IPython',
