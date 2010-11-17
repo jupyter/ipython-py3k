@@ -57,7 +57,6 @@ for author, email in release.authors.values():
     __author__ += author + ' <' + email + '>\n'
 __license__  = release.license
 __version__  = release.version
-__revision__ = release.revision
 
 #-----------------------------------------------------------------------------
 # Check for Python 2.x paths explicitly added to the pythonpath
