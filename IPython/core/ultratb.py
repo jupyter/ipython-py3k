@@ -858,14 +858,20 @@ class VerboseTB(TBTools):
             def linereader(file=file, lnum=[lnum], getline=linecache.getline):
                 line = getline(file, lnum[0])
                 lnum[0] += 1
-                return line.encode()
+                return line
 
             # Build the list of names on this line of code where the exception
             # occurred.
             try:
                 # This builds the names list in-place by capturing it from the
                 # enclosing scope.
-                [tokeneater(*token) for token in tokenize.tokenize(linereader)]
+                # We're using _tokenize because tokenize expects bytes, and
+                # attempts to find an encoding cookie, which can go wrong
+                # e.g. if the traceback line includes "encoding=encoding".
+                # N.B. _tokenize is undocumented. An official API for
+                # tokenising strings is proposed in Python Issue 9969.
+                for atoken in tokenize._tokenize(linereader, None):
+                    tokeneater(*atoken)
             except IndexError:
                 # signals exit of tokenizer
                 pass

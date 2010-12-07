@@ -173,11 +173,17 @@ class Parser:
 
         # parse the source and write it
         self.pos = 0
-        text = io.BytesIO(self.raw.encode())
+        text = io.StringIO(self.raw)
 
         error = False
         try:
-            [self(*token) for token in tokenize.tokenize(text.readline)]
+            # We're using _tokenize because tokenize expects bytes, and
+            # attempts to find an encoding cookie, which can go wrong, e.g.
+            # if the traceback line includes "encoding=encoding".
+            # N.B. _tokenize is undocumented. An official API for tokenising
+            # strings is proposed in Python Issue 9969.
+            for atoken in tokenize._tokenize(text.readline, None):
+                self(*atoken)
         except tokenize.TokenError as ex:
             msg = ex.args[0]
             line = ex.args[1][0]
