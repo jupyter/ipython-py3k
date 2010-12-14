@@ -18,7 +18,7 @@ http://somethingaboutorange.com/mrl/projects/nose
 
 Exiting."""
     import sys
-    print >> sys.stderr, error
+    print(error, file=sys.stderr)
 else:
     from IPython.testing import iptest
     iptest.main()
