@@ -2084,7 +2084,7 @@ class InteractiveShell(Configurable, Magic):
                 print('Stack:\n', stack)
                 list.append(self, val)
 
-            self.history_manager.input_hist_parsed.append = 
+            self.history_manager.input_hist_parsed.append = \
                 types.MethodType(myapp, self.history_manager.input_hist_parsed)
         # End dbg
 
