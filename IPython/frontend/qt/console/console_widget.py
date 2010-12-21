@@ -1505,10 +1505,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         document = self._control.document()
         position -= 1
         while position >= self._prompt_pos and \
-                not document.characterAt(position).isLetterOrNumber():
+                not document.characterAt(position).isalnum():
             position -= 1
         while position >= self._prompt_pos and \
-                document.characterAt(position).isLetterOrNumber():
+                document.characterAt(position).isalnum():
             position -= 1
         cursor = self._control.textCursor()
         cursor.setPosition(position + 1)
@@ -1522,10 +1522,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         document = self._control.document()
         end = self._get_end_cursor().position()
         while position < end and \
-                not document.characterAt(position).isLetterOrNumber():
+                not document.characterAt(position).isalnum():
             position += 1
         while position < end and \
-                document.characterAt(position).isLetterOrNumber():
+                document.characterAt(position).isalnum():
             position += 1
         cursor = self._control.textCursor()
         cursor.setPosition(position)
