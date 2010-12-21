@@ -42,8 +42,8 @@ class BracketMatcher(QtCore.QObject):
         """
         # Decide what character to search for and what direction to search in.
         document = self._text_edit.document()
-        qchar = document.characterAt(position)
-        start_char = qchar #.toAscii()
+        char = document.characterAt(position)
+        start_char = char
         search_char = self._opening_map.get(start_char)
         if search_char:
             increment = 1
@@ -57,7 +57,6 @@ class BracketMatcher(QtCore.QObject):
         # Search for the character.
         depth = 0
         while position >= 0 and position < document.characterCount():
-            char = qchar.toAscii()
             if char == start_char:
                 depth += 1
             elif char == search_char:
@@ -65,7 +64,7 @@ class BracketMatcher(QtCore.QObject):
             if depth == 0:
                 break
             position += increment
-            qchar = document.characterAt(position)
+            char = document.characterAt(position)
         else:
             position = -1
         return position
