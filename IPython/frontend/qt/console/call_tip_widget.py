@@ -200,7 +200,7 @@ class CallTipWidget(QtGui.QLabel):
                     break
                 depth -= 1
             position += 1 if forward else -1
-            qchar = document.characterAt(position)
+            char = document.characterAt(position)
         else:
             position = -1
         return position, commas
