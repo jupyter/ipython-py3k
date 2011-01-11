@@ -16,7 +16,6 @@
 #-----------------------------------------------------------------------------
 
 import builtins
-import __future__
 import bdb
 import inspect
 import os
@@ -693,12 +692,7 @@ Currently the magic system has the following functions:\n"""
         Show objects beginning with a single _:
        
         %psearch -a _*         list objects beginning with a single underscore"""
-        try:
-            parameter_s = parameter_s.encode('ascii')
-        except UnicodeEncodeError:
-            print('Python identifiers can only contain ascii characters.')
-            return
-
+        
         # default namespaces to be searched
         def_search = ['user','builtin']
 
