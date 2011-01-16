@@ -13,7 +13,7 @@ import sys
 from IPython.core import release
 
 cl_usage = """\
-ipython [options] [files]
+ipython3 [options] [files]
 
 IPython: an enhanced interactive Python shell.
 
