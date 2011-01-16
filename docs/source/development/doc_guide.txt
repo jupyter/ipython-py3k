@@ -51,7 +51,7 @@ An interactive Python session::
 
     >>> from IPython.utils.path import get_ipython_dir
     >>> get_ipython_dir()
-    '/home/fperez/.ipython'
+    '/home/fperez/.ipython3'
 
 An IPython session:
 

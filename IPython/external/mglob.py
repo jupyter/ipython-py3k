@@ -201,8 +201,8 @@ def expand(flist,exp_dirs = False):
             
 def test():
     assert (
-        expand("*.py ~/.ipython/*.py rec:/usr/share/doc-base") == 
-        expand( ['*.py', '~/.ipython/*.py', 'rec:/usr/share/doc-base'] ) 
+        expand("*.py ~/.ipython3/*.py rec:/usr/share/doc-base") == 
+        expand( ['*.py', '~/.ipython3/*.py', 'rec:/usr/share/doc-base'] ) 
         )
     
 def main():

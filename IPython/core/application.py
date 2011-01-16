@@ -59,7 +59,7 @@ class BaseAppConfigLoader(ArgParseConfigLoader):
             help=
             """Set to override default location of the IPython directory
             IPYTHON_DIR, stored as Global.ipython_dir.  This can also be 
-            specified through the environment variable IPYTHON_DIR.""",
+            specified through the environment variable IPYTHON3_DIR.""",
             metavar='Global.ipython_dir')
 
     def _add_log_level(self, parser):
@@ -105,7 +105,7 @@ class Application(object):
     default_log_level = logging.WARN
     #: Set by --profile option
     profile_name = None
-    #: User's ipython directory, typically ~/.ipython/
+    #: User's ipython directory, typically ~/.ipython3/
     ipython_dir = None
     #: Internal defaults, implemented in code.
     default_config = None

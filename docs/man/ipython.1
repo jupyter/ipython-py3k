@@ -22,7 +22,7 @@
 .\" To preview this page as plain text: nroff -man ipython.1
 .\"
 .SH NAME
-ipython \- An Enhanced Interactive Python
+ipython \- An Enhanced Interactive Python3
 .SH SYNOPSIS
 .B ipython
 .RI [ options ] " files" ...
@@ -142,7 +142,7 @@ EDITOR is something like Emacs).
 .TP
 .B \-ipythondir <name>
 The name of your IPython configuration directory IPYTHON_DIR.  This can
-also be specified through the environment variable IPYTHON_DIR.
+also be specified through the environment variable IPYTHON3_DIR.
 .TP
 .B \-log|l
 Generate a log file of all input. The file is named ipython_log.py in your
@@ -204,12 +204,12 @@ IPYTHON_DIR/ipythonrc file and then have other 'profiles' which include
 this one and load extra things for particular tasks. For example:
 .br
 .sp 1
-1) $HOME/.ipython/ipythonrc : load basic things you always want.
+1) $HOME/.ipython3/ipythonrc : load basic things you always want.
 .br
-2) $HOME/.ipython/ipythonrc-math : load (1) and basic math-related
+2) $HOME/.ipython3/ipythonrc-math : load (1) and basic math-related
 modules.
 .br
-3) $HOME/.ipython/ipythonrc-numeric : load (1) and Numeric and
+3) $HOME/.ipython3/ipythonrc-numeric : load (1) and Numeric and
 plotting modules.
 .br
 .sp 1

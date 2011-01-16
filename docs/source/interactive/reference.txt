@@ -28,7 +28,7 @@ file and ignore your configuration setup.
 Please note that some of the configuration options are not available at
 the command line, simply because they are not practical here. Look into
 your ipythonrc configuration file for details on those. This file
-typically installed in the $HOME/.ipython directory. For Windows users,
+typically installed in the $HOME/.ipython3 directory. For Windows users,
 $HOME resolves to C:\\Documents and Settings\\YourUserName in most
 instances. In the rest of this text, we will refer to this directory as
 IPYTHON_DIR.
@@ -152,7 +152,7 @@ All options with a [no] prepended can be specified in negated form
     -ipythondir <name> 
 	name of your IPython configuration directory IPYTHON_DIR. This
 	can also be specified through the environment variable
-	IPYTHON_DIR.
+	IPYTHON3_DIR.
 
     -log, l 
 	generate a log file of all input. The file is named
@@ -218,9 +218,9 @@ All options with a [no] prepended can be specified in negated form
 	include this one and load extra things for particular
 	tasks. For example:
 
-	1. $HOME/.ipython/ipythonrc : load basic things you always want.
-	2. $HOME/.ipython/ipythonrc-math : load (1) and basic math-related modules.
-	3. $HOME/.ipython/ipythonrc-numeric : load (1) and Numeric and plotting modules.
+	1. $HOME/.ipython3/ipythonrc : load basic things you always want.
+	2. $HOME/.ipython3/ipythonrc-math : load (1) and basic math-related modules.
+	3. $HOME/.ipython3/ipythonrc-numeric : load (1) and Numeric and plotting modules.
 
 	Since it is possible to create an endless loop by having
 	circular file inclusions, IPython will stop if it reaches 15

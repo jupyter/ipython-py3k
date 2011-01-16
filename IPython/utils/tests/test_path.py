@@ -46,7 +46,7 @@ env = os.environ
 TEST_FILE_PATH = split(abspath(__file__))[0]
 TMP_TEST_DIR = tempfile.mkdtemp()
 HOME_TEST_DIR = join(TMP_TEST_DIR, "home_test_dir")
-IP_TEST_DIR = join(HOME_TEST_DIR,'.ipython')
+IP_TEST_DIR = join(HOME_TEST_DIR,'.ipython3')
 #
 # Setup/teardown functions/decorators
 #
@@ -224,9 +224,9 @@ def test_get_home_dir_8():
 @with_environment
 def test_get_ipython_dir_1():
     """test_get_ipython_dir_1, Testcase to see if we can call get_ipython_dir without Exceptions."""
-    env['IPYTHON_DIR'] = "someplace/.ipython"
+    env['IPYTHON3_DIR'] = "someplace/.ipython3"
     ipdir = path.get_ipython_dir()
-    nt.assert_equal(ipdir, "someplace/.ipython")
+    nt.assert_equal(ipdir, "someplace/.ipython3")
 
 
 @with_environment
@@ -234,10 +234,9 @@ def test_get_ipython_dir_2():
     """test_get_ipython_dir_2, Testcase to see if we can call get_ipython_dir without Exceptions."""
     path.get_home_dir = lambda : "someplace"
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
+    env.pop('IPYTHON3_DIR', None)
     ipdir = path.get_ipython_dir()
-    nt.assert_equal(ipdir, os.path.join("someplace", ".ipython"))
+    nt.assert_equal(ipdir, os.path.join("someplace", ".ipython3"))
 
 
 def test_filefind():

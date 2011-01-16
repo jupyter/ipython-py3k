@@ -395,7 +395,7 @@ to 'mydir', if it exists.
 
 You can define your own magic functions to extend the system. See the supplied
 ipythonrc and example-magic.py files for details (in your ipython
-configuration directory, typically $HOME/.ipython/).
+configuration directory, typically $HOME/.ipython3/).
 
 You can also define your own aliased names for magic functions. In your
 ipythonrc file, placing a line like:
@@ -3252,7 +3252,7 @@ Defaulting color scheme to 'NoColor'"""
 
     @testdec.skip_doctest
     def magic_install_profiles(self, s):
-        """Install the default IPython profiles into the .ipython dir.
+        """Install the default IPython profiles into the .ipython3 dir.
 
         If the default profiles have already been installed, they will not
         be overwritten. You can force overwriting them by using the ``-o``
@@ -3283,7 +3283,7 @@ Defaulting color scheme to 'NoColor'"""
                 print("    %s" % f)
 
     def magic_install_default_config(self, s):
-        """Install IPython's default config file into the .ipython dir.
+        """Install IPython's default config file into the .ipython3 dir.
 
         If the default config file (:file:`ipython_config.py`) is already
         installed, it will not be overwritten. You can force overwriting

@@ -187,7 +187,7 @@ class ControllerService(object, service.Service):
         This method takes the assigned id, ip/port and pid of the engine
         and saves it to a file of the form:
         
-        ~/.ipython/log/ipcontroller-###-engine-info.log
+        ~/.ipython3/log/ipcontroller-###-engine-info.log
         
         where ### is the pid of the controller.
         

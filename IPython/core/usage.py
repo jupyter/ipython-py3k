@@ -30,9 +30,9 @@ IPython: an enhanced interactive Python shell.
     command line, simply because they are not practical here. Look into your
     ipython_config.py configuration file for details on those.
 
-    This file typically installed in the $HOME/.ipython directory.  For Windows
-    users, $HOME resolves to C:\\Documents and Settings\\YourUserName in most
-    instances.
+    This file is typically installed in the $HOME/.ipython3 directory.  For
+    Windows users, $HOME resolves to C:\\Documents and Settings\\YourUserName in
+    most instances.
 
     In IPython's documentation, we will refer to this directory as IPYTHON_DIR,
     you can change its default location by setting any path you want in this

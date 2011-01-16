@@ -12,8 +12,8 @@ Outdated configuration information that might still be useful
 This section will help you set various things in your environment for
 your IPython sessions to be as efficient as possible. All of IPython's
 configuration information, along with several example files, is stored
-in a directory named by default $HOME/.ipython. You can change this by
-defining the environment variable IPYTHONDIR, or at runtime with the
+in a directory named by default $HOME/.ipython3. You can change this by
+defining the environment variable IPYTHON3_DIR, or at runtime with the
 command line option -ipythondir.
 
 If all goes well, the first time you run IPython it should automatically create
@@ -94,7 +94,7 @@ sequences. You can go to a 'no color' mode by typing '%colors NoColor'.
 
 You can try using a different terminal emulator program (Emacs users,
 see below). To permanently set your color preferences, edit the file
-$HOME/.ipython/ipythonrc and set the colors option to the desired value.
+$HOME/.ipython3/ipythonrc and set the colors option to the desired value.
 
 
 Object details (types, docstrings, source code, etc.)

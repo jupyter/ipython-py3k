@@ -40,14 +40,14 @@ hosts ``host1``-``hostn``. The following steps are then required:
 
 At this point, the controller and engines will be connected. By default, the
 FURL files created by the controller are put into the
-:file:`~/.ipython/security` directory. If the engines share a filesystem with
+:file:`~/.ipython3/security` directory. If the engines share a filesystem with
 the controller, step 2 can be skipped as the engines will automatically look
 at that location.
 
 The final step required required to actually use the running controller from a
 client is to move the FURL files :file:`ipcontroller-mec.furl` and
 :file:`ipcontroller-tc.furl` from ``host0`` to the host where the clients will
-be run. If these file are put into the :file:`~/.ipython/security` directory
+be run. If these file are put into the :file:`~/.ipython3/security` directory
 of the client's host, they will be found automatically. Otherwise, the full
 path to them has to be passed to the client's constructor.
 
@@ -74,7 +74,7 @@ controller and engines in the following situations:
 .. note::
 
     Currently :command:`ipcluster` requires that the
-    :file:`~/.ipython/security` directory live on a shared filesystem that is
+    :file:`~/.ipython3/security` directory live on a shared filesystem that is
     seen by both the controller and engines. If you don't have a shared file
     system you will need to use :command:`ipcontroller` and
     :command:`ipengine` directly.  This constraint can be relaxed if you are 
@@ -346,7 +346,7 @@ to be able to create the key (or FURL file) once, and then simply use it at
 any point in the future.
 
 This is possible, but before you do this, you **must** remove any old FURL
-files in the :file:`~/.ipython/security` directory.
+files in the :file:`~/.ipython3/security` directory.
 
 .. warning::
 
@@ -379,7 +379,7 @@ Log files
 
 All of the components of IPython have log files associated with them.
 These log files can be extremely useful in debugging problems with
-IPython and can be found in the directory :file:`~/.ipython/log`.  Sending
+IPython and can be found in the directory :file:`~/.ipython3/log`.  Sending
 the log files to us will often help us to debug any problems.
 
 

@@ -236,14 +236,14 @@ the second for a 'normal' command, and the third for a multiline command.")
 ;; MODIFY py-shell so that it loads the editing history
 (defadvice py-shell (around py-shell-with-history)
   "Add persistent command-history support (in
-$PYTHONHISTORY (or \"~/.ipython/history\", if we use IPython)). Also, if
+$PYTHONHISTORY (or \"~/.ipython3/history\", if we use IPython)). Also, if
 `py-shell-initial-switch-buffers' is nil, it only switches to *Python* if that
 buffer already exists."
   (if (comint-check-proc "*Python*")
       ad-do-it
     (setq comint-input-ring-file-name
           (if (string-equal py-python-command ipython-command)
-              (concat (or (getenv "IPYTHONDIR") "~/.ipython") "/history")
+              (concat (or (getenv "IPYTHON3_DIR") "~/.ipython3") "/history")
             (or (getenv "PYTHONHISTORY") "~/.python-history.py")))
     (comint-read-input-ring t)
     (let ((buf (current-buffer)))

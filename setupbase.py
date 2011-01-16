@@ -257,14 +257,14 @@ def find_scripts():
     """
     kernel_scripts = pjoin('IPython','kernel','scripts')
     main_scripts = pjoin('IPython','scripts')
-    scripts = [pjoin(kernel_scripts, 'ipengine'),
-               pjoin(kernel_scripts, 'ipcontroller'),
-               pjoin(kernel_scripts, 'ipcluster'),
-               pjoin(main_scripts, 'ipython'),
-               pjoin(main_scripts, 'ipython-qtconsole'),
-               pjoin(main_scripts, 'pycolor'),
-               pjoin(main_scripts, 'irunner'),
-               pjoin(main_scripts, 'iptest')
+    scripts = [pjoin(kernel_scripts, 'ipengine3'),
+               pjoin(kernel_scripts, 'ipcontroller3'),
+               pjoin(kernel_scripts, 'ipcluster3'),
+               pjoin(main_scripts, 'ipython3'),
+               pjoin(main_scripts, 'ipython3-qtconsole'),
+               pjoin(main_scripts, 'pycolor3'),
+               pjoin(main_scripts, 'irunner3'),
+               pjoin(main_scripts, 'iptest3')
               ]
     
     # Script to be run by the windows binary installer after the default setup

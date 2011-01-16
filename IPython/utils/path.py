@@ -252,17 +252,12 @@ def get_ipython_dir():
     """Get the IPython directory for this platform and user.
     
     This uses the logic in `get_home_dir` to find the home directory
-    and the adds .ipython to the end of the path.
+    and the adds .ipython3 to the end of the path.
     """
-    ipdir_def = '.ipython'
+    ipdir_def = '.ipython3'
     home_dir = get_home_dir()
     # import pdb; pdb.set_trace()  # dbg
-    ipdir = os.environ.get(
-        'IPYTHON_DIR', os.environ.get(
-            'IPYTHONDIR', os.path.join(home_dir, ipdir_def)
-        )
-    )
-    return ipdir
+    return os.environ.get('IPYTHON3_DIR', os.path.join(home_dir, ipdir_def))
 
 
 def get_ipython_package_dir():
