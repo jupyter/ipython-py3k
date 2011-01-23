@@ -1236,6 +1236,7 @@ class InteractiveShell(Configurable, Magic):
     #-------------------------------------------------------------------------
 
     def init_history(self):
+        """Sets up the command history, and starts regular autosaves."""
         self.history_manager = HistoryManager(shell=self)
 
     def save_history(self):
@@ -2524,7 +2525,6 @@ class InteractiveShell(Configurable, Magic):
             except OSError:
                 pass
 
-        
         self.save_history()
 
         # Clear all user namespaces to release all references cleanly.
