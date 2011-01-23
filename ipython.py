@@ -14,7 +14,7 @@ sys.path.insert(0, this_dir)
 
 # Now proceed with execution
 exec(compile(open(os.path.join(
-    this_dir, 'IPython', 'scripts', 'ipython'
+    this_dir, 'IPython', 'scripts', 'ipython3'
 )).read(), os.path.join(
-    this_dir, 'IPython', 'scripts', 'ipython'
+    this_dir, 'IPython', 'scripts', 'ipython3'
 ), 'exec'))
