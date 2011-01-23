@@ -13,10 +13,13 @@
 
 
 # Stdlib imports
+import atexit
 import fnmatch
 import json
 import os
 import sys
+import threading
+import time
 
 # Our own packages
 import IPython.utils.io
@@ -103,6 +106,14 @@ class HistoryManager(object):
         
         # Fill the history zero entry, user counter starts at 1
         self.store_inputs('\n', '\n')
+        
+        # Create and start the autosaver.
+        self.autosave_flag = threading.Event()
+        self.autosave_timer = HistorySaveThread(self.autosave_flag, 60)
+        self.autosave_timer.start()
+        # Register the autosave handler to be triggered as a post execute
+        # callback.
+        self.shell.register_post_execute(self.autosave_if_due)
 
     def _init_shadow_hist(self):
         try:
@@ -140,12 +151,22 @@ class HistoryManager(object):
         with open(self.hist_file,'wt') as hfile:
             json.dump(hist, hfile,
                       sort_keys=True, indent=4)
+                      
+    def autosave_if_due(self):
+        """Check if the autosave event is set; if so, save history. We do it 
+        this way so that the save takes place in the main thread."""
+        if self.autosave_flag.is_set():
+            self.save_history()
+            self.autosave_flag.clear()
         
     def reload_history(self):
         """Reload the input history from disk file."""
 
         with open(self.hist_file,'rt') as hfile:
-            hist = json.load(hfile)
+            try:
+                hist = json.load(hfile)
+            except ValueError:    # Ignore it if JSON is corrupt.
+                return
             self.input_hist_parsed = hist['parsed']
             self.input_hist_raw = hist['raw']
             if self.shell.has_readline:
@@ -251,6 +272,38 @@ class HistoryManager(object):
         # The directory history can't be completely empty
         self.dir_hist[:] = [os.getcwd()]
 
+class HistorySaveThread(threading.Thread):
+    """This thread makes IPython save history periodically.
+
+    Without this class, IPython would only save the history on a clean exit.
+    This saves the history periodically (the current default is once per
+    minute), so that it is not lost in the event of a crash.
+    
+    The implementation sets an event to indicate that history should be saved.
+    The actual save is carried out after executing a user command, to avoid
+    thread issues.
+    """
+    daemon = True
+    
+    def __init__(self, autosave_flag, time_interval=60):
+        threading.Thread.__init__(self)
+        self.time_interval = time_interval
+        self.autosave_flag = autosave_flag
+        self.exit_now = threading.Event()
+        # Ensure the thread is stopped tidily when exiting normally
+        atexit.register(self.stop)
+
+    def run(self):
+        while True:
+            self.exit_now.wait(self.time_interval)
+            if self.exit_now.is_set():
+                break
+            self.autosave_flag.set()
+            
+    def stop(self):
+        """Safely and quickly stop the autosave timer thread."""
+        self.exit_now.set()
+        self.join()
 
 def magic_history(self, parameter_s = ''):
     """Print input history (_i<n> variables), with most recent last.
