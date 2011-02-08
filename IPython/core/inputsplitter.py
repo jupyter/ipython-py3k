@@ -218,13 +218,6 @@ def split_blocks(python):
     # to put in a more sophisticated test.
     linenos = [x.lineno-1 for x in code_ast.body if x.lineno is not None]
 
-    # When we have a bare string as the first statement, it does not end up as
-    # a Discard Node in the AST as we might expect. Instead, it gets interpreted
-    # as the docstring of the module. Check for this case and prepend 0 (the
-    # first line number) to the list of linenos to account for it.
-    if ast.doc is not None:
-        linenos.insert(0, 0)
-
     # When we finally get the slices, we will need to slice all the way to
     # the end even though we don't have a line number for it. Fortunately,
     # None does the job nicely.
