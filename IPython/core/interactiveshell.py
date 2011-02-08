@@ -2149,7 +2149,11 @@ class InteractiveShell(Configurable, Magic):
         if len(block.splitlines()) <= 1:
             out = self.run_single_line(block)
         else:
-            out = self.run_code(block)
+            # Call run_source, which correctly compiles the input cell.
+            # run_code must only be called when we know we have a code object,
+            # as it does a naked exec and the compilation mode may not be what
+            # we wanted.
+            out = self.run_source(block)
         return out
 
     def run_single_line(self, line):
