@@ -304,7 +304,7 @@ class IPythonRunner(InteractiveRunner):
     prompts would break this.
     """
     
-    def __init__(self,program = 'ipython',args=None,out=sys.stdout,echo=True):
+    def __init__(self,program = 'ipython3',args=None,out=sys.stdout,echo=True):
         """New runner, optionally passing the ipython command to use."""
         
         args0 = ['--colors','NoColor',
@@ -321,7 +321,7 @@ class IPythonRunner(InteractiveRunner):
 class PythonRunner(InteractiveRunner):
     """Interactive Python runner."""
 
-    def __init__(self,program='python',args=None,out=sys.stdout,echo=True):
+    def __init__(self,program='python3',args=None,out=sys.stdout,echo=True):
         """New runner, optionally passing the python command to use."""
 
         prompts = [r'>>> ',r'\.\.\. ']
