@@ -4,7 +4,7 @@
 #-----------------------------------------------------------------------------
 #  Copyright (C) 2001 Janko Hauser <jhauser@zscout.de>
 #  Copyright (C) 2001-2007 Fernando Perez. <fperez@colorado.edu>
-#  Copyright (C) 2008-2010  The IPython Development Team
+#  Copyright (C) 2008-2011  The IPython Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
@@ -2088,18 +2088,6 @@ class InteractiveShell(Configurable, Magic):
         self.history_manager.store_inputs(ipy_cell, cell)
 
         self.logger.log(ipy_cell, cell)
-        # dbg code!!!
-        if 0:
-            def myapp(self, val):  # dbg
-                import traceback as tb
-                stack = ''.join(tb.format_stack())
-                print('Value:', val)
-                print('Stack:\n', stack)
-                list.append(self, val)
-
-            self.history_manager.input_hist_parsed.append = \
-                types.MethodType(myapp, self.history_manager.input_hist_parsed)
-        # End dbg
 
         # All user code execution must happen with our context managers active
         with self.builtin_trap, self.display_trap:
@@ -2141,10 +2129,22 @@ class InteractiveShell(Configurable, Magic):
         self.execution_count += 1
 
     def run_one_block(self, block):
-        """Run a single interactive block.
+        """Run a single interactive block of source code.
 
         If the block is single-line, dynamic transformations are applied to it
         (like automagics, autocall and alias recognition).
+
+        If the block is multi-line, it must consist of valid Python code only.
+
+        Parameters
+        ----------
+        block : string
+           A (possibly multiline) string of code to be executed.
+
+        Returns
+        -------
+        The output of the underlying execution method used, be it
+        :meth:`run_source` or :meth:`run_single_line`.
         """
         if len(block.splitlines()) <= 1:
             out = self.run_single_line(block)
@@ -2307,7 +2307,7 @@ class InteractiveShell(Configurable, Magic):
         try:
             try:
                 self.hooks.pre_run_code_hook()
-                #rprint('Running code') # dbg
+                #rprint('Running code', repr(code_obj)) # dbg
                 exec(code_obj, self.user_global_ns, self.user_ns)
             finally:
                 # Reset our crash handler in place

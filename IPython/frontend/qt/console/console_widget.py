@@ -90,14 +90,20 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
     #------ Protected class variables ------------------------------------------
 
+    # When the control key is down, these keys are mapped.
     _ctrl_down_remap = { QtCore.Qt.Key_B : QtCore.Qt.Key_Left,
                          QtCore.Qt.Key_F : QtCore.Qt.Key_Right,
                          QtCore.Qt.Key_A : QtCore.Qt.Key_Home,
-                         QtCore.Qt.Key_E : QtCore.Qt.Key_End,
                          QtCore.Qt.Key_P : QtCore.Qt.Key_Up,
                          QtCore.Qt.Key_N : QtCore.Qt.Key_Down,
                          QtCore.Qt.Key_D : QtCore.Qt.Key_Delete, }
+    if not sys.platform == 'darwin':
+        # On OS X, Ctrl-E already does the right thing, whereas End moves the
+        # cursor to the bottom of the buffer.
+        _ctrl_down_remap[QtCore.Qt.Key_E] = QtCore.Qt.Key_End
 
+    # The shortcuts defined by this widget. We need to keep track of these to
+    # support 'override_shortcuts' above.
     _shortcuts = set(list(_ctrl_down_remap.keys()) +
                      [ QtCore.Qt.Key_C, QtCore.Qt.Key_G, QtCore.Qt.Key_O,
                        QtCore.Qt.Key_V ])
@@ -171,8 +177,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         action.setEnabled(True)
         printkey = QtGui.QKeySequence(QtGui.QKeySequence.Print)
         if printkey.matches("Ctrl+P") and sys.platform != 'darwin':
-            # only override if there is a collision
-            # Qt ctrl = cmd on OSX, so the match gets a false positive on darwin
+            # Only override the default if there is a collision.
+            # Qt ctrl = cmd on OSX, so the match gets a false positive on darwin.
             printkey = "Ctrl+Shift+P"
         action.setShortcut(printkey)
         action.triggered.connect(self.print_)
@@ -1301,9 +1307,9 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                     intercepted = (not self._in_buffer(anchor) or
                                    not self._in_buffer(position))
 
-        # Don't move the cursor if control is down to allow copy-paste using
-        # the keyboard in any part of the buffer.
-        if not ctrl_down:
+        # Don't move the cursor if Control/Cmd is pressed to allow copy-paste
+        # using the keyboard in any part of the buffer.
+        if not self._control_key_down(event.modifiers(), include_command=True):
             self._keep_cursor_in_buffer()
 
         return intercepted
