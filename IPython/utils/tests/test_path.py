@@ -17,6 +17,7 @@ import shutil
 import sys
 import tempfile
 
+from imp import reload
 from os.path import join, abspath, split
 
 import nose.tools as nt
@@ -60,7 +61,7 @@ def setup():
     # Do not mask exceptions here.  In particular, catching WindowsError is a
     # problem because that exception is only defined on Windows...
     os.makedirs(IP_TEST_DIR)
-    os.makedirs(os.path.join(XDG_TEST_DIR, 'ipython'))
+    os.makedirs(os.path.join(XDG_TEST_DIR, 'ipython3'))
 
 
 def teardown():
@@ -246,21 +247,19 @@ def test_get_ipython_dir_3():
     """test_get_ipython_dir_3, use XDG if defined, and .ipython doesn't exist."""
     path.get_home_dir = lambda : "someplace"
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
+    env.pop('IPYTHON3_DIR', None)
     env['XDG_CONFIG_HOME'] = XDG_TEST_DIR
     ipdir = path.get_ipython_dir()
-    nt.assert_equal(ipdir, os.path.join(XDG_TEST_DIR, "ipython"))
+    nt.assert_equal(ipdir, os.path.join(XDG_TEST_DIR, "ipython3"))
 
 @with_environment
 def test_get_ipython_dir_4():
     """test_get_ipython_dir_4, use XDG if both exist."""
     path.get_home_dir = lambda : HOME_TEST_DIR
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
+    env.pop('IPYTHON3_DIR', None)
     env['XDG_CONFIG_HOME'] = XDG_TEST_DIR
-    xdg_ipdir = os.path.join(XDG_TEST_DIR, "ipython")
+    xdg_ipdir = os.path.join(XDG_TEST_DIR, "ipython3")
     ipdir = path.get_ipython_dir()
     nt.assert_equal(ipdir, xdg_ipdir)
 
@@ -268,10 +267,9 @@ def test_get_ipython_dir_4():
 def test_get_ipython_dir_5():
     """test_get_ipython_dir_5, use .ipython if exists and XDG defined, but doesn't exist."""
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
+    env.pop('IPYTHON3_DIR', None)
     env['XDG_CONFIG_HOME'] = XDG_TEST_DIR
-    os.rmdir(os.path.join(XDG_TEST_DIR, 'ipython'))
+    os.rmdir(os.path.join(XDG_TEST_DIR, 'ipython3'))
     ipdir = path.get_ipython_dir()
     nt.assert_equal(ipdir, IP_TEST_DIR)
 
@@ -281,9 +279,8 @@ def test_get_ipython_dir_6():
     path.get_home_dir = lambda : 'somehome'
     path.get_xdg_dir = lambda : 'somexdg'
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
-    xdg_ipdir = os.path.join("somexdg", "ipython")
+    env.pop('IPYTHON3_DIR', None)
+    xdg_ipdir = os.path.join("somexdg", "ipython3")
     ipdir = path.get_ipython_dir()
     nt.assert_equal(ipdir, xdg_ipdir)
 
@@ -293,8 +290,7 @@ def test_get_xdg_dir_1():
     reload(path)
     path.get_home_dir = lambda : 'somewhere'
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
+    env.pop('IPYTHON3_DIR', None)
     env.pop('XDG_CONFIG_HOME', None)
     
     nt.assert_equal(path.get_xdg_dir(), os.path.join('somewhere', '.config'))
@@ -306,8 +302,7 @@ def test_get_xdg_dir_1():
     reload(path)
     path.get_home_dir = lambda : HOME_TEST_DIR
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
+    env.pop('IPYTHON3_DIR', None)
     env.pop('XDG_CONFIG_HOME', None)
     nt.assert_equal(path.get_xdg_dir(), None)
 
@@ -317,8 +312,7 @@ def test_get_xdg_dir_2():
     reload(path)
     path.get_home_dir = lambda : HOME_TEST_DIR
     os.name = "posix"
-    env.pop('IPYTHON_DIR', None)
-    env.pop('IPYTHONDIR', None)
+    env.pop('IPYTHON3_DIR', None)
     env.pop('XDG_CONFIG_HOME', None)
     cfgdir=os.path.join(path.get_home_dir(), '.config')
     os.makedirs(cfgdir)

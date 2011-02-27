@@ -261,7 +261,7 @@ def get_xdg_dir():
         # use ~/.config if not set OR empty
         xdg = env.get("XDG_CONFIG_HOME", None) or os.path.join(get_home_dir(), '.config')
         if xdg and isdir(xdg):
-            return xdg.decode(sys.getfilesystemencoding())
+            return xdg
     
     return None
     
@@ -300,7 +300,7 @@ def get_ipython_dir():
             # not using XDG
             ipdir = home_ipdir
     
-    return ipdir.decode(sys.getfilesystemencoding())
+    return ipdir
 
 
 def get_ipython_package_dir():
