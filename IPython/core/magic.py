@@ -395,7 +395,8 @@ to 'mydir', if it exists.
 
 You can define your own magic functions to extend the system. See the supplied
 ipythonrc and example-magic.py files for details (in your ipython
-configuration directory, typically $HOME/.ipython3/).
+configuration directory, typically $HOME/.config/ipython3 on Linux or 
+$HOME/.ipython3 elsewhere).
 
 You can also define your own aliased names for magic functions. In your
 ipythonrc file, placing a line like:
@@ -575,10 +576,19 @@ Currently the magic system has the following functions:\n"""
         self.shell._inspect('pinfo', parameter_s, detail_level=1,
                             namespaces=namespaces)
 
+    @testdec.skip_doctest
     def magic_pdef(self, parameter_s='', namespaces=None):
         """Print the definition header for any callable object.
 
-        If the object is a class, print the constructor information."""
+        If the object is a class, print the constructor information.
+        
+        Examples
+        --------
+        ::
+        
+          In [3]: %pdef urllib.urlopen
+          urllib.urlopen(url, data=None, proxies=None)
+        """
         self._inspect('pdef',parameter_s, namespaces)
 
     def magic_pdoc(self, parameter_s='', namespaces=None):
@@ -722,11 +732,31 @@ Currently the magic system has the following functions:\n"""
         except:
             shell.showtraceback()
         
+    @testdec.skip_doctest
     def magic_who_ls(self, parameter_s=''):
         """Return a sorted list of all interactive variables.
 
         If arguments are given, only variables of types matching these
-        arguments are returned."""
+        arguments are returned.
+
+        Examples
+        --------
+
+        Define two variables and list them with who_ls::
+
+          In [1]: alpha = 123
+
+          In [2]: beta = 'test'
+
+          In [3]: %who_ls
+          Out[3]: ['alpha', 'beta']
+
+          In [4]: %who_ls int
+          Out[4]: ['alpha']
+
+          In [5]: %who_ls str
+          Out[5]: ['beta']
+        """
 
         user_ns = self.shell.user_ns
         internal_ns = self.shell.internal_ns
@@ -738,11 +768,12 @@ Currently the magic system has the following functions:\n"""
         typelist = parameter_s.split()
         if typelist:
             typeset = set(typelist)
-            out = [i for i in out if type(i).__name__ in typeset]
+            out = [i for i in out if type(user_ns[i]).__name__ in typeset]
 
         out.sort()
         return out
         
+    @testdec.skip_doctest
     def magic_who(self, parameter_s=''):
         """Print all interactive variables, with some minimal formatting.
 
@@ -764,7 +795,26 @@ Currently the magic system has the following functions:\n"""
         file and things which are internal to IPython.
 
         This is deliberate, as typically you may load many modules and the
-        purpose of %who is to show you only what you've manually defined."""
+        purpose of %who is to show you only what you've manually defined.
+
+        Examples
+        --------
+
+        Define two variables and list them with who::
+
+          In [1]: alpha = 123
+
+          In [2]: beta = 'test'
+
+          In [3]: %who
+          alpha   beta
+
+          In [4]: %who int
+          alpha
+
+          In [5]: %who str
+          beta
+        """
 
         varlist = self.magic_who_ls(parameter_s)
         if not varlist:
@@ -784,6 +834,7 @@ Currently the magic system has the following functions:\n"""
                 print()
         print()
 
+    @testdec.skip_doctest
     def magic_whos(self, parameter_s=''):
         """Like %who, but gives some extra information about each variable.
 
@@ -797,7 +848,23 @@ Currently the magic system has the following functions:\n"""
           elements, typecode and size in memory.
 
           - Everything else: a string representation, snipping their middle if
-          too long."""
+          too long.
+
+        Examples
+        --------
+
+        Define two variables and list them with whos::
+
+          In [1]: alpha = 123
+
+          In [2]: beta = 'test'
+
+          In [3]: %whos
+          Variable   Type        Data/Info
+          --------------------------------
+          alpha      int         123
+          beta       str         test
+        """
         
         varnames = self.magic_who_ls(parameter_s)
         if not varnames:
@@ -2361,7 +2428,14 @@ Currently the magic system has the following functions:\n"""
 
         Currently implemented schemes: NoColor, Linux, LightBG.
 
-        Color scheme names are not case-sensitive."""
+        Color scheme names are not case-sensitive.
+        
+        Examples
+        --------
+        To get a plain black and white terminal::
+        
+          %colors nocolor
+        """
 
         def color_switch_err(name):
             warn('Error changing %s color schemes.\n%s' %
@@ -2598,11 +2672,21 @@ Defaulting color scheme to 'NoColor'"""
             db['syscmdlist'] = syscmdlist
         finally:
             os.chdir(savedir)
-        
+    
+    @testdec.skip_doctest    
     def magic_pwd(self, parameter_s = ''):
-        """Return the current working directory path."""
+        """Return the current working directory path.
+        
+        Examples
+        --------
+        ::
+        
+          In [9]: pwd
+          Out[9]: '/home/tsuser/sprint/ipython'
+        """
         return os.getcwd()
-
+    
+    @testdec.skip_doctest
     def magic_cd(self, parameter_s=''):
         """Change the current working directory.
 
@@ -2633,7 +2717,15 @@ Defaulting color scheme to 'NoColor'"""
         since the default prompts do not display path information.
         
         Note that !cd doesn't work for this purpose because the shell where
-        !command runs is immediately discarded after executing 'command'."""
+        !command runs is immediately discarded after executing 'command'.
+        
+        Examples
+        --------
+        ::
+        
+          In [10]: cd parent/child
+          /home/tsuser/parent/child
+        """
 
         parameter_s = parameter_s.strip()
         #bkms = self.shell.persist.get("bookmarks",{})
@@ -3363,5 +3455,52 @@ Defaulting color scheme to 'NoColor'"""
 
         See %xmode for changing exception reporting modes."""
         self.shell.showtraceback()
+    
+    @testdec.skip_doctest
+    def magic_precision(self, s=''):
+        """Set floating point precision for pretty printing.
+        
+        Can set either integer precision or a format string.
+        
+        If numpy has been imported and precision is an int,
+        numpy display precision will also be set, via ``numpy.set_printoptions``.
+        
+        If no argument is given, defaults will be restored.
+        
+        Examples
+        --------
+        ::
+        
+            In [1]: from math import pi
+        
+            In [2]: %precision 3
+            Out[2]: '%.3f'
+        
+            In [3]: pi
+            Out[3]: 3.142
+        
+            In [4]: %precision %i
+            Out[4]: '%i'
+        
+            In [5]: pi
+            Out[5]: 3
+        
+            In [6]: %precision %e
+            Out[6]: '%e'
+        
+            In [7]: pi**10
+            Out[7]: 9.364805e+04
+        
+            In [8]: %precision
+            Out[8]: '%r'
+        
+            In [9]: pi**10
+            Out[9]: 93648.047476082982
+        
+        """
+        
+        ptformatter = self.shell.display_formatter.formatters['text/plain']
+        ptformatter.float_precision = s
+        return ptformatter.float_format
 
 # end Magic

@@ -5,14 +5,15 @@
 #-----------------------------------------------------------------------------
 
 # Standard library imports
+import os
 from os.path import commonprefix
 import re
-import os
 import sys
 from textwrap import dedent
+from unicodedata import category
 
 # System library imports
-from PyQt4 import QtCore, QtGui
+from IPython.external.qt import QtCore, QtGui
 
 # Local imports
 from IPython.config.configurable import Configurable
@@ -20,6 +21,16 @@ from IPython.frontend.qt.util import MetaQObjectHasTraits, get_font
 from IPython.utils.traitlets import Bool, Enum, Int
 from .ansi_code_processor import QtAnsiCodeProcessor
 from .completion_widget import CompletionWidget
+
+#-----------------------------------------------------------------------------
+# Functions
+#-----------------------------------------------------------------------------
+
+def is_letter_or_number(char):
+    """ Returns whether the specified unicode character is a letter or a number.
+    """
+    cat = category(char)
+    return cat.startswith('L') or cat.startswith('N')
 
 #-----------------------------------------------------------------------------
 # Classes
@@ -77,16 +88,16 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     #------ Signals ------------------------------------------------------------
 
     # Signals that indicate ConsoleWidget state.
-    copy_available = QtCore.pyqtSignal(bool)
-    redo_available = QtCore.pyqtSignal(bool)
-    undo_available = QtCore.pyqtSignal(bool)
+    copy_available = QtCore.Signal(bool)
+    redo_available = QtCore.Signal(bool)
+    undo_available = QtCore.Signal(bool)
 
     # Signal emitted when paging is needed and the paging style has been
     # specified as 'custom'.
-    custom_page_requested = QtCore.pyqtSignal(object)
+    custom_page_requested = QtCore.Signal(object)
 
     # Signal emitted when the font is changed.
-    font_changed = QtCore.pyqtSignal(QtGui.QFont)
+    font_changed = QtCore.Signal(QtGui.QFont)
 
     #------ Protected class variables ------------------------------------------
 
@@ -272,7 +283,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         elif etype == QtCore.QEvent.Drop and obj == self._control.viewport():
             cursor = self._control.cursorForPosition(event.pos())
             if self._in_buffer(cursor.position()):
-                text = str(event.mimeData().text())
+                text = event.mimeData().text()
                 self._insert_plain_text_into_buffer(cursor, text)
 
             # Qt is expecting to get something here--drag and drop occurs in its
@@ -333,7 +344,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """ Returns whether text can be pasted from the clipboard.
         """
         if self._control.textInteractionFlags() & QtCore.Qt.TextEditable:
-            return not QtGui.QApplication.clipboard().text().isEmpty()
+            return bool(QtGui.QApplication.clipboard().text())
         return False
 
     def can_export(self):
@@ -474,7 +485,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
         cursor = self._get_end_cursor()
         cursor.setPosition(self._prompt_pos, QtGui.QTextCursor.KeepAnchor)
-        input_buffer = str(cursor.selection().toPlainText())
+        input_buffer = cursor.selection().toPlainText()
 
         # Strip out continuation prompts.
         return input_buffer.replace('\n' + self._continuation_prompt, '\n')
@@ -537,7 +548,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
             # Remove any trailing newline, which confuses the GUI and forces the
             # user to backspace.
-            text = str(QtGui.QApplication.clipboard().text(mode)).rstrip()
+            text = QtGui.QApplication.clipboard().text(mode).rstrip()
             self._insert_plain_text_into_buffer(cursor, dedent(text))
 
     def print_(self, printer = None):
@@ -900,7 +911,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         while cursor.movePosition(QtGui.QTextCursor.NextBlock):
             temp_cursor = QtGui.QTextCursor(cursor)
             temp_cursor.select(QtGui.QTextCursor.BlockUnderCursor)
-            text = str(temp_cursor.selection().toPlainText()).lstrip()
+            text = temp_cursor.selection().toPlainText().lstrip()
             if not text.startswith(prompt):
                 break
         else:
@@ -1093,7 +1104,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 elif not self._executing:
                     cursor.movePosition(QtGui.QTextCursor.End,
                                         QtGui.QTextCursor.KeepAnchor)
-                    at_end = not(cursor.selectedText().strip())
+                    at_end = len(cursor.selectedText().strip()) == 0
                     single_line = (self._get_end_cursor().blockNumber() ==
                                    self._get_prompt_cursor().blockNumber())
                     if (at_end or shift_down or single_line) and not ctrl_down:
@@ -1435,7 +1446,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         cursor.movePosition(QtGui.QTextCursor.StartOfBlock)
         cursor.movePosition(QtGui.QTextCursor.EndOfBlock, 
                             QtGui.QTextCursor.KeepAnchor)
-        return str(cursor.selection().toPlainText())
+        return cursor.selection().toPlainText()
 
     def _get_cursor(self):
         """ Convenience method that returns a cursor for the current position.
@@ -1511,10 +1522,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         document = self._control.document()
         position -= 1
         while position >= self._prompt_pos and \
-                not document.characterAt(position).isalnum():
+                  not is_letter_or_number(document.characterAt(position)):
             position -= 1
         while position >= self._prompt_pos and \
-                document.characterAt(position).isalnum():
+                  is_letter_or_number(document.characterAt(position)):
             position -= 1
         cursor = self._control.textCursor()
         cursor.setPosition(position + 1)
@@ -1528,10 +1539,10 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         document = self._control.document()
         end = self._get_end_cursor().position()
         while position < end and \
-                not document.characterAt(position).isalnum():
+                  not is_letter_or_number(document.characterAt(position)):
             position += 1
         while position < end and \
-                document.characterAt(position).isalnum():
+                  is_letter_or_number(document.characterAt(position)):
             position += 1
         cursor = self._control.textCursor()
         cursor.setPosition(position)
@@ -1578,7 +1589,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         self._insert_html(cursor, html)
         end = cursor.position()
         cursor.setPosition(start, QtGui.QTextCursor.KeepAnchor)
-        text = str(cursor.selection().toPlainText())
+        text = cursor.selection().toPlainText()
 
         cursor.setPosition(end)
         cursor.endEditBlock()
@@ -1619,7 +1630,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             must be in the input buffer), ensuring that continuation prompts are
             inserted as necessary.
         """
-        lines = str(text).splitlines(True)
+        lines = text.splitlines(True)
         if lines:
             cursor.beginEditBlock()
             cursor.insertText(lines[0])
@@ -1826,7 +1837,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             if cursor.position() > 0:
                 cursor.movePosition(QtGui.QTextCursor.Left, 
                                     QtGui.QTextCursor.KeepAnchor)
-                if str(cursor.selection().toPlainText()) != '\n':
+                if cursor.selection().toPlainText() != '\n':
                     self._append_plain_text('\n')
 
         # Write the prompt.

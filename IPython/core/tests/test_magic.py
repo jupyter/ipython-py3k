@@ -362,3 +362,47 @@ def test_xmode():
     for i in range(3):
         _ip.magic("xmode")
     nt.assert_equal(_ip.InteractiveTB.mode, xmode)
+
+def doctest_who():
+    """doctest for %who
+    
+    In [1]: %reset -f
+    
+    In [2]: alpha = 123
+    
+    In [3]: beta = 'beta'
+    
+    In [4]: %who int
+    alpha
+    
+    In [5]: %who str
+    beta
+    
+    In [6]: %whos
+    Variable   Type    Data/Info
+    ----------------------------
+    alpha      int     123
+    beta       str     beta
+    
+    In [7]: %who_ls
+    Out[7]: ['alpha', 'beta']
+    """
+
+def doctest_precision():
+    """doctest for %precision
+    
+    In [1]: f = get_ipython().shell.display_formatter.formatters['text/plain']
+    
+    In [2]: %precision 5
+    Out[2]: '%.5f'
+    
+    In [3]: f.float_format
+    Out[3]: '%.5f'
+    
+    In [4]: %precision %e
+    Out[4]: '%e'
+    
+    In [5]: f(3.1415927)
+    Out[5]: '3.141593e+00'
+    """
+

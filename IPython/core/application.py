@@ -105,7 +105,7 @@ class Application(object):
     default_log_level = logging.WARN
     #: Set by --profile option
     profile_name = None
-    #: User's ipython directory, typically ~/.ipython3/
+    #: User's ipython directory, typically ~/.ipython3 or ~/.config/ipython3/
     ipython_dir = None
     #: Internal defaults, implemented in code.
     default_config = None

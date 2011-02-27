@@ -4,7 +4,7 @@ from textwrap import dedent
 from unicodedata import category
 
 # System library imports
-from PyQt4 import QtCore, QtGui
+from IPython.external.qt import QtCore, QtGui
 
 
 class CallTipWidget(QtGui.QLabel):
@@ -36,7 +36,7 @@ class CallTipWidget(QtGui.QLabel):
         self.setMargin(1 + self.style().pixelMetric(
                 QtGui.QStyle.PM_ToolTipLabelFrameWidth, None, self))
         self.setWindowOpacity(self.style().styleHint(
-                QtGui.QStyle.SH_ToolTipLabel_Opacity, None, self) / 255.0)
+                QtGui.QStyle.SH_ToolTipLabel_Opacity, None, self, None) / 255.0)
 
     def eventFilter(self, obj, event):
         """ Reimplemented to hide on certain key presses and on text edit focus
@@ -100,7 +100,7 @@ class CallTipWidget(QtGui.QLabel):
         """
         painter = QtGui.QStylePainter(self)
         option = QtGui.QStyleOptionFrame()
-        option.init(self)
+        option.initFrom(self)
         painter.drawPrimitive(QtGui.QStyle.PE_PanelTipLabel, option)
         painter.end()
 
@@ -186,9 +186,9 @@ class CallTipWidget(QtGui.QLabel):
         commas = depth = 0
         document = self._text_edit.document()
         char = document.characterAt(position)
-        while (position > 0 and category(char) not in {'Cc', 'Cn'} and 
-               # Need to check explicitly for line/paragraph separators:
-               ord(char) not in (0x2028, 0x2029)):
+        # Search until a match is found or a non-printable character is
+        # encountered.
+        while category(char) != 'Cc' and position > 0:
             if char == ',' and depth == 0:
                 commas += 1
             elif char == ')':
