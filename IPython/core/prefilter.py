@@ -37,7 +37,7 @@ from IPython.core.macro import Macro
 from IPython.core.splitinput import split_user_input
 from IPython.core import page
 
-from IPython.utils.traitlets import List, Int, Any, Str, CBool, Bool, Instance
+from IPython.utils.traitlets import List, Int, Any, Unicode, CBool, Bool, Instance
 import IPython.utils.io
 from IPython.utils.text import make_quoted_expr
 from IPython.utils.autoattr import auto_attr
@@ -763,7 +763,7 @@ class AutocallChecker(PrefilterChecker):
 
 class PrefilterHandler(Configurable):
 
-    handler_name = Str('normal')
+    handler_name = Unicode('normal')
     esc_strings = List([])
     shell = Instance('IPython.core.interactiveshell.InteractiveShellABC')
     prefilter_manager = Instance('IPython.core.prefilter.PrefilterManager')
@@ -811,7 +811,7 @@ class PrefilterHandler(Configurable):
 
 class AliasHandler(PrefilterHandler):
 
-    handler_name = Str('alias')
+    handler_name = Unicode('alias')
 
     def handle(self, line_info):
         """Handle alias input lines. """
@@ -826,7 +826,7 @@ class AliasHandler(PrefilterHandler):
 
 class ShellEscapeHandler(PrefilterHandler):
 
-    handler_name = Str('shell')
+    handler_name = Unicode('shell')
     esc_strings = List([ESC_SHELL, ESC_SH_CAP])
 
     def handle(self, line_info):
@@ -853,7 +853,7 @@ class ShellEscapeHandler(PrefilterHandler):
 
 
 class MacroHandler(PrefilterHandler):
-    handler_name = Str("macro")
+    handler_name = Unicode("macro")
     
     def handle(self, line_info):
         obj = self.shell.user_ns.get(line_info.ifun)
@@ -864,7 +864,7 @@ class MacroHandler(PrefilterHandler):
 
 class MagicHandler(PrefilterHandler):
 
-    handler_name = Str('magic')
+    handler_name = Unicode('magic')
     esc_strings = List([ESC_MAGIC])
 
     def handle(self, line_info):
@@ -878,7 +878,7 @@ class MagicHandler(PrefilterHandler):
 
 class AutoHandler(PrefilterHandler):
 
-    handler_name = Str('auto')
+    handler_name = Unicode('auto')
     esc_strings = List([ESC_PAREN, ESC_QUOTE, ESC_QUOTE2])
 
     def handle(self, line_info):
@@ -938,7 +938,7 @@ class AutoHandler(PrefilterHandler):
 
 class HelpHandler(PrefilterHandler):
 
-    handler_name = Str('help')
+    handler_name = Unicode('help')
     esc_strings = List([ESC_HELP])
 
     def handle(self, line_info):
@@ -976,7 +976,7 @@ class HelpHandler(PrefilterHandler):
 
 class EmacsHandler(PrefilterHandler):
 
-    handler_name = Str('emacs')
+    handler_name = Unicode('emacs')
     esc_strings = List([])
 
     def handle(self, line_info):

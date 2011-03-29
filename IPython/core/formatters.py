@@ -28,7 +28,7 @@ from io import StringIO
 # Our own imports
 from IPython.config.configurable import Configurable
 from IPython.lib import pretty
-from IPython.utils.traitlets import Bool, Dict, Int, Str, CStr
+from IPython.utils.traitlets import Bool, Dict, Int, Unicode, CUnicode
 
 
 #-----------------------------------------------------------------------------
@@ -189,11 +189,11 @@ class BaseFormatter(Configurable):
     returned and this format type is not used.
     """
 
-    format_type = Str('text/plain')
+    format_type = Unicode('text/plain')
 
     enabled = Bool(True, config=True)
 
-    print_method = Str('__repr__')
+    print_method = Unicode('__repr__')
 
     # The singleton printers.
     # Maps the IDs of the builtin singleton objects to the format functions.
@@ -332,14 +332,14 @@ class PlainTextFormatter(BaseFormatter):
     """
 
     # The format type of data returned.
-    format_type = Str('text/plain')
+    format_type = Unicode('text/plain')
 
     # This subclass ignores this attribute as it always need to return
     # something.
     enabled = Bool(True, config=False)
 
     # Look for a __pretty__ methods to use for pretty printing.
-    print_method = Str('__pretty__')
+    print_method = Unicode('__pretty__')
 
     # Whether to pretty-print or not.
     pprint = Bool(True, config=True)
@@ -351,12 +351,12 @@ class PlainTextFormatter(BaseFormatter):
     max_width = Int(79, config=True)
 
     # The newline character.
-    newline = Str('\n', config=True)
+    newline = Unicode('\n', config=True)
     
     # format-string for pprinting floats
-    float_format = Str('%r')
+    float_format = Unicode('%r')
     # setter for float precision, either int or direct format-string
-    float_precision = CStr('', config=True)
+    float_precision = CUnicode('', config=True)
     
     def _float_precision_changed(self, name, old, new):
         """float_precision changed, set float_format accordingly.
@@ -445,9 +445,9 @@ class HTMLFormatter(BaseFormatter):
     or :meth:`for_type_by_name` methods to register functions that handle
     this.
     """
-    format_type = Str('text/html')
+    format_type = Unicode('text/html')
 
-    print_method = Str('__html__')
+    print_method = Unicode('__html__')
 
 
 class SVGFormatter(BaseFormatter):
@@ -458,9 +458,9 @@ class SVGFormatter(BaseFormatter):
     or :meth:`for_type_by_name` methods to register functions that handle
     this.
     """
-    format_type = Str('image/svg+xml')
+    format_type = Unicode('image/svg+xml')
 
-    print_method = Str('__svg__')
+    print_method = Unicode('__svg__')
 
 
 class PNGFormatter(BaseFormatter):
@@ -471,9 +471,9 @@ class PNGFormatter(BaseFormatter):
     or :meth:`for_type_by_name` methods to register functions that handle
     this. The raw data should be the base64 encoded raw png data.
     """
-    format_type = Str('image/png')
+    format_type = Unicode('image/png')
 
-    print_method = Str('__png__')
+    print_method = Unicode('__png__')
 
 
 class LatexFormatter(BaseFormatter):
@@ -484,9 +484,9 @@ class LatexFormatter(BaseFormatter):
     or :meth:`for_type_by_name` methods to register functions that handle
     this.
     """
-    format_type = Str('text/latex')
+    format_type = Unicode('text/latex')
 
-    print_method = Str('__latex__')
+    print_method = Unicode('__latex__')
 
 
 class JSONFormatter(BaseFormatter):
@@ -497,9 +497,9 @@ class JSONFormatter(BaseFormatter):
     or :meth:`for_type_by_name` methods to register functions that handle
     this.
     """
-    format_type = Str('application/json')
+    format_type = Unicode('application/json')
 
-    print_method = Str('__json__')
+    print_method = Unicode('__json__')
 
 
 FormatterABC.register(BaseFormatter)

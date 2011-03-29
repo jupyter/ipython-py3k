@@ -866,8 +866,8 @@ class CComplex(Complex):
             self.error(obj, value)
 
 
-class Str(TraitType):
-    """A trait for strings."""
+class Unicode(TraitType):
+    """A trait for unicode strings."""
 
     default_value = ''
     info_text = 'a string'
@@ -878,8 +878,8 @@ class Str(TraitType):
         self.error(obj, value)
 
 
-class CStr(Str):
-    """A casting version of the string trait."""
+class CUnicode(Unicode):
+    """A casting version of the unicode string trait."""
 
     def validate(self, obj, value):
         try:

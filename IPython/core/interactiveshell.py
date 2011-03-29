@@ -62,7 +62,7 @@ from IPython.utils.process import system, getoutput
 from IPython.utils.strdispatch import StrDispatch
 from IPython.utils.syspathcontext import prepended_to_syspath
 from IPython.utils.text import num_ini_spaces, format_screen, LSString, SList
-from IPython.utils.traitlets import (Int, Str, CBool, CaselessStrEnum, Enum,
+from IPython.utils.traitlets import (Int, Unicode, CBool, CaselessStrEnum, Enum,
                                      List, Instance, Type)
 from IPython.utils.warn import warn, error, fatal
 import IPython.core.hooks
@@ -115,10 +115,10 @@ def get_default_colors():
         return 'Linux'
 
 
-class SeparateStr(Str):
-    """A Str subclass to validate separate_in, separate_out, etc.
+class SeparateStr(Unicode):
+    """A Unicode subclass to validate separate_in, separate_out, etc.
 
-    This is a Str based trait that converts '0'->'' and '\\n'->'\n'.
+    This is a Unicode based trait that converts '0'->'' and '\\n'->'\n'.
     """
 
     def validate(self, obj, value):
@@ -172,9 +172,9 @@ class InteractiveShell(Configurable, Magic):
     pdb = CBool(False, config=True)
 
     profile = Unicode('', config=True)
-    prompt_in1 = Str('In [\\#]: ', config=True)
-    prompt_in2 = Str('   .\\D.: ', config=True)
-    prompt_out = Str('Out[\\#]: ', config=True)
+    prompt_in1 = Unicode('In [\\#]: ', config=True)
+    prompt_in2 = Unicode('   .\\D.: ', config=True)
+    prompt_out = Unicode('Out[\\#]: ', config=True)
     prompts_pad_left = CBool(True, config=True)
     quiet = CBool(False, config=True)
 
@@ -185,7 +185,7 @@ class InteractiveShell(Configurable, Magic):
     readline_use = CBool(True, config=True)
     readline_merge_completions = CBool(True, config=True)
     readline_omit__names = Enum((0,1,2), default_value=2, config=True)
-    readline_remove_delims = Str('-/~', config=True)
+    readline_remove_delims = Unicode('-/~', config=True)
     readline_parse_and_bind = List([
             'tab: complete',
             '"\C-l": clear-screen',
