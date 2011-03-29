@@ -285,7 +285,9 @@ class PyFileConfigLoader(FileConfigLoader):
             return self.config
 
         namespace = dict(load_subconfig=load_subconfig, get_config=get_config)
-        exec(compile(open(self.full_filename).read(), self.full_filename, 'exec'), namespace)
+        fs_encoding = sys.getfilesystemencoding() or 'ascii'
+        conf_filename = self.full_filename.encode(fs_encoding)
+        exec(compile(open(conf_filename).read(), conf_filename, 'exec'), namespace)
 
     def _convert_to_config(self):
         if self.data is None:
@@ -325,6 +327,7 @@ class ArgParseConfigLoader(CommandLineConfigLoader):
             argv = sys.argv[1:]
         self.argv = argv
         self.parser_args = parser_args
+        self.version = parser_kw.pop("version", None)
         kwargs = dict(argument_default=argparse.SUPPRESS)
         kwargs.update(parser_kw)
         self.parser_kw = kwargs
@@ -361,8 +364,16 @@ class ArgParseConfigLoader(CommandLineConfigLoader):
         raise NotImplementedError("subclasses must implement _add_arguments")
 
     def _parse_args(self, args):
-        """self.parser->self.parsed_data""" 
-        self.parsed_data, self.extra_args = self.parser.parse_known_args(args)
+        """self.parser->self.parsed_data"""
+        # decode sys.argv to support unicode command-line options
+        uargs = []
+        for a in args:
+            if isinstance(a, str):
+                # don't decode if we already got unicode
+                a = a.decode(sys.stdin.encoding or 
+                                            sys.getdefaultencoding())
+            uargs.append(a)
+        self.parsed_data, self.extra_args = self.parser.parse_known_args(uargs)
 
     def _convert_to_config(self):
         """self.parsed_data->self.config"""

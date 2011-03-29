@@ -259,6 +259,17 @@ class InputSplitterTestCase(unittest.TestCase):
         self.assertTrue(isp.push_accepts_more())
         isp.push('')
         self.assertFalse(isp.push_accepts_more())
+        
+    def test_push_accepts_more5(self):
+        # In cell mode, inputs must be fed in whole blocks, so skip this test
+        if self.isp.input_mode == 'cell': return
+
+        isp = self.isp
+        isp.push('try:')
+        isp.push('    a = 5')
+        isp.push('except:')
+        isp.push('    raise')
+        self.assertTrue(isp.push_accepts_more())
 
     def test_continuation(self):
         isp = self.isp
@@ -428,15 +439,15 @@ def transform_checker(tests, func):
 
 syntax = \
   dict(assign_system =
-       [('a =! ls', 'a = get_ipython().getoutput("ls")'),
-        ('b = !ls', 'b = get_ipython().getoutput("ls")'),
+       [('a =! ls', 'a = get_ipython().getoutput(u"ls")'),
+        ('b = !ls', 'b = get_ipython().getoutput(u"ls")'),
         ('x=1', 'x=1'), # normal input is unmodified
         ('    ','    '),  # blank lines are kept intact
         ],
 
        assign_magic =
-       [('a =% who', 'a = get_ipython().magic("who")'),
-        ('b = %who', 'b = get_ipython().magic("who")'),
+       [('a =% who', 'a = get_ipython().magic(u"who")'),
+        ('b = %who', 'b = get_ipython().magic(u"who")'),
         ('x=1', 'x=1'), # normal input is unmodified
         ('    ','    '),  # blank lines are kept intact
         ],
@@ -463,29 +474,29 @@ syntax = \
 
        # System calls
        escaped_shell =
-       [ ('!ls', 'get_ipython().system("ls")'),
+       [ ('!ls', 'get_ipython().system(u"ls")'),
          # Double-escape shell, this means to capture the output of the
          # subprocess and return it
-         ('!!ls', 'get_ipython().getoutput("ls")'),
+         ('!!ls', 'get_ipython().getoutput(u"ls")'),
          ],
 
        # Help/object info
        escaped_help =
        [ ('?', 'get_ipython().show_usage()'),
-         ('?x1', 'get_ipython().magic("pinfo x1")'),
-         ('??x2', 'get_ipython().magic("pinfo2 x2")'),
-         ('x3?', 'get_ipython().magic("pinfo x3")'),
-         ('x4??', 'get_ipython().magic("pinfo2 x4")'),
-         ('%hist?', 'get_ipython().magic("pinfo %hist")'),
-         ('f*?', 'get_ipython().magic("psearch f*")'),
-         ('ax.*aspe*?', 'get_ipython().magic("psearch ax.*aspe*")'),
+         ('?x1', 'get_ipython().magic(u"pinfo x1")'),
+         ('??x2', 'get_ipython().magic(u"pinfo2 x2")'),
+         ('x3?', 'get_ipython().magic(u"pinfo x3")'),
+         ('x4??', 'get_ipython().magic(u"pinfo2 x4")'),
+         ('%hist?', 'get_ipython().magic(u"pinfo %hist")'),
+         ('f*?', 'get_ipython().magic(u"psearch f*")'),
+         ('ax.*aspe*?', 'get_ipython().magic(u"psearch ax.*aspe*")'),
          ],
 
        # Explicit magic calls
        escaped_magic =
-       [ ('%cd', 'get_ipython().magic("cd")'),
-         ('%cd /home', 'get_ipython().magic("cd /home")'),
-         ('    %magic', '    get_ipython().magic("magic")'),
+       [ ('%cd', 'get_ipython().magic(u"cd")'),
+         ('%cd /home', 'get_ipython().magic(u"cd /home")'),
+         ('    %magic', '    get_ipython().magic(u"magic")'),
          ],
        
        # Quoting with separate arguments

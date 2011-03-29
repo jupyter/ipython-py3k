@@ -19,7 +19,7 @@ from IPython.external.qt import QtCore, QtGui
 from IPython.core.inputsplitter import IPythonInputSplitter, \
     transform_ipy_prompt
 from IPython.core.usage import default_gui_banner
-from IPython.utils.traitlets import Bool, Str
+from IPython.utils.traitlets import Bool, Str, Unicode
 from .frontend_widget import FrontendWidget
 from .styles import (default_light_style_sheet,  default_light_syntax_style,
                     default_dark_style_sheet, default_dark_syntax_style,
@@ -57,19 +57,19 @@ class IPythonWidget(FrontendWidget):
     # A command for invoking a system text editor. If the string contains a
     # {filename} format specifier, it will be used. Otherwise, the filename will
     # be appended to the end the command.
-    editor = Str('default', config=True)
+    editor = Unicode('default', config=True)
 
     # The editor command to use when a specific line number is requested. The
     # string should contain two format specifiers: {line} and {filename}. If
     # this parameter is not specified, the line number option to the %edit magic
     # will be ignored.
-    editor_line = Str(config=True)
+    editor_line = Unicode(config=True)
 
     # A CSS stylesheet. The stylesheet can contain classes for:
     #     1. Qt: QPlainTextEdit, QFrame, QWidget, etc
     #     2. Pygments: .c, .k, .o, etc (see PygmentsHighlighter)
     #     3. IPython: .error, .in-prompt, .out-prompt, etc
-    style_sheet = Str(config=True)
+    style_sheet = Unicode(config=True)
     
     # If not empty, use this Pygments style for syntax highlighting. Otherwise,
     # the style sheet is queried for Pygments style information.
@@ -158,15 +158,12 @@ class IPythonWidget(FrontendWidget):
             else:
                 super(IPythonWidget, self)._handle_execute_reply(msg)
 
-    def _handle_history_reply(self, msg):
-        """ Implemented to handle history replies, which are only supported by
-            the IPython kernel.
+    def _handle_history_tail_reply(self, msg):
+        """ Implemented to handle history tail replies, which are only supported
+            by the IPython kernel.
         """
-        history_dict = msg['content']['history']
-        input_history_dict = {}
-        for key,val in list(history_dict.items()):
-            input_history_dict[int(key)] = val
-        items = [ val.rstrip() for _, val in sorted(input_history_dict.items()) ]
+        history_items = msg['content']['history']
+        items = [ line.rstrip() for _, _, line in history_items ]
         self._set_history(items)
 
     def _handle_pyout(self, msg):
@@ -213,7 +210,7 @@ class IPythonWidget(FrontendWidget):
         """ Reimplemented to make a history request.
         """
         super(IPythonWidget, self)._started_channels()
-        self.kernel_manager.xreq_channel.history(raw=True, output=False)
+        self.kernel_manager.xreq_channel.history_tail(1000)
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' public interface
