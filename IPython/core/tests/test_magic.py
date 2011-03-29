@@ -167,10 +167,10 @@ def test_macro_run():
     """Test that we can run a multi-line macro successfully."""
     ip = get_ipython()
     ip.history_manager.reset()
-    cmds = ["a=10", "a+=1", "print a", "%macro test 2-3"]
+    cmds = ["a=10", "a+=1", "print(a)", "%macro test 2-3"]
     for cmd in cmds:
         ip.run_cell(cmd)
-    nt.assert_equal(ip.user_ns["test"].value, "a+=1\nprint a\n")
+    nt.assert_equal(ip.user_ns["test"].value, "a+=1\nprint(a)\n")
     original_stdout = sys.stdout
     new_stdout = StringIO()
     sys.stdout = new_stdout

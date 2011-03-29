@@ -736,7 +736,8 @@ class InteractiveShell(Configurable, Magic):
         else:
             # fallback to our internal debugger
             pm = lambda : self.InteractiveTB.debugger(force=True)
-        self.history_saving_wrapper(pm)()
+#        self.history_saving_wrapper(pm)()
+        pm()
 
     #-------------------------------------------------------------------------
     # Things related to IPython's various namespaces
@@ -1983,11 +1984,6 @@ class InteractiveShell(Configurable, Magic):
         # behavior of running a script from the system command line, where
         # Python inserts the script's directory into sys.path
         dname = os.path.dirname(fname)
-        
-        if isinstance(fname, str):
-            # execfile uses default encoding instead of filesystem encoding
-            # so unicode filenames will fail
-            fname = fname.encode(sys.getfilesystemencoding() or sys.getdefaultencoding())
 
         with prepended_to_syspath(dname):
             try:

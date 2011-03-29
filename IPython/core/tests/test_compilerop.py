@@ -49,9 +49,7 @@ def test_compiler():
     nt.assert_true(len(linecache.cache) > ncache)
 
 def setUp():
-    # Check we're in a proper Python 2 environment (some imports, such
-    # as GTK, can change the default encoding, which can hide bugs.)
-    nt.assert_equal(sys.getdefaultencoding(), "ascii")
+    nt.assert_equal(sys.getdefaultencoding(), "utf-8")
 
 def test_compiler_unicode():
     cp = compilerop.CachingCompiler()

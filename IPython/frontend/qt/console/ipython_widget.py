@@ -19,7 +19,7 @@ from IPython.external.qt import QtCore, QtGui
 from IPython.core.inputsplitter import IPythonInputSplitter, \
     transform_ipy_prompt
 from IPython.core.usage import default_gui_banner
-from IPython.utils.traitlets import Bool, Str, Unicode
+from IPython.utils.traitlets import Bool, Unicode
 from .frontend_widget import FrontendWidget
 from .styles import (default_light_style_sheet,  default_light_syntax_style,
                     default_dark_style_sheet, default_dark_syntax_style,
@@ -73,14 +73,14 @@ class IPythonWidget(FrontendWidget):
     
     # If not empty, use this Pygments style for syntax highlighting. Otherwise,
     # the style sheet is queried for Pygments style information.
-    syntax_style = Str(config=True)
+    syntax_style = Unicode(config=True)
 
     # Prompts.
-    in_prompt = Str(default_in_prompt, config=True)
-    out_prompt = Str(default_out_prompt, config=True)
-    input_sep = Str(default_input_sep, config=True)
-    output_sep = Str(default_output_sep, config=True)
-    output_sep2 = Str(default_output_sep2, config=True)
+    in_prompt = Unicode(default_in_prompt, config=True)
+    out_prompt = Unicode(default_out_prompt, config=True)
+    input_sep = Unicode(default_input_sep, config=True)
+    output_sep = Unicode(default_output_sep, config=True)
+    output_sep2 = Unicode(default_output_sep2, config=True)
 
     # FrontendWidget protected class variables.
     _input_splitter_class = IPythonInputSplitter

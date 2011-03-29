@@ -23,9 +23,7 @@ Authors:
 from unittest import TestCase
 
 from IPython.config.configurable import Configurable, ConfigurableError
-from IPython.utils.traitlets import (
-    TraitError, Int, Float, Str
-)
+from IPython.utils.traitlets import (TraitError, Int, Float, Unicode)
 from IPython.config.loader import Config
 
 
@@ -37,16 +35,16 @@ from IPython.config.loader import Config
 class MyConfigurable(Configurable):
     a = Int(1, config=True)
     b = Float(1.0, config=True)
-    c = Str('no config')
+    c = Unicode('no config')
 
 
 class Foo(Configurable):
     a = Int(0, config=True)
-    b = Str('nope', config=True)
+    b = Unicode('nope', config=True)
 
 
 class Bar(Foo):
-    b = Str('gotit', config=False)
+    b = Unicode('gotit', config=False)
     c = Float(config=True)
 
 

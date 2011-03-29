@@ -18,7 +18,7 @@ from IPython.utils.tempdir import TemporaryDirectory
 from IPython.core.history import HistoryManager, extract_hist_ranges
 
 def setUp():
-    nt.assert_equal(sys.getdefaultencoding(), "ascii")
+    nt.assert_equal(sys.getdefaultencoding(), "utf-8")
 
 def test_history():
     ip = get_ipython()
@@ -77,8 +77,8 @@ def test_history():
             testfilename = os.path.realpath(os.path.join(tmpdir, "test.py"))
             ip.magic_save(testfilename + " ~1/1-3")
             testfile = open(testfilename, "r")
-            nt.assert_equal(testfile.read().decode("utf-8"),
-                    "# coding: utf-8\n" + "\n".join(hist))
+            nt.assert_equal(testfile.read(),
+                            "# coding: utf-8\n" + "\n".join(hist))
             
             # Duplicate line numbers - check that it doesn't crash, and
             # gets a new session

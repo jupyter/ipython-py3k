@@ -2063,9 +2063,9 @@ Currently the magic system has the following functions:\n"""
                 print('Operation cancelled.')
                 return
         cmds = self.extract_input_lines(ranges, 'r' in opts)
-        with open(fname,'w') as f:
+        with open(fname, 'w', encoding='utf-8') as f:
             f.write("# coding: utf-8\n")
-            f.write(cmds.encode("utf-8"))
+            f.write(cmds)
         print('The following commands were written to file `%s`:' % fname)
         print(cmds)
 

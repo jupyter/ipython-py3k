@@ -26,7 +26,7 @@ from unittest import TestCase
 
 from IPython.utils.traitlets import (
     HasTraits, MetaHasTraits, TraitType, Any,
-    Int, Float, Complex, Str, TraitError,
+    Int, Float, Complex, Unicode, TraitError,
     Undefined, Type, This, Instance, TCPAddress
 )
 
@@ -682,13 +682,13 @@ class TestComplex(TraitTestBase):
     _bad_values    = ['10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
 
 
-class StringTrait(HasTraits):
+class UnicodeTrait(HasTraits):
 
-    value = Str('string')
+    value = Unicode('string')
 
-class TestString(TraitTestBase):
+class TestUnicode(TraitTestBase):
 
-    obj = StringTrait()
+    obj = UnicodeTrait()
 
     _default_value = 'string'
     _good_values   = ['10', '-10', '10L',
