@@ -509,7 +509,7 @@ class Inspector:
                         src = getsource(obj.__class__,binary_file)
                 if src is not None:
                     source = self.format(src)
-                    out.write(header('Source:\n')+source.rstrip())
+                    out.write(header('Source:\n')+source.rstrip()+'\n')
                     source_success = True
             except Exception as msg:
                 pass
@@ -534,7 +534,7 @@ class Inspector:
                     init_ds = None
 
             if init_def or init_ds:
-                out.writeln(header('\nConstructor information:'))
+                out.writeln(header('Constructor information:'))
                 if init_def:
                     out.write(header('Definition:\t')+ self.format(init_def))
                 if init_ds:

@@ -18,7 +18,6 @@ machinery.  This should thus be thought of as scaffolding.
 # Stdlib
 import inspect
 import os
-import re
 
 # Our own
 from IPython.core.interactiveshell import (
@@ -432,9 +431,10 @@ class ZMQInteractiveShell(InteractiveShell):
 
         # by default this is done with temp files, except when the given
         # arg is a filename
-        use_temp = 1
+        use_temp = True
 
-        if re.match(r'\d',args):
+        data = ''
+        if args[0].isdigit():
             # Mode where user specifies ranges of lines, like in %macro.
             # This means that you can't edit files whose names begin with
             # numbers this way. Tough.
@@ -442,15 +442,14 @@ class ZMQInteractiveShell(InteractiveShell):
             data = ''.join(self.extract_input_slices(ranges,opts_r))
         elif args.endswith('.py'):
             filename = make_filename(args)
-            data = ''
-            use_temp = 0
+            use_temp = False
         elif args:
             try:
                 # Load the parameter given as a variable. If not a string,
                 # process it as an object instead (below)
 
                 #print '*** args',args,'type',type(args)  # dbg
-                data = eval(args,self.shell.user_ns)
+                data = eval(args, self.shell.user_ns)
                 if not isinstance(data, str):
                     raise DataIsObject
 
@@ -461,13 +460,11 @@ class ZMQInteractiveShell(InteractiveShell):
                     warn("Argument given (%s) can't be found as a variable "
                          "or as a filename." % args)
                     return
-
-                data = ''
-                use_temp = 0
+                use_temp = False
+                
             except DataIsObject:
-
                 # macros have a special edit function
-                if isinstance(data,Macro):
+                if isinstance(data, Macro):
                     self._edit_macro(args,data)
                     return
                                 
@@ -506,9 +503,7 @@ class ZMQInteractiveShell(InteractiveShell):
                             warn('The file `%s` where `%s` was defined cannot '
                                  'be read.' % (filename,data))
                             return
-                use_temp = 0
-        else:
-            data = ''
+                use_temp = False
 
         if use_temp:
             filename = self.shell.mktempfile(data)

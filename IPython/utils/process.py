@@ -109,10 +109,11 @@ def arg_split(s, posix=False):
     This is a modified version of the standard library's shlex.split()
     function, but with a default of posix=False for splitting, so that quotes
     in inputs are respected."""
-
+    
     lex = shlex.shlex(s, posix=posix)
     lex.whitespace_split = True
-    return list(lex)
+    tokens = list(lex)
+    return tokens
 
 
 def abbrev_cwd():

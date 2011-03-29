@@ -44,6 +44,21 @@ from .zmqshell import ZMQInteractiveShell
 # Module-level logger
 logger = logging.getLogger(__name__)
 
+# FIXME: this needs to be done more cleanly later, once we have proper
+# configuration support.  This is a library, so it shouldn't set a stream
+# handler, see:
+# http://docs.python.org/library/logging.html#configuring-logging-for-a-library
+# But this lets us at least do developer debugging for now by manually turning
+# it on/off.  And once we have full config support, the client entry points
+# will select their logging handlers, as well as passing to this library the
+# logging level.
+
+if 0:  # dbg - set to 1 to actually see the messages.
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(logging.DEBUG)
+
+# /FIXME
+
 #-----------------------------------------------------------------------------
 # Main kernel class
 #-----------------------------------------------------------------------------
@@ -107,7 +122,7 @@ class Kernel(Configurable):
 
         # Build dict of handlers for message types
         msg_types = [ 'execute_request', 'complete_request', 
-                      'object_info_request', 'history_request',
+                      'object_info_request', 'history_tail_request',
                       'connect_request', 'shutdown_request']
         self.handlers = {}
         for msg_type in msg_types:
@@ -308,13 +323,15 @@ class Kernel(Configurable):
                                 oinfo, parent, ident)
         logger.debug(msg)
 
-    def history_request(self, ident, parent):
-        output = parent['content']['output']
-        index = parent['content']['index']
+    def history_tail_request(self, ident, parent):
+        # We need to pull these out, as passing **kwargs doesn't work with
+        # unicode keys before Python 2.6.5.
+        n = parent['content']['n']
         raw = parent['content']['raw']
-        hist = self.shell.get_history(index=index, raw=raw, output=output)
-        content = {'history' : hist}
-        msg = self.session.send(self.reply_socket, 'history_reply',
+        output = parent['content']['output']
+        hist = self.shell.history_manager.get_tail(n, raw=raw, output=output)
+        content = {'history' : list(hist)}
+        msg = self.session.send(self.reply_socket, 'history_tail_reply',
                                 content, parent, ident)
         logger.debug(str(msg))
 

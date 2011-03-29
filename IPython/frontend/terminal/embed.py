@@ -32,7 +32,7 @@ from IPython.core import ultratb
 from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
 from IPython.frontend.terminal.ipapp import load_default_config
 
-from IPython.utils.traitlets import Bool, Str, CBool
+from IPython.utils.traitlets import Bool, Str, CBool, Unicode
 from IPython.utils.io import ask_yes_no
 
 
@@ -61,7 +61,7 @@ def kill_embedded(self,parameter_s=''):
 class InteractiveShellEmbed(TerminalInteractiveShell):
 
     dummy_mode = Bool(False)
-    exit_msg = Str('')
+    exit_msg = Unicode('')
     embedded = CBool(True)
     embedded_active = CBool(True)
     # Like the base class display_banner is not configurable, but here it
@@ -126,7 +126,7 @@ class InteractiveShellEmbed(TerminalInteractiveShell):
             return
 
         if self.has_readline:
-            self.set_completer()
+            self.set_readline_completer()
 
         # self.banner is auto computed
         if header:

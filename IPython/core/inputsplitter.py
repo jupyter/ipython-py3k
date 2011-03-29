@@ -66,6 +66,7 @@ Authors
 # Imports
 #-----------------------------------------------------------------------------
 # stdlib
+import ast
 import codeop
 import re
 import sys
@@ -185,9 +186,6 @@ def split_blocks(python):
     commands : list of str
         Separate commands that can be exec'ed independently.
     """
-
-    import ast
-    
     # compiler.parse treats trailing spaces after a newline as a
     # SyntaxError.  This is different than codeop.CommandCompiler, which
     # will compile the trailng spaces just fine.  We simply strip any
@@ -205,7 +203,7 @@ def split_blocks(python):
         return [python_ori]
 
     # Uncomment to help debug the ast tree
-    # for n in code_ast.node:
+    # for n in code_ast.body:
     #     print n.lineno,'->',n
 
     # Each separate command is available by iterating over ast.node. The
@@ -430,18 +428,22 @@ class InputSplitter(object):
             return True
 
         # If we already have complete input and we're flush left, the answer
-        # depends.  In line mode, we're done.  But in cell mode, we need to
-        # check how many blocks the input so far compiles into, because if
-        # there's already more than one full independent block of input, then
-        # the client has entered full 'cell' mode and is feeding lines that
-        # each is complete.  In this case we should then keep accepting.
-        # The Qt terminal-like console does precisely this, to provide the
-        # convenience of terminal-like input of single expressions, but
-        # allowing the user (with a separate keystroke) to switch to 'cell'
-        # mode and type multiple expressions in one shot.
+        # depends.  In line mode, if there hasn't been any indentation,
+        # that's it. If we've come back from some indentation, we need
+        # the blank final line to finish.
+        # In cell mode, we need to check how many blocks the input so far
+        # compiles into, because if there's already more than one full
+        # independent block of input, then the client has entered full
+        # 'cell' mode and is feeding lines that each is complete.  In this
+        # case we should then keep accepting. The Qt terminal-like console
+        # does precisely this, to provide the convenience of terminal-like
+        # input of single expressions, but allowing the user (with a
+        # separate keystroke) to switch to 'cell' mode and type multiple
+        # expressions in one shot.
         if self.indent_spaces==0:
             if self.input_mode=='line':
-                return False
+                if not self._full_dedent:
+                    return False
             else:
                 nblocks = len(split_blocks(''.join(self._buffer)))
                 if nblocks==1:
@@ -589,7 +591,7 @@ class InputSplitter(object):
 
         If input lines are not newline-terminated, a newline is automatically
         appended."""
-
+        
         if buffer is None:
             buffer = self._buffer
             
@@ -848,7 +850,7 @@ class EscapedTransformer(object):
         elif line_info.esc == '??':
             pinfo = 'pinfo2'
 
-        tpl = '%sget_ipython().magic("%s %s")'
+        tpl = '%sget_ipython().magic(u"%s %s")'
         return tpl % (line_info.lspace, pinfo,
                       ' '.join([line_info.fpart, line_info.rest]).strip())
 
