@@ -1529,14 +1529,12 @@ class InteractiveShell(Configurable, Magic):
             # otherwise we end up with a monster history after a while:
             readline.set_history_length(self.history_length)
             
-            stdin_encoding = sys.stdin.encoding or "utf-8"
-            
             # Load the last 1000 lines from history
             for _, _, cell in self.history_manager.get_tail(1000,
                                                 include_latest=True):
                 if cell.strip(): # Ignore blank lines
                     for line in cell.splitlines():
-                        readline.add_history(line.encode(stdin_encoding))
+                        readline.add_history(line)
 
         # Configure auto-indent for all platforms
         self.set_autoindent(self.autoindent)
@@ -2439,7 +2437,7 @@ class InteractiveShell(Configurable, Magic):
                           # Skip our own frame in searching for locals:
                           sys._getframe(depth+1).f_locals # locals
                           )
-        return str(res).decode(res.codec)
+        return str(res)
 
     def mktempfile(self, data=None, prefix='ipython_edit_'):
         """Make a new tempfile and return its filename.
