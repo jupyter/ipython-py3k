@@ -88,9 +88,13 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     custom_restart = Bool(False)
     custom_restart_kernel_died = QtCore.Signal(float)
     custom_restart_requested = QtCore.Signal()
-   
-    # Emitted when an 'execute_reply' has been received from the kernel and
-    # processed by the FrontendWidget.
+
+    # Emitted when a user visible 'execute_request' has been submitted to the
+    # kernel from the FrontendWidget. Contains the code to be executed.
+    executing = QtCore.Signal(object)
+
+    # Emitted when a user-visible 'execute_reply' has been received from the
+    # kernel and processed by the FrontendWidget. Contains the response message.
     executed = QtCore.Signal(object)
 
     # Emitted when an exit request has been received from the kernel.
@@ -182,6 +186,8 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         msg_id = self.kernel_manager.xreq_channel.execute(source, hidden)
         self._request_info['execute'] = self._ExecutionRequest(msg_id, 'user')
         self._hidden = hidden
+        if not hidden:
+            self.executing.emit(source)
         
     def _prompt_started_hook(self):
         """ Called immediately after a new prompt is displayed.
@@ -349,7 +355,13 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             # line as string, later we can pass False to format_call and
             # syntax-highlight it ourselves for nicer formatting in the
             # calltip.
-            call_info, doc = call_tip(rep['content'], format_call=True)
+            if rep['content']['ismagic']:
+                # Don't generate a call-tip for magics. Ideally, we should
+                # generate a tooltip, but not on ( like we do for actual
+                # callables.
+                call_info, doc = None, None
+            else:
+                call_info, doc = call_tip(rep['content'], format_call=True)
             if call_info or doc:
                 self._call_tip_widget.show_call_info(call_info, doc)
 

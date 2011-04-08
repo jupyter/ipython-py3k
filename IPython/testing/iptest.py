@@ -5,15 +5,13 @@ This module provides a main entry point to a user script to test IPython
 itself from the command line. There are two ways of running this script:
 
 1. With the syntax `iptest all`.  This runs our entire test suite by
-   calling this script (with different arguments) or trial recursively.  This
+   calling this script (with different arguments) recursively.  This
    causes modules and package to be tested in different processes, using nose
    or trial where appropriate.
 2. With the regular nose syntax, like `iptest -vvs IPython`.  In this form
    the script simply calls nose, but with special command line flags and
    plugins loaded.
 
-For now, this script requires that both nose and twisted are installed.  This
-will change in the future.
 """
 
 #-----------------------------------------------------------------------------
@@ -53,6 +51,7 @@ from IPython.utils.sysinfo import sys_info
 
 from IPython.testing import globalipapp
 from IPython.testing.plugin.ipdoctest import IPythonDoctest
+from IPython.external.decorators import KnownFailure
 
 pjoin = path.join
 
@@ -83,7 +82,7 @@ warnings.filterwarnings('ignore', 'wxPython/wxWidgets release number mismatch',
 # Logic for skipping doctests
 #-----------------------------------------------------------------------------
 
-def test_for(mod):
+def test_for(mod, min_version=None):
     """Test to see if mod is importable."""
     try:
         __import__(mod)
@@ -92,7 +91,10 @@ def test_for(mod):
         # importable.
         return False
     else:
-        return True
+        if min_version:
+            return sys.modules[mod].__version__ >= min_version
+        else:
+            return True
 
 # Global dict where we can store information on what we have and what we don't
 # have available at test run time
@@ -101,10 +103,9 @@ have = {}
 have['curses'] = test_for('_curses')
 have['wx'] = test_for('wx')
 have['wx.aui'] = test_for('wx.aui')
-have['zope.interface'] = test_for('zope.interface')
-have['twisted'] = test_for('twisted')
-have['foolscap'] = test_for('foolscap')
 have['pexpect'] = test_for('pexpect')
+have['zmq'] = test_for('zmq', '2.0.10')
+have['pymongo'] = test_for('pymongo')
 
 #-----------------------------------------------------------------------------
 # Functions and classes
@@ -183,15 +184,12 @@ def make_exclude():
         exclusions.extend([ipjoin('scripts', 'irunner'),
                            ipjoin('lib', 'irunner')])
 
-    # This is scary.  We still have things in frontend and testing that
-    # are being tested by nose that use twisted.  We need to rethink
-    # how we are isolating dependencies in testing.
-    if not (have['twisted'] and have['zope.interface'] and have['foolscap']):
-        exclusions.extend(
-            [ipjoin('testing', 'parametric'),
-             ipjoin('testing', 'util'),
-             ipjoin('testing', 'tests', 'test_decorators_trial'),
-             ] )
+    if not have['zmq']:
+        exclusions.append(ipjoin('zmq'))
+        exclusions.append(ipjoin('parallel'))
+    
+    if not have['pymongo']:
+        exclusions.append(ipjoin('parallel', 'controller', 'mongodb'))
 
     # This is needed for the reg-exp to match on win32 in the ipdoctest plugin.
     if sys.platform == 'win32':
@@ -218,9 +216,6 @@ class IPTester(object):
         if runner == 'iptest':
             iptest_app = get_ipython_module_path('IPython.testing.iptest')
             self.runner = pycmd2argv(iptest_app) + sys.argv[1:]
-        elif runner == 'trial':
-            # For trial, it needs to be installed system-wide
-            self.runner = pycmd2argv(p.abspath(find_cmd('trial')))
         else:
             raise Exception('Not a valid test runner: %s' % repr(runner))
         if params is None:
@@ -291,27 +286,18 @@ def make_runners():
     # Packages to be tested via nose, that only depend on the stdlib
     nose_pkg_names = ['config', 'core', 'extensions', 'frontend', 'lib',
                      'scripts', 'testing', 'utils' ]
-    # The machinery in kernel needs twisted for real testing
-    trial_pkg_names = []
-
-    # And add twisted ones if conditions are met
-    if have['zope.interface'] and have['twisted'] and have['foolscap']:
-        # We only list IPython.kernel for testing using twisted.trial as
-        # nose and twisted.trial have conflicts that make the testing system
-        # unstable.
-        trial_pkg_names.append('kernel')
-
+    
+    if have['zmq']:
+        nose_pkg_names.append('parallel')
+    
     # For debugging this code, only load quick stuff
     #nose_pkg_names = ['core', 'extensions']  # dbg
-    #trial_pkg_names = []  # dbg 
 
     # Make fully qualified package names prepending 'IPython.' to our name lists
     nose_packages = ['IPython.%s' % m for m in nose_pkg_names ]
-    trial_packages = ['IPython.%s' % m for m in trial_pkg_names ]
 
     # Make runners
     runners = [ (v, IPTester('iptest', params=v)) for v in nose_packages ]
-    runners.extend([ (v, IPTester('trial', params=v)) for v in trial_packages ])
     
     return runners
 
@@ -357,7 +343,7 @@ def run_iptest():
 
     # Construct list of plugins, omitting the existing doctest plugin, which
     # ours replaces (and extends).
-    plugins = [IPythonDoctest(make_exclude())]
+    plugins = [IPythonDoctest(make_exclude()), KnownFailure()]
     for p in nose.plugins.builtin.plugins:
         plug = p()
         if plug.name == 'doctest':
