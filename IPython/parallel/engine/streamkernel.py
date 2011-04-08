@@ -28,7 +28,7 @@ import zmq
 from zmq.eventloop import ioloop, zmqstream
 
 # Local imports.
-from IPython.utils.traitlets import Instance, List, Int, Dict, Set, Str
+from IPython.utils.traitlets import Instance, List, Int, Dict, Set
 from IPython.zmq.completer import KernelCompleter
 
 from IPython.parallel.error import wrap_exception

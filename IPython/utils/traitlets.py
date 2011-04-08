@@ -889,6 +889,26 @@ class CUnicode(Unicode):
                 return str(value)
             except:
                 self.error(obj, value)
+                
+class Bytes(TraitType):
+    """A trait for byte strings."""
+
+    default_value = b''
+    info_text = 'a string'
+
+    def validate(self, obj, value):
+        if isinstance(value, bytes):
+            return value
+        self.error(obj, value)
+        
+class CBytes(Bytes):
+    """A casting version of the byte string trait."""
+
+    def validate(self, obj, value):
+        try:
+            return bytes(value)
+        except:
+            self.error(obj, value)
 
 class Bool(TraitType):
     """A boolean (True, False) trait."""

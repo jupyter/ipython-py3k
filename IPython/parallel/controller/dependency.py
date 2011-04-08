@@ -59,10 +59,6 @@ class dependent(object):
         if self.df(*self.dargs, **self.dkwargs) is False:
             raise UnmetDependency()
         return self.f(*args, **kwargs)
-    
-    @property
-    def __name__(self):
-        return self.__name__
 
 @interactive
 def _require(*names):

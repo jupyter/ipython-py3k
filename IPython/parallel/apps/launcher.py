@@ -42,7 +42,7 @@ from zmq.eventloop import ioloop
 
 from IPython.external import Itpl
 # from IPython.config.configurable import Configurable
-from IPython.utils.traitlets import Any, Str, Int, List, Unicode, Dict, Instance, CUnicode
+from IPython.utils.traitlets import Any, Int, List, Unicode, Dict, Instance, CUnicode
 from IPython.utils.path import get_ipython_module_path
 from IPython.utils.process import find_cmd, pycmd2argv, FindCmdError
 
@@ -601,7 +601,7 @@ class WindowsHPCLauncher(BaseLauncher):
 
     # A regular expression used to get the job id from the output of the 
     # submit_command.
-    job_id_regexp = Str(r'\d+', config=True)
+    job_id_regexp = Unicode(r'\d+', config=True)
     # The filename of the instantiated job script.
     job_file_name = CUnicode('ipython_job.xml', config=True)
     # The full path to the instantiated job script. This gets made dynamically
@@ -958,7 +958,7 @@ class IPClusterLauncher(LocalProcessLauncher):
     # Command line arguments to pass to ipcluster.
     ipcluster_args = List(
         ['--clean-logs', '--log-to-file', '--log-level', str(logging.INFO)], config=True)
-    ipcluster_subcommand = Str('start')
+    ipcluster_subcommand = Unicode('start')
     ipcluster_n = Int(2)
 
     def find_args(self):

@@ -25,7 +25,8 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 # internal:
 from IPython.utils.importstring import import_item
-from IPython.utils.traitlets import HasTraits, Instance, Int, CStr, Str, Dict, Set, List, Bool
+from IPython.utils.traitlets import (HasTraits, Instance, Int, Unicode, CUnicode,
+                                    Dict, Set, List, Bool)
 
 from IPython.parallel import error
 from IPython.parallel.factory import RegistrationFactory, LoggingFactory
@@ -104,17 +105,17 @@ class EngineConnector(HasTraits):
     heartbeat (str): identity of heartbeat XREQ socket
     """
     id=Int(0)
-    queue=Str()
-    control=Str()
-    registration=Str()
-    heartbeat=Str()
-    pending=Set()
+    queue=Unicode()
+    control=Unicode()
+    registration=Unicode()
+    heartbeat=Unicode()
+    pending=Unicode()
 
 class HubFactory(RegistrationFactory):
     """The Configurable for setting up a Hub."""
     
     # name of a scheduler scheme
-    scheme = Str('leastload', config=True)
+    scheme = Unicode('leastload', config=True)
     
     # port-pairs for monitoredqueues:
     hb = Instance(list, config=True)
@@ -148,18 +149,18 @@ class HubFactory(RegistrationFactory):
     
     ping = Int(1000, config=True) # ping frequency
     
-    engine_ip = CStr('127.0.0.1', config=True)
-    engine_transport = CStr('tcp', config=True)
+    engine_ip = CUnicode('127.0.0.1', config=True)
+    engine_transport = CUnicode('tcp', config=True)
     
-    client_ip = CStr('127.0.0.1', config=True)
-    client_transport = CStr('tcp', config=True)
+    client_ip = CUnicode('127.0.0.1', config=True)
+    client_transport = CUnicode('tcp', config=True)
     
-    monitor_ip = CStr('127.0.0.1', config=True)
-    monitor_transport = CStr('tcp', config=True)
+    monitor_ip = CUnicode('127.0.0.1', config=True)
+    monitor_transport = CUnicode('tcp', config=True)
     
-    monitor_url = CStr('')
+    monitor_url = CUnicode('')
     
-    db_class = CStr('IPython.parallel.controller.dictdb.DictDB', config=True)
+    db_class = CUnicode('IPython.parallel.controller.dictdb.DictDB', config=True)
     
     # not configurable
     db = Instance('IPython.parallel.controller.dictdb.BaseDB')

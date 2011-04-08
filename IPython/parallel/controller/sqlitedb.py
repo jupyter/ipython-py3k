@@ -15,7 +15,7 @@ import sqlite3
 
 from zmq.eventloop import ioloop
 
-from IPython.utils.traitlets import CUnicode, CStr, Instance, List
+from IPython.utils.traitlets import CUnicode, Instance, List
 from .dictdb import BaseDB
 from IPython.parallel.util import ISO8601
 

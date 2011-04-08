@@ -25,7 +25,7 @@ blackhole = tempfile.TemporaryFile()
 # nose setup/teardown
 
 def setup():
-    cp = Popen('ipcontroller --profile iptest -r --log-level 10 --log-to-file --usethreads'.split(), stdout=blackhole, stderr=STDOUT)
+    cp = Popen('ipcontroller3 --profile iptest -r --log-level 10 --log-to-file --usethreads'.split(), stdout=blackhole, stderr=STDOUT)
     processes.append(cp)
     engine_json = os.path.join(get_ipython_dir(), 'cluster_iptest', 'security', 'ipcontroller-engine.json')
     client_json = os.path.join(get_ipython_dir(), 'cluster_iptest', 'security', 'ipcontroller-client.json')
@@ -44,7 +44,7 @@ def add_engines(n=1, profile='iptest'):
     base = len(rc)
     eps = []
     for i in range(n):
-        ep = Popen(['ipengine']+ ['--profile', profile, '--log-level', '10', '--log-to-file'], stdout=blackhole, stderr=STDOUT)
+        ep = Popen(['ipengine3']+ ['--profile', profile, '--log-level', '10', '--log-to-file'], stdout=blackhole, stderr=STDOUT)
         # ep.start()
         processes.append(ep)
         eps.append(ep)

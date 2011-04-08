@@ -20,7 +20,7 @@ from zmq.eventloop.ioloop import IOLoop
 
 from IPython.config.configurable import Configurable
 from IPython.utils.importstring import import_item
-from IPython.utils.traitlets import Str,Int,Instance, CUnicode, CStr
+from IPython.utils.traitlets import Int,Instance, CUnicode, Unicode
 
 import IPython.parallel.streamsession as ss
 from IPython.parallel.util import select_random_ports
@@ -39,9 +39,9 @@ class LoggingFactory(Configurable):
 class SessionFactory(LoggingFactory):
     """The Base factory from which every factory in IPython.parallel inherits"""
     
-    packer = Str('',config=True)
-    unpacker = Str('',config=True)
-    ident = CStr('',config=True)
+    packer = Unicode('',config=True)
+    unpacker = Unicode('',config=True)
+    ident = CUnicode('',config=True)
     def _ident_default(self):
         return str(uuid.uuid4())
     username = CUnicode(os.environ.get('USER','username'),config=True)
@@ -77,9 +77,9 @@ class SessionFactory(LoggingFactory):
 class RegistrationFactory(SessionFactory):
     """The Base Configurable for objects that involve registration."""
     
-    url = Str('', config=True) # url takes precedence over ip,regport,transport
-    transport = Str('tcp', config=True)
-    ip = Str('127.0.0.1', config=True)
+    url = Unicode('', config=True) # url takes precedence over ip,regport,transport
+    transport = Unicode('tcp', config=True)
+    ip = Unicode('127.0.0.1', config=True)
     regport = Instance(int, config=True)
     def _regport_default(self):
         # return 10101

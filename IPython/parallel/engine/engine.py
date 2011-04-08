@@ -19,7 +19,7 @@ import zmq
 from zmq.eventloop import ioloop, zmqstream
 
 # internal
-from IPython.utils.traitlets import Instance, Str, Dict, Int, Type, CFloat
+from IPython.utils.traitlets import Instance, Unicode, Dict, Int, Type, CFloat
 # from IPython.utils.localinterfaces import LOCALHOST 
 
 from IPython.parallel.controller.heartmonitor import Heart
@@ -36,7 +36,7 @@ class EngineFactory(RegistrationFactory):
     user_ns=Dict(config=True)
     out_stream_factory=Type('IPython.zmq.iostream.OutStream', config=True)
     display_hook_factory=Type('IPython.zmq.displayhook.DisplayHook', config=True)
-    location=Str(config=True)
+    location=Unicode(config=True)
     timeout=CFloat(2,config=True)
     
     # not configurable:
