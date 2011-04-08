@@ -39,10 +39,6 @@ class Macro(object):
         self.value = code + '\n'
     
     def __str__(self):
-        enc = sys.stdin.encoding or sys.getdefaultencoding()
-        return self.value.encode(enc, "replace")
-    
-    def __unicode__(self):
         return self.value
 
     def __repr__(self):
