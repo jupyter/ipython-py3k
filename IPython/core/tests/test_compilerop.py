@@ -40,21 +40,21 @@ def test_code_name2():
     nt.assert_true(name.startswith('<ipython-input-9'))
 
 
-def test_compiler():
+def test_cache():
     """Test the compiler correctly compiles and caches inputs
     """
     cp = compilerop.CachingCompiler()
     ncache = len(linecache.cache)
-    cp('x=1', 'single')
+    cp.cache('x=1')
     nt.assert_true(len(linecache.cache) > ncache)
 
 def setUp():
     nt.assert_equal(sys.getdefaultencoding(), "utf-8")
 
-def test_compiler_unicode():
+def test_cache_unicode():
     cp = compilerop.CachingCompiler()
     ncache = len(linecache.cache)
-    cp("t = 'žćčšđ'", "single")
+    cp.cache("t = 'žćčšđ'")
     nt.assert_true(len(linecache.cache) > ncache)
 
 def test_compiler_check_cache():
@@ -62,7 +62,7 @@ def test_compiler_check_cache():
     """
     # Rather simple-minded tests that just exercise the API
     cp = compilerop.CachingCompiler()
-    cp('x=1', 'single', 99)
+    cp.cache('x=1', 99)
     # Ensure now that after clearing the cache, our entries survive
     cp.check_cache()
     for k in linecache.cache:

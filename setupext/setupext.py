@@ -56,55 +56,6 @@ def check_for_ipython():
         print_status("IPython", IPython.__version__)
         return True
 
-def check_for_zopeinterface():
-    try:
-        import zope.interface
-    except ImportError:
-        print_status("zope.Interface", "Not found (required for parallel computing capabilities)")
-        return False
-    else:
-        print_status("Zope.Interface","yes")
-        return True
-        
-def check_for_twisted():
-    try:
-        import twisted
-    except ImportError:
-        print_status("Twisted", "Not found (required for parallel computing capabilities)")
-        return False
-    else:
-        major = twisted.version.major
-        minor = twisted.version.minor
-        micro = twisted.version.micro
-        print_status("Twisted", twisted.version.short())
-        if not ((major==2 and minor>=5 and micro>=0) or \
-                major>=8):
-            print_message("WARNING: IPython requires Twisted 2.5.0 or greater, you have version %s"%twisted.version.short())
-            print_message("Twisted is required for parallel computing capabilities")
-            return False
-        else:
-            return True
-
-def check_for_foolscap():
-    try:
-        import foolscap
-    except ImportError:
-        print_status('Foolscap', "Not found (required for parallel computing capabilities)")
-        return False
-    else:
-        print_status('Foolscap', foolscap.__version__)
-        return True
-
-def check_for_pyopenssl():
-    try:
-        import OpenSSL
-    except ImportError:
-        print_status('OpenSSL', "Not found (required if you want security in the parallel computing capabilities)")
-        return False
-    else:
-        print_status('OpenSSL', OpenSSL.__version__)    
-        return True
-
 def check_for_sphinx():
     try:
         import sphinx
@@ -175,4 +126,17 @@ def check_for_simplejson():
         print_status("simplejson","yes")
         return True
 
-        
+def check_for_pyzmq():
+    try:
+        import zmq
+    except ImportError:
+        print_status('pyzmq', "no (required for qtconsole and parallel computing capabilities)")
+        return False
+    else:
+        if zmq.__version__ < '2.0.10':
+            print_status('pyzmq', "no (require >= 2.0.10 for qtconsole and parallel computing capabilities)")
+            
+        else:
+            print_status("pyzmq", zmq.__version__)
+            return True
+

@@ -27,6 +27,7 @@ import textwrap
 from io import StringIO
 from getopt import getopt,GetoptError
 from pprint import pformat
+from xmlrpc.client import ServerProxy
 import collections
 
 # cProfile was added in Python2.5
@@ -962,12 +963,15 @@ Currently the magic system has the following functions:\n"""
     def magic_reset(self, parameter_s=''):
         """Resets the namespace by removing all names defined by the user.
 
-        Input/Output history are left around in case you need them.
-
         Parameters
         ----------
           -f : force reset without asking for confirmation.
-
+          
+          -s : 'Soft' reset: Only clears your namespace, leaving history intact.
+          References to objects may be kept. By default (without this option),
+          we do a 'hard' reset, giving you a new session and removing all
+          references to objects from the current session.
+        
         Examples
         --------
         In [6]: a = 1
@@ -980,11 +984,11 @@ Currently the magic system has the following functions:\n"""
 
         In [9]: %reset -f
 
-        In [10]: 'a' in _ip.user_ns
-        Out[10]: False
+        In [1]: 'a' in _ip.user_ns
+        Out[1]: False
         """
-
-        if parameter_s == '-f':
+        opts, args = self.parse_options(parameter_s,'sf')
+        if 'f' in opts:
             ans = True
         else:
             ans = self.shell.ask_yes_no(
@@ -992,13 +996,16 @@ Currently the magic system has the following functions:\n"""
         if not ans:
             print('Nothing done.')
             return
-        user_ns = self.shell.user_ns
-        for i in self.magic_who_ls():
-            del(user_ns[i])
+        
+        if 's' in opts:                     # Soft reset
+            user_ns = self.shell.user_ns
+            for i in self.magic_who_ls():
+                del(user_ns[i])
             
-        # Also flush the private list of module references kept for script
-        # execution protection
-        self.shell.clear_main_mod_cache()
+        else:                     # Hard reset
+            self.shell.reset(new_session = True)
+            
+        
 
     def magic_reset_selective(self, parameter_s=''):
         """Resets the namespace by removing names defined by the user.
@@ -1600,90 +1607,89 @@ Currently the magic system has the following functions:\n"""
         # every single object ever created.
         sys.modules[main_mod_name] = main_mod
         
-        stats = None
         try:
-            #self.shell.save_history()
-
-            if 'p' in opts:
-                stats = self.magic_prun('',0,opts,arg_lst,prog_ns)
-            else:
-                if 'd' in opts:
-                    deb = debugger.Pdb(self.shell.colors)
-                    # reset Breakpoint state, which is moronically kept
-                    # in a class
-                    bdb.Breakpoint.next = 1
-                    bdb.Breakpoint.bplist = {}
-                    bdb.Breakpoint.bpbynumber = [None]
-                    # Set an initial breakpoint to stop execution
-                    maxtries = 10
-                    bp = int(opts.get('b',[1])[0])
-                    checkline = deb.checkline(filename,bp)
-                    if not checkline:
-                        for bp in range(bp+1,bp+maxtries+1):
-                            if deb.checkline(filename,bp):
-                                break
-                        else:
-                            msg = ("\nI failed to find a valid line to set "
-                                   "a breakpoint\n"
-                                   "after trying up to line: %s.\n"
-                                   "Please set a valid breakpoint manually "
-                                   "with the -b option." % bp)
-                            error(msg)
-                            return
-                    # if we find a good linenumber, set the breakpoint
-                    deb.do_break('%s:%s' % (filename,bp))
-                    # Start file run
-                    print("NOTE: Enter 'c' at the", end=' ')
-                    print("%s prompt to start your script." % deb.prompt)
-                    try:
-                        deb.run('execfile("%s")' % filename,prog_ns)
-                        
-                    except:
-                        etype, value, tb = sys.exc_info()
-                        # Skip three frames in the traceback: the %run one,
-                        # one inside bdb.py, and the command-line typed by the
-                        # user (run by exec in pdb itself).
-                        self.shell.InteractiveTB(etype,value,tb,tb_offset=3)
+            stats = None
+            with self.readline_no_record:
+                if 'p' in opts:
+                    stats = self.magic_prun('',0,opts,arg_lst,prog_ns)
                 else:
-                    if runner is None:
-                        runner = self.shell.safe_execfile
-                    if 't' in opts:
-                        # timed execution
-                        try:
-                            nruns = int(opts['N'][0])
-                            if nruns < 1:
-                                error('Number of runs must be >=1')
+                    if 'd' in opts:
+                        deb = debugger.Pdb(self.shell.colors)
+                        # reset Breakpoint state, which is moronically kept
+                        # in a class
+                        bdb.Breakpoint.next = 1
+                        bdb.Breakpoint.bplist = {}
+                        bdb.Breakpoint.bpbynumber = [None]
+                        # Set an initial breakpoint to stop execution
+                        maxtries = 10
+                        bp = int(opts.get('b',[1])[0])
+                        checkline = deb.checkline(filename,bp)
+                        if not checkline:
+                            for bp in range(bp+1,bp+maxtries+1):
+                                if deb.checkline(filename,bp):
+                                    break
+                            else:
+                                msg = ("\nI failed to find a valid line to set "
+                                       "a breakpoint\n"
+                                       "after trying up to line: %s.\n"
+                                       "Please set a valid breakpoint manually "
+                                       "with the -b option." % bp)
+                                error(msg)
                                 return
-                        except (KeyError):
-                            nruns = 1
-                        if nruns == 1:
-                            t0 = clock2()
-                            runner(filename,prog_ns,prog_ns,
-                                   exit_ignore=exit_ignore)
-                            t1 = clock2()
-                            t_usr = t1[0]-t0[0]
-                            t_sys = t1[1]-t0[1]
-                            print("\nIPython CPU timings (estimated):")
-                            print("  User  : %10s s." % t_usr)
-                            print("  System: %10s s." % t_sys)
-                        else:
-                            runs = list(range(nruns))
-                            t0 = clock2()
-                            for nr in runs:
+                        # if we find a good linenumber, set the breakpoint
+                        deb.do_break('%s:%s' % (filename,bp))
+                        # Start file run
+                        print("NOTE: Enter 'c' at the", end=' ')
+                        print("%s prompt to start your script." % deb.prompt)
+                        try:
+                            deb.run('execfile("%s")' % filename,prog_ns)
+                            
+                        except:
+                            etype, value, tb = sys.exc_info()
+                            # Skip three frames in the traceback: the %run one,
+                            # one inside bdb.py, and the command-line typed by the
+                            # user (run by exec in pdb itself).
+                            self.shell.InteractiveTB(etype,value,tb,tb_offset=3)
+                    else:
+                        if runner is None:
+                            runner = self.shell.safe_execfile
+                        if 't' in opts:
+                            # timed execution
+                            try:
+                                nruns = int(opts['N'][0])
+                                if nruns < 1:
+                                    error('Number of runs must be >=1')
+                                    return
+                            except (KeyError):
+                                nruns = 1
+                            if nruns == 1:
+                                t0 = clock2()
                                 runner(filename,prog_ns,prog_ns,
                                        exit_ignore=exit_ignore)
-                            t1 = clock2()
-                            t_usr = t1[0]-t0[0]
-                            t_sys = t1[1]-t0[1]
-                            print("\nIPython CPU timings (estimated):")
-                            print("Total runs performed:",nruns)
-                            print("  Times : %10s    %10s" % ('Total','Per run'))
-                            print("  User  : %10s s, %10s s." % (t_usr,t_usr/nruns))
-                            print("  System: %10s s, %10s s." % (t_sys,t_sys/nruns))
-                            
-                    else:
-                        # regular execution
-                        runner(filename,prog_ns,prog_ns,exit_ignore=exit_ignore)
+                                t1 = clock2()
+                                t_usr = t1[0]-t0[0]
+                                t_sys = t1[1]-t0[1]
+                                print("\nIPython CPU timings (estimated):")
+                                print("  User  : %10s s." % t_usr)
+                                print("  System: %10s s." % t_sys)
+                            else:
+                                runs = list(range(nruns))
+                                t0 = clock2()
+                                for nr in runs:
+                                    runner(filename,prog_ns,prog_ns,
+                                           exit_ignore=exit_ignore)
+                                t1 = clock2()
+                                t_usr = t1[0]-t0[0]
+                                t_sys = t1[1]-t0[1]
+                                print("\nIPython CPU timings (estimated):")
+                                print("Total runs performed:",nruns)
+                                print("  Times : %10s    %10s" % ('Total','Per run'))
+                                print("  User  : %10s s, %10s s." % (t_usr,t_usr/nruns))
+                                print("  System: %10s s, %10s s." % (t_sys,t_sys/nruns))
+                                
+                        else:
+                            # regular execution
+                            runner(filename,prog_ns,prog_ns,exit_ignore=exit_ignore)
 
                 if 'i' in opts:
                     self.shell.user_ns['__name__'] = __name__save
@@ -1720,8 +1726,6 @@ Currently the magic system has the following functions:\n"""
                 # added.  Otherwise it will trap references to objects
                 # contained therein.
                 del sys.modules[main_mod_name]
-
-            #self.shell.reload_history()
                 
         return stats
 
@@ -1958,7 +1962,8 @@ Currently the magic system has the following functions:\n"""
 
     @testdec.skip_doctest
     def magic_macro(self,parameter_s = ''):
-        """Define a set of input lines as a macro for future re-execution.
+        """Define a macro for future re-execution. It accepts ranges of history,
+        filenames or string objects.
 
         Usage:\\
           %macro [options] name n1-n2 n3-n4 ... n5 .. n6 ...
@@ -2010,12 +2015,8 @@ Currently the magic system has the following functions:\n"""
         You can view a macro's contents by explicitly printing it with:
         
           'print macro_name'.
-
-        For one-off cases which DON'T contain magic function calls in them you
-        can obtain similar results by explicitly executing slices from your
-        input history with:
-
-          In [60]: exec In[44:48]+In[49]"""
+          
+        """
 
         opts,args = self.parse_options(parameter_s,'r',mode='list')
         if not args:   # List existing macros
@@ -2024,18 +2025,22 @@ Currently the magic system has the following functions:\n"""
         if len(args) == 1:
             raise UsageError(
                 "%macro insufficient args; usage '%macro name n1-n2 n3-4...")
-        name, ranges = args[0], " ".join(args[1:])
+        name, codefrom = args[0], " ".join(args[1:])
         
         #print 'rng',ranges  # dbg
-        lines = self.extract_input_lines(ranges,'r' in opts)
+        try:
+            lines = self.shell.find_user_code(codefrom, 'r' in opts)
+        except (ValueError, TypeError) as e:
+            print(e.args[0])
+            return
         macro = Macro(lines)
         self.shell.define_macro(name, macro)
         print('Macro `%s` created. To execute, type its name (without quotes).' % name)
-        print('Macro contents:')
+        print('=== Macro contents: ===')
         print(macro, end=' ')
 
     def magic_save(self,parameter_s = ''):
-        """Save a set of lines to a given filename.
+        """Save a set of lines or a macro to a given filename.
 
         Usage:\\
           %save [options] filename n1-n2 n3-n4 ... n5 .. n6 ...
@@ -2054,7 +2059,7 @@ Currently the magic system has the following functions:\n"""
         it asks for confirmation before overwriting existing files."""
 
         opts,args = self.parse_options(parameter_s,'r',mode='list')
-        fname,ranges = args[0], " ".join(args[1:])
+        fname, codefrom = args[0], " ".join(args[1:])
         if not fname.endswith('.py'):
             fname += '.py'
         if os.path.isfile(fname):
@@ -2062,12 +2067,28 @@ Currently the magic system has the following functions:\n"""
             if ans.lower() not in ['y','yes']:
                 print('Operation cancelled.')
                 return
-        cmds = self.extract_input_lines(ranges, 'r' in opts)
+                
+        try:
+            cmds = self.shell.find_user_code(codefrom, 'r' in opts)
+        except (TypeError, ValueError) as e:
+            print(e.args[0])
+            return
         with open(fname, 'w', encoding='utf-8') as f:
             f.write("# coding: utf-8\n")
             f.write(cmds)
         print('The following commands were written to file `%s`:' % fname)
         print(cmds)
+    
+    def magic_pastebin(self, parameter_s = ''):
+        """Upload code to the 'Lodge it' paste bin, returning the URL."""
+        try:
+            code = self.shell.find_user_code(parameter_s)
+        except (ValueError, TypeError) as e:
+            print(e.args[0])
+            return
+        pbserver = ServerProxy('http://paste.pocoo.org/xmlrpc/')
+        id = pbserver.pastes.newPaste("python", code)
+        return "http://paste.pocoo.org/show/" + id
 
     def _edit_macro(self,mname,macro):
         """open an editor with the macro data in a file"""

@@ -116,16 +116,19 @@ def find_packages():
     add_package(packages, 'external.Itpl')
     add_package(packages, 'external.mglob')
     add_package(packages, 'external.path')
+    add_package(packages, 'external.pexpect')
     add_package(packages, 'external.pyparsing')
     add_package(packages, 'external.simplegeneric')
+    add_package(packages, 'external.ssh')
     add_package(packages, 'external.validate')
+    add_package(packages, 'kernel')
     add_package(packages, 'frontend')
     add_package(packages, 'frontend.qt')
     add_package(packages, 'frontend.qt.console', tests=True)
     add_package(packages, 'frontend.terminal', tests=True)    
-    add_package(packages, 'kernel', config=False, tests=True, scripts=True)
-    add_package(packages, 'kernel.core', config=False, tests=True)
     add_package(packages, 'lib', tests=True)
+    add_package(packages, 'parallel', tests=True, scripts=True, 
+                                    others=['apps','engine','client','controller'])
     add_package(packages, 'quarantine', tests=True)
     add_package(packages, 'scripts')
     add_package(packages, 'testing', tests=True)
@@ -256,34 +259,42 @@ def make_man_update_target(manpage):
 # Find scripts
 #---------------------------------------------------------------------------
 
-def find_scripts():
-    """
-    Find IPython's scripts.
-    """
-    kernel_scripts = pjoin('IPython','kernel','scripts')
-    main_scripts = pjoin('IPython','scripts')
-    scripts = [pjoin(kernel_scripts, 'ipengine3'),
-               pjoin(kernel_scripts, 'ipcontroller3'),
-               pjoin(kernel_scripts, 'ipcluster3'),
-               pjoin(main_scripts, 'ipython3'),
-               pjoin(main_scripts, 'ipython3-qtconsole'),
-               pjoin(main_scripts, 'pycolor3'),
-               pjoin(main_scripts, 'irunner3'),
-               pjoin(main_scripts, 'iptest3')
-              ]
+def find_scripts(entry_points=False):
+    """Find IPython's scripts.
     
-    # Script to be run by the windows binary installer after the default setup
-    # routine, to add shortcuts and similar windows-only things.  Windows
-    # post-install scripts MUST reside in the scripts/ dir, otherwise distutils
-    # doesn't find them.
-    if 'bdist_wininst' in sys.argv:
-        if len(sys.argv) > 2 and \
-               ('sdist' in sys.argv or 'bdist_rpm' in sys.argv):
-            print("ERROR: bdist_wininst must be run alone. Exiting.",
-                  file=sys.stderr)
-            sys.exit(1)
-        scripts.append(pjoin('scripts','ipython_win_post_install.py'))
-
+    if entry_points is True:
+        return setuptools entry_point-style definitions
+    else:
+        return file paths of plain scripts [default]
+    
+    """
+    if entry_points:
+        scripts = [
+            'ipython3 = IPython.frontend.terminal.ipapp:launch_new_instance',
+            'ipython3-qtconsole = IPython.frontend.qt.console.ipythonqt:main',
+            'pycolor3 = IPython.utils.PyColorize:main',
+            'ipcontroller3 = IPython.parallel.apps.ipcontrollerapp:launch_new_instance',
+            'ipengine3 = IPython.parallel.apps.ipengineapp:launch_new_instance',
+            'iplogger3 = IPython.parallel.apps.iploggerapp:launch_new_instance',
+            'ipcluster3 = IPython.parallel.apps.ipclusterapp:launch_new_instance',
+            'iptest3 = IPython.testing.iptest:main',
+            'irunner3 = IPython.lib.irunner:main'
+        ]
+    else:
+        parallel_scripts = pjoin('IPython','parallel','scripts')
+        main_scripts = pjoin('IPython','scripts')
+        scripts = [
+                   pjoin(parallel_scripts, 'ipengine3'),
+                   pjoin(parallel_scripts, 'ipcontroller3'),
+                   pjoin(parallel_scripts, 'ipcluster3'),
+                   pjoin(parallel_scripts, 'iplogger3'),
+                   pjoin(main_scripts, 'ipython3'),
+                   pjoin(main_scripts, 'ipython3-qtconsole'),
+                   pjoin(main_scripts, 'pycolor3'),
+                   pjoin(main_scripts, 'irunner3'),
+                   pjoin(main_scripts, 'iptest3')
+                  ]
+    
     return scripts
 
 #---------------------------------------------------------------------------
@@ -297,10 +308,9 @@ def check_for_dependencies():
     """
     from setupext.setupext import (
         print_line, print_raw, print_status,
-        check_for_zopeinterface, check_for_twisted,
-        check_for_foolscap, check_for_pyopenssl,
         check_for_sphinx, check_for_pygments,
-        check_for_nose, check_for_pexpect
+        check_for_nose, check_for_pexpect,
+        check_for_pyzmq
     )
     print_line()
     print_raw("BUILDING IPYTHON")
@@ -312,14 +322,11 @@ def check_for_dependencies():
     print_raw("")
     print_raw("OPTIONAL DEPENDENCIES")
 
-    check_for_zopeinterface()
-    check_for_twisted()
-    check_for_foolscap()
-    check_for_pyopenssl()
     check_for_sphinx()
     check_for_pygments()
     check_for_nose()
     check_for_pexpect()
+    check_for_pyzmq()
 
 
 def record_commit_info(pkg_dir, build_cmd=build_py):
