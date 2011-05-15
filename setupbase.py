@@ -287,7 +287,6 @@ def find_scripts(entry_points=False):
         parallel_scripts = pjoin('IPython','parallel','scripts')
         main_scripts = pjoin('IPython','scripts')
         scripts = [
-<<<<<<< HEAD
                    pjoin(parallel_scripts, 'ipengine3'),
                    pjoin(parallel_scripts, 'ipcontroller3'),
                    pjoin(parallel_scripts, 'ipcluster3'),

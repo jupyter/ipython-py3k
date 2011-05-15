@@ -18,6 +18,7 @@ __all__ = ['Inspector','InspectColors']
 
 # stdlib modules
 import builtins
+import collections
 import io
 import inspect
 import linecache
@@ -28,14 +29,14 @@ from collections import namedtuple
 from itertools import zip_longest
 
 # IPython's own
+import IPython.utils.io
 from IPython.core import page
 from IPython.external.Itpl import itpl
 from IPython.utils import PyColorize
-from IPython.utils import io
 from IPython.utils.text import indent
 from IPython.utils.wildcard import list_namespace
 from IPython.utils.coloransi import *
-import collections
+
 
 #****************************************************************************
 # Builtin color schemes
@@ -298,7 +299,7 @@ class Inspector:
         if output is None:
             self.noinfo('definition header',oname)
         else:
-            print(header,self.format(output), end=' ', file=io.stdout)
+            print(header,self.format(output), end=' ', file=IPython.utils.io.stdout)
 
     def pdoc(self,obj,oname='',formatter = None):
         """Print the docstring for any object.
