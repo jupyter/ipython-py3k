@@ -21,8 +21,11 @@ import warnings
 #        WarningManager, WarningMessage
 # Our version:
 from ._numpy_testing_utils import WarningManager
-from ._numpy_testing_noseclasses import KnownFailureTest
 import collections
+try:
+    from ._numpy_testing_noseclasses import KnownFailureTest
+except:
+    pass
 
 # End IPython changes
 

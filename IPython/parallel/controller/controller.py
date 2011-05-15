@@ -35,8 +35,6 @@ class ControllerFactory(HubFactory):
     """Configurable for setting up a Hub and Schedulers."""
     
     usethreads = Bool(False, config=True)
-    # pure-zmq downstream HWM
-    hwm = Int(0, config=True)
     
     # internal
     children = List()
@@ -97,7 +95,6 @@ class ControllerFactory(HubFactory):
         if self.scheme == 'pure':
             self.log.warn("task::using pure XREQ Task scheduler")
             q = mq(zmq.XREP, zmq.XREQ, zmq.PUB, 'intask', 'outtask')
-            q.setsockopt_out(zmq.HWM, self.hwm)
             q.bind_in(self.client_info['task'][1])
             q.setsockopt_in(zmq.IDENTITY, 'task')
             q.bind_out(self.engine_info['task'])
@@ -109,8 +106,10 @@ class ControllerFactory(HubFactory):
             
         else:
             self.log.info("task::using Python %s Task scheduler"%self.scheme)
-            sargs = (self.client_info['task'][1], self.engine_info['task'], self.monitor_url, self.client_info['notification'])
-            kwargs = dict(scheme=self.scheme,logname=self.log.name, loglevel=self.log.level, config=self.config)
+            sargs = (self.client_info['task'][1], self.engine_info['task'],
+                                self.monitor_url, self.client_info['notification'])
+            kwargs = dict(scheme=self.scheme,logname=self.log.name, loglevel=self.log.level,
+                                                            config=dict(self.config))
             q = Process(target=launch_scheduler, args=sargs, kwargs=kwargs)
             q.daemon=True
             children.append(q)

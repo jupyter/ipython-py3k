@@ -407,7 +407,7 @@ class HasTraits(object, metaclass=MetaHasTraits):
         # Allow trait values to be set using keyword arguments.
         # We need to use setattr for this to trigger validation and
         # notifications.
-        for key, value in list(kw.items()):
+        for key, value in kw.items():
             setattr(self, key, value)
 
     def _notify_trait(self, name, old_value, new_value):
@@ -509,7 +509,7 @@ class HasTraits(object, metaclass=MetaHasTraits):
 
     def trait_names(self, **metadata):
         """Get a list of all the names of this classes traits."""
-        return list(list(self.traits(**metadata).keys()))
+        return list(self.traits(**metadata).keys())
 
     def traits(self, **metadata):
         """Get a list of all the traits of this class.
@@ -528,13 +528,13 @@ class HasTraits(object, metaclass=MetaHasTraits):
         if len(metadata) == 0:
             return traits
 
-        for meta_name, meta_eval in list(list(metadata.items())):
+        for meta_name, meta_eval in list(metadata.items()):
             if type(meta_eval) is not FunctionType:
                 metadata[meta_name] = _SimpleTest(meta_eval)
 
         result = {}
-        for name, trait in list(list(traits.items())):
-            for meta_name, meta_eval in list(list(metadata.items())):
+        for name, trait in list(traits.items()):
+            for meta_name, meta_eval in list(metadata.items()):
                 if not meta_eval(trait.get_metadata(meta_name)):
                     break
             else:

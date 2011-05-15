@@ -48,19 +48,6 @@ def spin_first(f, self, *args, **kwargs):
     self.spin()
     return f(self, *args, **kwargs)
 
-@decorator
-def default_block(f, self, *args, **kwargs):
-    """Default to self.block; preserve self.block."""
-    block = kwargs.get('block',None)
-    block = self.block if block is None else block
-    saveblock = self.block
-    self.block = block
-    try:
-        ret = f(self, *args, **kwargs)
-    finally:
-        self.block = saveblock
-    return ret
-
 
 #--------------------------------------------------------------------------
 # Classes
@@ -352,12 +339,12 @@ class Client(HasTraits):
     
     def _update_engines(self, engines):
         """Update our engines dict and _ids from a dict of the form: {id:uuid}."""
-        for k,v in list(engines.items()):
+        for k,v in engines.items():
             eid = int(k)
             self._engines[eid] = bytes(v) # force not unicode
             self._ids.append(eid)
         self._ids = sorted(self._ids)
-        if sorted(self._engines.keys()) != list(list(range(len(self._engines)))) and \
+        if sorted(self._engines.keys()) != list(range(len(self._engines))) and \
                         self._task_scheme == 'pure' and self._task_socket:
             self._stop_scheduling_tasks()
     
@@ -378,6 +365,11 @@ class Client(HasTraits):
         """Turn valid target IDs or 'all' into two lists:
         (int_ids, uuids).
         """
+        if not self._ids:
+            # flush notification socket if no engines yet, just in case
+            if not self.ids:
+                raise error.NoEnginesRegistered("Can't build targets without any engines")
+        
         if targets is None:
             targets = self._ids
         elif isinstance(targets, str):
@@ -388,12 +380,12 @@ class Client(HasTraits):
         elif isinstance(targets, int):
             if targets < 0:
                 targets = self.ids[targets]
-            if targets not in self.ids:
+            if targets not in self._ids:
                 raise IndexError("No such engine: %i"%targets)
             targets = [targets]
         
         if isinstance(targets, slice):
-            indices = list(list(range(len(self._ids))))[targets]
+            indices = list(range(len(self._ids)))[targets]
             ids = self.ids
             targets = [ ids[i] for i in indices ]
         
@@ -771,7 +763,7 @@ class Client(HasTraits):
                     # index access
                     job = self.history[job]
                 elif isinstance(job, AsyncResult):
-                    list(list(map(theids.add, job.msg_ids)))
+                    list(map(theids.add, job.msg_ids))
                     continue
                 theids.add(job)
         if not theids.intersection(self.outstanding):
@@ -789,14 +781,14 @@ class Client(HasTraits):
     #--------------------------------------------------------------------------
     
     @spin_first
-    @default_block
     def clear(self, targets=None, block=None):
         """Clear the namespace in target(s)."""
+        block = self.block if block is None else block
         targets = self._build_targets(targets)[0]
         for t in targets:
             self.session.send(self._control_socket, 'clear_request', content={}, ident=t)
         error = False
-        if self.block:
+        if block:
             self._flush_ignored_control()
             for i in range(len(targets)):
                 idents,msg = self.session.recv(self._control_socket,0)
@@ -811,7 +803,6 @@ class Client(HasTraits):
         
     
     @spin_first
-    @default_block
     def abort(self, jobs=None, targets=None, block=None):
         """Abort specific jobs from the execution queues of target(s).
         
@@ -826,6 +817,7 @@ class Client(HasTraits):
         
         
         """
+        block = self.block if block is None else block
         targets = self._build_targets(targets)[0]
         msg_ids = []
         if isinstance(jobs, (str,AsyncResult)):
@@ -843,7 +835,7 @@ class Client(HasTraits):
             self.session.send(self._control_socket, 'abort_request', 
                     content=content, ident=t)
         error = False
-        if self.block:
+        if block:
             self._flush_ignored_control()
             for i in range(len(targets)):
                 idents,msg = self.session.recv(self._control_socket,0)
@@ -857,9 +849,9 @@ class Client(HasTraits):
             raise error
     
     @spin_first
-    @default_block
     def shutdown(self, targets=None, restart=False, hub=False, block=None):
         """Terminates one or more engine processes, optionally including the hub."""
+        block = self.block if block is None else block
         if hub:
             targets = 'all'
         targets = self._build_targets(targets)[0]
@@ -891,28 +883,8 @@ class Client(HasTraits):
             raise error
     
     #--------------------------------------------------------------------------
-    # Execution methods
+    # Execution related methods
     #--------------------------------------------------------------------------
-    
-    @default_block
-    def _execute(self, code, targets='all', block=None):
-        """Executes `code` on `targets` in blocking or nonblocking manner.
-        
-        ``execute`` is always `bound` (affects engine namespace)
-        
-        Parameters
-        ----------
-        
-        code : str
-                the code string to be executed
-        targets : int/str/list of ints/strs
-                the engines on which to execute
-                default : all
-        block : bool
-                whether or not to wait until done to return
-                default: self.block
-        """
-        return self[targets].execute(code, block=block)
     
     def _maybe_raise(self, result):
         """wrapper for maybe raising an exception if apply failed."""
@@ -944,13 +916,6 @@ class Client(HasTraits):
         if not isinstance(subheader, dict):
             raise TypeError("subheader must be dict, not %s"%type(subheader))
         
-        if not self._ids:
-            # flush notification socket if no engines yet
-            any_ids = self.ids
-            if not any_ids:
-                raise error.NoEnginesRegistered("Can't execute without any connected engines.")
-                # enforce types of f,args,kwargs
-        
         bufs = util.pack_apply_message(f,args,kwargs)
         
         msg = self.session.send(socket, "apply_request", buffers=bufs, ident=ident,
@@ -962,7 +927,7 @@ class Client(HasTraits):
             # possibly routed to a specific engine
             if isinstance(ident, list):
                 ident = ident[-1]
-            if ident in list(list(self._engines.values())):
+            if ident in list(self._engines.values()):
                 # save for later, in case of engine death
                 self._outstanding_dict[ident].add(msg_id)
         self.history.append(msg_id)
@@ -1009,38 +974,10 @@ class Client(HasTraits):
         return DirectView(client=self, socket=self._mux_socket, targets=targets)
     
     #--------------------------------------------------------------------------
-    # Data movement (TO BE REMOVED)
-    #--------------------------------------------------------------------------
-    
-    @default_block
-    def _push(self, ns, targets='all', block=None, track=False):
-        """Push the contents of `ns` into the namespace on `target`"""
-        if not isinstance(ns, dict):
-            raise TypeError("Must be a dict, not %s"%type(ns))
-        result = self.apply(util._push, kwargs=ns, targets=targets, block=block, bound=True, balanced=False, track=track)
-        if not block:
-            return result
-    
-    @default_block
-    def _pull(self, keys, targets='all', block=None):
-        """Pull objects from `target`'s namespace by `keys`"""
-        if isinstance(keys, str):
-            pass
-        elif isinstance(keys, (list,tuple,set)):
-            for key in keys:
-                if not isinstance(key, str):
-                    raise TypeError("keys must be str, not type %r"%type(key))
-        else:
-            raise TypeError("keys must be strs, not %r"%keys)
-        result = self.apply(util._pull, (keys,), targets=targets, block=block, bound=True, balanced=False)
-        return result
-    
-    #--------------------------------------------------------------------------
     # Query methods
     #--------------------------------------------------------------------------
     
     @spin_first
-    @default_block
     def get_result(self, indices_or_msg_ids=None, block=None):
         """Retrieve a result by msg_id or history index, wrapped in an AsyncResult object.
         
@@ -1078,6 +1015,7 @@ class Client(HasTraits):
             A subclass of AsyncResult that retrieves results from the Hub
         
         """
+        block = self.block if block is None else block
         if indices_or_msg_ids is None:
             indices_or_msg_ids = -1
         
@@ -1278,5 +1216,78 @@ class Client(HasTraits):
         if content['status'] != 'ok':
             raise self._unwrap_exception(content)
 
+    @spin_first
+    def hub_history(self):
+        """Get the Hub's history
+        
+        Just like the Client, the Hub has a history, which is a list of msg_ids.
+        This will contain the history of all clients, and, depending on configuration,
+        may contain history across multiple cluster sessions.
+        
+        Any msg_id returned here is a valid argument to `get_result`.
+        
+        Returns
+        -------
+        
+        msg_ids : list of strs
+                list of all msg_ids, ordered by task submission time.
+        """
+        
+        self.session.send(self._query_socket, "history_request", content={})
+        idents, msg = self.session.recv(self._query_socket, 0)
+        
+        if self.debug:
+            pprint(msg)
+        content = msg['content']
+        if content['status'] != 'ok':
+            raise self._unwrap_exception(content)
+        else:
+            return content['history']
+
+    @spin_first
+    def db_query(self, query, keys=None):
+        """Query the Hub's TaskRecord database
+        
+        This will return a list of task record dicts that match `query`
+        
+        Parameters
+        ----------
+        
+        query : mongodb query dict
+            The search dict. See mongodb query docs for details.
+        keys : list of strs [optional]
+            THe subset of keys to be returned.  The default is to fetch everything.
+            'msg_id' will *always* be included.
+        """
+        content = dict(query=query, keys=keys)
+        self.session.send(self._query_socket, "db_request", content=content)
+        idents, msg = self.session.recv(self._query_socket, 0)
+        if self.debug:
+            pprint(msg)
+        content = msg['content']
+        if content['status'] != 'ok':
+            raise self._unwrap_exception(content)
+        
+        records = content['records']
+        buffer_lens = content['buffer_lens']
+        result_buffer_lens = content['result_buffer_lens']
+        buffers = msg['buffers']
+        has_bufs = buffer_lens is not None
+        has_rbufs = result_buffer_lens is not None
+        for i,rec in enumerate(records):
+            # relink buffers
+            if has_bufs:
+                blen = buffer_lens[i]
+                rec['buffers'], buffers = buffers[:blen],buffers[blen:]
+            if has_rbufs:
+                blen = result_buffer_lens[i]
+                rec['result_buffers'], buffers = buffers[:blen],buffers[blen:]
+            # turn timestamps back into times
+            for key in 'submitted started completed resubmitted'.split():
+                maybedate = rec.get(key, None)
+                if maybedate and util.ISO8601_RE.match(maybedate):
+                    rec[key] = datetime.strptime(maybedate, util.ISO8601)
+            
+        return records
 
 __all__ = [ 'Client' ]

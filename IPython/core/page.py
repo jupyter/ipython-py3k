@@ -36,7 +36,7 @@ from IPython.core import ipapi
 from IPython.core.error import TryNext
 from IPython.utils.cursesimport import use_curses
 from IPython.utils.data import chop
-import IPython.utils.io
+from IPython.utils import io
 from IPython.utils.process import system
 from IPython.utils.terminal import get_terminal_size
 
@@ -56,18 +56,18 @@ def page_dumb(strng, start=0, screen_lines=25):
     out_ln  = strng.splitlines()[start:]
     screens = chop(out_ln,screen_lines-1)
     if len(screens) == 1:
-        print(os.linesep.join(screens[0]), file=IPython.utils.io.Term.cout)
+        print(os.linesep.join(screens[0]), file=io.stdout)
     else:
         last_escape = ""
         for scr in screens[0:-1]:
             hunk = os.linesep.join(scr)
-            print(last_escape + hunk, file=IPython.utils.io.Term.cout)
+            print(last_escape + hunk, file=io.stdout)
             if not page_more():
                 return
             esc_list = esc_re.findall(hunk)
             if len(esc_list) > 0:
                 last_escape = esc_list[-1]
-        print(last_escape + os.linesep.join(screens[-1]), file=IPython.utils.io.Term.cout)
+        print(last_escape + os.linesep.join(screens[-1]), file=io.stdout)
 
 
 def page(strng, start=0, screen_lines=0, pager_cmd=None):
@@ -110,7 +110,7 @@ def page(strng, start=0, screen_lines=0, pager_cmd=None):
         print(strng)
         return
     # chop off the topmost part of the string we don't want to see
-    str_lines = strng.split(os.linesep)[start:]
+    str_lines = strng.splitlines()[start:]
     str_toprint = os.linesep.join(str_lines)
     num_newlines = len(str_lines)
     len_str = len(str_toprint)
@@ -176,7 +176,7 @@ def page(strng, start=0, screen_lines=0, pager_cmd=None):
     #print 'numlines',numlines,'screenlines',screen_lines  # dbg
     if numlines <= screen_lines :
         #print '*** normal print'  # dbg
-        print(str_toprint, file=IPython.utils.io.Term.cout)
+        print(str_toprint, file=io.stdout)
     else:
         # Try to open pager and default to internal one if that fails.
         # All failure modes are tagged as 'retval=1', to match the return
@@ -282,13 +282,13 @@ if os.name == 'nt' and os.environ.get('TERM','dumb') != 'emacs':
 
         @return:    True if need print more lines, False if quit
         """
-        IPython.utils.io.Term.cout.write('---Return to continue, q to quit--- ')
+        io.stdout.write('---Return to continue, q to quit--- ')
         ans = msvcrt.getch()
         if ans in ("q", "Q"):
             result = False
         else:
             result = True
-        IPython.utils.io.Term.cout.write("\b"*37 + " "*37 + "\b"*37)
+        io.stdout.write("\b"*37 + " "*37 + "\b"*37)
         return result
 else:
     def page_more():

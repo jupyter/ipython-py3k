@@ -163,7 +163,7 @@ class BackgroundJobManager:
             job = BackgroundJobExpr(func_or_exp,glob,loc)
         else:
             raise
-        jkeys = list(list(self.jobs_all.keys()))
+        jkeys = list(self.jobs_all.keys())
         if jkeys:
             job.num = max(jkeys)+1
         else:

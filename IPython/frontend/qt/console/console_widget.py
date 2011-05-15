@@ -22,6 +22,7 @@ from IPython.frontend.qt.util import MetaQObjectHasTraits, get_font
 from IPython.utils.traitlets import Bool, Enum, Int
 from .ansi_code_processor import QtAnsiCodeProcessor
 from .completion_widget import CompletionWidget
+from .kill_ring import QtKillRing
 
 #-----------------------------------------------------------------------------
 # Functions
@@ -172,6 +173,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         self._filter_drag = False
         self._filter_resize = False
         self._html_exporter = HtmlExporter(self._control)
+        self._kill_ring = QtKillRing(self._control)
         self._prompt = ''
         self._prompt_html = None
         self._prompt_pos = 0
@@ -651,13 +653,13 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """
         pass
 
-    def _up_pressed(self):
+    def _up_pressed(self, shift_modifier):
         """ Called when the up key is pressed. Returns whether to continue
             processing the event.
         """
         return True
 
-    def _down_pressed(self):
+    def _down_pressed(self, shift_modifier):
         """ Called when the down key is pressed. Returns whether to continue
             processing the event.
         """
@@ -848,6 +850,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         layout.documentSizeChanged.connect(self._adjust_scrollbars)
 
         # Configure the control.
+        control.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         control.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         control.setReadOnly(True)
         control.setUndoRedoEnabled(False)
@@ -951,7 +954,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                         cursor.movePosition(QtGui.QTextCursor.Right,
                                             QtGui.QTextCursor.KeepAnchor,
                                             len(self._continuation_prompt))
-                    cursor.removeSelectedText()
+                    self._kill_ring.kill_cursor(cursor)
                 intercepted = True
 
             elif key == QtCore.Qt.Key_L:
@@ -974,11 +977,12 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                                         QtGui.QTextCursor.KeepAnchor)
                     cursor.movePosition(QtGui.QTextCursor.Right,
                                         QtGui.QTextCursor.KeepAnchor, offset)
-                    cursor.removeSelectedText()
+                    self._kill_ring.kill_cursor(cursor)
                 intercepted = True
 
             elif key == QtCore.Qt.Key_Y:
-                self.paste()
+                self._keep_cursor_in_buffer()
+                self._kill_ring.yank()
                 intercepted = True
 
             elif key in (QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete):
@@ -1003,16 +1007,20 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 self._set_cursor(self._get_word_end_cursor(position))
                 intercepted = True
 
+            elif key == QtCore.Qt.Key_Y:
+                self._kill_ring.rotate()
+                intercepted = True
+
             elif key == QtCore.Qt.Key_Backspace:
                 cursor = self._get_word_start_cursor(position)
                 cursor.setPosition(position, QtGui.QTextCursor.KeepAnchor)
-                cursor.removeSelectedText()
+                self._kill_ring.kill_cursor(cursor)
                 intercepted = True
 
             elif key == QtCore.Qt.Key_D:
                 cursor = self._get_word_end_cursor(position)
                 cursor.setPosition(position, QtGui.QTextCursor.KeepAnchor)
-                cursor.removeSelectedText()
+                self._kill_ring.kill_cursor(cursor)
                 intercepted = True
 
             elif key == QtCore.Qt.Key_Delete:
@@ -1039,14 +1047,14 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
                 intercepted = True
 
             elif key == QtCore.Qt.Key_Up:
-                if self._reading or not self._up_pressed():
+                if self._reading or not self._up_pressed(shift_down):
                     intercepted = True
                 else:
                     prompt_line = self._get_prompt_cursor().blockNumber()
                     intercepted = cursor.blockNumber() <= prompt_line
 
             elif key == QtCore.Qt.Key_Down:
-                if self._reading or not self._down_pressed():
+                if self._reading or not self._down_pressed(shift_down):
                     intercepted = True
                 else:
                     end_line = self._get_end_cursor().blockNumber()
@@ -1556,7 +1564,11 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         self._control.document().setMaximumBlockCount(0)
         self._control.setUndoRedoEnabled(True)
 
+        # Work around bug in QPlainTextEdit: input method is not re-enabled
+        # when read-only is disabled.
         self._control.setReadOnly(False)
+        self._control.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
+
         self._control.moveCursor(QtGui.QTextCursor.End)
         self._executing = False
         self._prompt_started_hook()

@@ -23,25 +23,22 @@ def setUp():
 def test_history():
     ip = get_ipython()
     with TemporaryDirectory() as tmpdir:
-        # Make a new :memory: DB.
         hist_manager_ori = ip.history_manager
+        hist_file = os.path.join(tmpdir, 'history.sqlite')
         try:
-            ip.history_manager = HistoryManager(shell=ip, hist_file=':memory:')
+            ip.history_manager = HistoryManager(shell=ip, hist_file=hist_file)
             hist = ['a=1', 'def f():\n    test = 1\n    return test', "b='€Æ¾÷ß'"]
             for i, h in enumerate(hist, start=1):
                 ip.history_manager.store_inputs(i, h)
             
             ip.history_manager.db_log_output = True
             # Doesn't match the input, but we'll just check it's stored.
-            ip.history_manager.output_hist_reprs[3].append("spam")
+            ip.history_manager.output_hist_reprs[3] = "spam"
             ip.history_manager.store_output(3)
             
             nt.assert_equal(ip.history_manager.input_hist_raw, [''] + hist)
             
-            # Check lines were written to DB
-            c = ip.history_manager.db.execute("SELECT source_raw FROM history")
-            nt.assert_equal([x for x, in c], hist)
-              
+            
             # New session
             ip.history_manager.reset()
             newcmds = ["z=5","class X(object):\n    pass", "k='p'"]
@@ -56,7 +53,7 @@ def test_history():
             # Check get_hist_tail
             gothist = ip.history_manager.get_tail(4, output=True,
                                                     include_latest=True)
-            expected = [(1, 3, (hist[-1], ["spam"])),
+            expected = [(1, 3, (hist[-1], "spam")),
                         (2, 1, (newcmds[0], None)),
                         (2, 2, (newcmds[1], None)),
                         (2, 3, (newcmds[2], None)),]
@@ -71,7 +68,7 @@ def test_history():
             gothist = ip.history_manager.search("*test*")
             nt.assert_equal(list(gothist), [(1,2,hist[1])] )
             gothist = ip.history_manager.search("b*", output=True)
-            nt.assert_equal(list(gothist), [(1,3,(hist[2],["spam"]))] )
+            nt.assert_equal(list(gothist), [(1,3,(hist[2],"spam"))] )
             
             # Cross testing: check that magic %save can get previous session.
             testfilename = os.path.realpath(os.path.join(tmpdir, "test.py"))
@@ -83,6 +80,7 @@ def test_history():
             # Duplicate line numbers - check that it doesn't crash, and
             # gets a new session
             ip.history_manager.store_inputs(1, "rogue")
+            ip.history_manager.writeout_cache()
             nt.assert_equal(ip.history_manager.session_number, 3)
         finally:
             # Restore history manager

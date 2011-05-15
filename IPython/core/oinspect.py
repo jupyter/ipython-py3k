@@ -31,7 +31,7 @@ from itertools import zip_longest
 from IPython.core import page
 from IPython.external.Itpl import itpl
 from IPython.utils import PyColorize
-import IPython.utils.io
+from IPython.utils import io
 from IPython.utils.text import indent
 from IPython.utils.wildcard import list_namespace
 from IPython.utils.coloransi import *
@@ -298,7 +298,7 @@ class Inspector:
         if output is None:
             self.noinfo('definition header',oname)
         else:
-            print(header,self.format(output), end=' ', file=IPython.utils.io.Term.cout)
+            print(header,self.format(output), end=' ', file=io.stdout)
 
     def pdoc(self,obj,oname='',formatter = None):
         """Print the docstring for any object.
@@ -871,7 +871,7 @@ class Inspector:
         for name in ns_search:
             if name not in ns_table:
                 raise ValueError('invalid namespace <%s>. Valid names: %s' %
-                                 (name,list(list(ns_table.keys()))))
+                                 (name,list(ns_table.keys())))
 
         #print 'type_pattern:',type_pattern # dbg
         search_result = []

@@ -8,8 +8,10 @@
 
 # Standard library imports
 from collections import namedtuple
+import os.path
 import re
 from subprocess import Popen
+import sys
 from textwrap import dedent
 
 # System library imports
@@ -158,7 +160,7 @@ class IPythonWidget(FrontendWidget):
             else:
                 super(IPythonWidget, self)._handle_execute_reply(msg)
 
-    def _handle_history_tail_reply(self, msg):
+    def _handle_history_reply(self, msg):
         """ Implemented to handle history tail replies, which are only supported
             by the IPython kernel.
         """
@@ -210,7 +212,7 @@ class IPythonWidget(FrontendWidget):
         """ Reimplemented to make a history request.
         """
         super(IPythonWidget, self)._started_channels()
-        self.kernel_manager.xreq_channel.history_tail(1000)
+        self.kernel_manager.xreq_channel.history(hist_access_type='tail', n=1000)
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' public interface
@@ -233,6 +235,10 @@ class IPythonWidget(FrontendWidget):
     def execute_file(self, path, hidden=False):
         """ Reimplemented to use the 'run' magic.
         """
+        # Use forward slashes on Windows to avoid escaping each separator.
+        if sys.platform == 'win32':
+            path = os.path.normpath(path).replace('\\', '/')
+
         self.execute('%%run %s' % path, hidden=hidden)
 
     #---------------------------------------------------------------------------

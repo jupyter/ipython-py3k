@@ -34,7 +34,8 @@ from IPython.core import page
 from IPython.core import prefilter
 from IPython.core import shadowns
 from IPython.core import ultratb
-from IPython.core.alias import AliasManager
+from IPython.core.alias import AliasManager, AliasError
+from IPython.core.autocall import ExitAutocall
 from IPython.core.builtin_trap import BuiltinTrap
 from IPython.core.compilerop import CachingCompiler
 from IPython.core.display_trap import DisplayTrap
@@ -140,23 +141,29 @@ class ReadlineNoRecord(object):
         
     def __enter__(self):
         if self._nested_level == 0:
-            self.orig_length = self.current_length()
-            self.readline_tail = self.get_readline_tail()
+            try:
+                self.orig_length = self.current_length()
+                self.readline_tail = self.get_readline_tail()
+            except (AttributeError, IndexError):   # Can fail with pyreadline
+                self.orig_length, self.readline_tail = 999999, []
         self._nested_level += 1
         
     def __exit__(self, type, value, traceback):
         self._nested_level -= 1
         if self._nested_level == 0:
             # Try clipping the end if it's got longer
-            e = self.current_length() - self.orig_length
-            if e > 0:
-                for _ in range(e):
-                    self.shell.readline.remove_history_item(self.orig_length)
-            
-            # If it still doesn't match, just reload readline history.
-            if self.current_length() != self.orig_length \
-                or self.get_readline_tail() != self.readline_tail:
-                self.shell.refill_readline_hist()
+            try:
+                e = self.current_length() - self.orig_length
+                if e > 0:
+                    for _ in range(e):
+                        self.shell.readline.remove_history_item(self.orig_length)
+                
+                # If it still doesn't match, just reload readline history.
+                if self.current_length() != self.orig_length \
+                    or self.get_readline_tail() != self.readline_tail:
+                    self.shell.refill_readline_hist()
+            except (AttributeError, IndexError):
+                pass
         # Returning False will cause exceptions to propagate
         return False
     
@@ -195,6 +202,9 @@ class InteractiveShell(Configurable, Magic):
     display_pub_class = Type(DisplayPublisher)
 
     exit_now = CBool(False)
+    exiter = Instance(ExitAutocall)
+    def _exiter_default(self):
+        return ExitAutocall(self)
     # Monotonically increasing execution counter
     execution_count = Int(1)
     
@@ -227,15 +237,13 @@ class InteractiveShell(Configurable, Magic):
     readline_merge_completions = CBool(True, config=True)
     readline_omit__names = Enum((0,1,2), default_value=2, config=True)
     readline_remove_delims = Unicode('-/~', config=True)
+    # don't use \M- bindings by default, because they
+    # conflict with 8-bit encodings. See gh-58,gh-88
     readline_parse_and_bind = List([
             'tab: complete',
             '"\C-l": clear-screen',
             'set show-all-if-ambiguous on',
             '"\C-o": tab-insert',
-            # See bug gh-58 - with \M-i enabled, chars 0x9000-0x9fff
-            # crash IPython.
-            '"\M-o": "\d\d\d\d"',
-            '"\M-I": "\d\d\d\d"',
             '"\C-r": reverse-search-history',
             '"\C-s": forward-search-history',
             '"\C-p": history-search-backward',
@@ -266,7 +274,7 @@ class InteractiveShell(Configurable, Magic):
     history_manager = Instance('IPython.core.history.HistoryManager')
 
     # Private interface
-    _post_execute = set()
+    _post_execute = Instance(dict)
 
     def __init__(self, config=None, ipython_dir=None,
                  user_ns=None, user_global_ns=None,
@@ -421,14 +429,6 @@ class InteractiveShell(Configurable, Magic):
 
         # command compiler
         self.compile = CachingCompiler()
-        
-        # User input buffers
-        # NOTE: these variables are slated for full removal, once we are 100%
-        # sure that the new execution logic is solid.  We will delte runlines,
-        # push_line and these buffers, as all input will be managed by the
-        # frontends via an inputsplitter instance.
-        self.buffer = []
-        self.buffer_raw = []
 
         # Make an empty namespace, which extension writers can rely on both
         # existing and NEVER being used by ipython itself.  This gives them a
@@ -436,12 +436,6 @@ class InteractiveShell(Configurable, Magic):
         # their extensions may require, without fear of collisions with other
         # ipython names that may develop later.
         self.meta = Struct()
-
-        # Object variable to store code object waiting execution.  This is
-        # used mainly by the multithreaded shells, but it can come in handy in
-        # other situations.  No need to use a Queue here, since it's a single
-        # item which gets cleared once run.
-        self.code_to_run = None
 
         # Temporary files used for various purposes.  Deleted at exit.
         self.tempfiles = []
@@ -455,6 +449,9 @@ class InteractiveShell(Configurable, Magic):
 
         # Indentation management
         self.indent_current_nsp = 0
+
+        # Dict to track post-execution functions that have been registered
+        self._post_execute = {}
 
     def init_environment(self):
         """Any changes we need to make to the user's environment."""
@@ -510,14 +507,13 @@ class InteractiveShell(Configurable, Magic):
     def init_io(self):
         # This will just use sys.stdout and sys.stderr. If you want to
         # override sys.stdout and sys.stderr themselves, you need to do that
-        # *before* instantiating this class, because Term holds onto 
+        # *before* instantiating this class, because io holds onto 
         # references to the underlying streams.
         if sys.platform == 'win32' and self.has_readline:
-            Term = io.IOTerm(cout=self.readline._outputfile,
-                             cerr=self.readline._outputfile)
+            io.stdout = io.stderr = io.IOStream(self.readline._outputfile)
         else:
-            Term = io.IOTerm()
-        io.Term = Term
+            io.stdout = io.IOStream(sys.stdout)
+            io.stderr = io.IOStream(sys.stderr)
 
     def init_prompts(self):
         # TODO: This is a pass for now because the prompts are managed inside
@@ -579,7 +575,7 @@ class InteractiveShell(Configurable, Magic):
     def restore_sys_module_state(self):
         """Restore the state of the sys module."""
         try:
-            for k, v in list(self._orig_sys_module_state.items()):
+            for k, v in self._orig_sys_module_state.items():
                 setattr(sys, k, v)
         except AttributeError:
             pass
@@ -651,7 +647,7 @@ class InteractiveShell(Configurable, Magic):
         """
         if not isinstance(func, collections.Callable):
             raise ValueError('argument %s must be callable' % func)
-        self._post_execute.add(func)
+        self._post_execute[func] = True
 
     #-------------------------------------------------------------------------
     # Things related to the "main" module
@@ -1021,6 +1017,9 @@ class InteractiveShell(Configurable, Magic):
 
         # Store myself as the public api!!!
         ns['get_ipython'] = self.get_ipython
+        
+        ns['exit'] = self.exiter
+        ns['quit'] = self.exiter
 
         # Sync what we've added so far to user_ns_hidden so these aren't seen
         # by %who
@@ -1034,21 +1033,20 @@ class InteractiveShell(Configurable, Magic):
         self.user_ns.update(ns)
 
     def reset(self, new_session=True):
-        """Clear all internal namespaces.
-
-        Note that this is much more aggressive than %reset, since it clears
-        fully all namespaces, as well as all input/output lists.
+        """Clear all internal namespaces, and attempt to release references to
+        user objects.
         
         If new_session is True, a new history session will be opened.
         """
         # Clear histories
         self.history_manager.reset(new_session)
+        # Reset counter used to index all histories
+        if new_session:
+            self.execution_count = 1
         
         # Flush cached output items
-        self.displayhook.flush()
-
-        # Reset counter used to index all histories
-        self.execution_count = 0
+        if self.displayhook.do_full_cache:
+            self.displayhook.flush()
         
         # Restore the user namespaces to minimal usability
         for ns in self.ns_refs_table:
@@ -1074,6 +1072,9 @@ class InteractiveShell(Configurable, Magic):
         # Flush the private list of module references kept for script
         # execution protection
         self.clear_main_mod_cache()
+        
+        # Clear out the namespace from the last %run
+        self.new_main_mod()
 
     def reset_selective(self, regex=None):
         """Clear selective variables from internal namespaces based on a
@@ -1360,7 +1361,7 @@ class InteractiveShell(Configurable, Magic):
             print('Exception type :',etype)
             print('Exception value:',value)
             print('Traceback      :',tb)
-            print('Source code    :','\n'.join(self.buffer))
+            #print 'Source code    :','\n'.join(self.buffer)
 
         if handler is None: handler = dummy_handler
 
@@ -1432,7 +1433,6 @@ class InteractiveShell(Configurable, Magic):
                 sys.last_type = etype
                 sys.last_value = value
                 sys.last_traceback = tb
-    
                 if etype in self.custom_exceptions:
                     # FIXME: Old custom traceback objects may just return a
                     # string, in that case we just put it into a list
@@ -1448,11 +1448,10 @@ class InteractiveShell(Configurable, Magic):
                     else:
                         stb = self.InteractiveTB.structured_traceback(etype,
                                                 value, tb, tb_offset=tb_offset)
-                        # FIXME: the pdb calling should be done by us, not by
-                        # the code computing the traceback.
-                        if self.InteractiveTB.call_pdb:
-                            # pdb mucks up readline, fix it back
-                            self.set_readline_completer()
+                        
+                        if self.call_pdb:
+                            # drop into debugger
+                            self.debugger(force=True)
 
                 # Actually show the traceback
                 self._showtraceback(etype, value, stb)
@@ -1466,7 +1465,7 @@ class InteractiveShell(Configurable, Magic):
         Subclasses may override this method to put the traceback on a different
         place, like a side channel.
         """
-        print(self.InteractiveTB.stb2text(stb), file=io.Term.cout)
+        print(self.InteractiveTB.stb2text(stb), file=io.stdout)
 
     def showsyntaxerror(self, filename=None):
         """Display the syntax error that just occurred.
@@ -1905,7 +1904,7 @@ class InteractiveShell(Configurable, Magic):
             # plain ascii works better w/ pyreadline, on some machines, so
             # we use it and only print uncolored rewrite if we have unicode
             rw = str(rw)
-            print(rw, file=IPython.utils.io.Term.cout)
+            print(rw, file=io.stdout)
         except UnicodeEncodeError:
             print("------> " + cmd)
             
@@ -2078,22 +2077,38 @@ class InteractiveShell(Configurable, Magic):
                 self.showtraceback()
                 warn('Unknown failure executing file: <%s>' % fname)
                 
-    def run_cell(self, cell, store_history=True):
+    def run_cell(self, raw_cell, store_history=True):
         """Run a complete IPython cell.
         
         Parameters
         ----------
-        cell : str
+        raw_cell : str
           The code (including IPython code such as %magic functions) to run.
         store_history : bool
           If True, the raw and translated cell will be stored in IPython's
           history. For user code calling back into IPython's machinery, this
           should be set to False.
         """
-        raw_cell = cell
+        if (not raw_cell) or raw_cell.isspace():
+            return
+        
+        for line in raw_cell.splitlines():
+            self.input_splitter.push(line)
+        cell = self.input_splitter.source_reset()
+        
         with self.builtin_trap:
-            cell = self.prefilter_manager.prefilter_lines(cell)
-            
+            prefilter_failed = False
+            if len(cell.splitlines()) == 1:
+                try:
+                    cell = self.prefilter_manager.prefilter_line(cell)
+                except AliasError as e:
+                    error(e)
+                    prefilter_failed=True
+                except Exception:
+                    # don't allow prefilter errors to crash IPython
+                    self.showtraceback()
+                    prefilter_failed = True
+                
             # Store raw and processed history
             if store_history:
                 self.history_manager.store_inputs(self.execution_count, 
@@ -2101,22 +2116,32 @@ class InteractiveShell(Configurable, Magic):
 
             self.logger.log(cell, raw_cell)
             
-            cell_name = self.compile.cache(cell, self.execution_count)
+            if not prefilter_failed:
+                # don't run if prefilter failed
+                cell_name = self.compile.cache(cell, self.execution_count)
             
-            with self.display_trap:
-                try:
-                    code_ast = ast.parse(cell, filename=cell_name)
-                except (OverflowError, SyntaxError, ValueError, TypeError, MemoryError):
-                    # Case 1
-                    self.showsyntaxerror()
-                    self.execution_count += 1
-                    return None
-                    
-                interactivity = 'last'      # Last node to be run interactive
-                if len(cell.splitlines()) == 1:
-                    interactivity = 'all'   # Single line; run fully interactive
-
-                self.run_ast_nodes(code_ast.body, cell_name, interactivity)
+                with self.display_trap:
+                    try:
+                        code_ast = ast.parse(cell, filename=cell_name)
+                    except (OverflowError, SyntaxError, ValueError, TypeError,
+                            MemoryError):
+                        self.showsyntaxerror()
+                        self.execution_count += 1
+                        return None
+            
+                    self.run_ast_nodes(code_ast.body, cell_name,
+                                                        interactivity="last_expr")
+            
+                    # Execute any registered post-execution functions.
+                    for func, status in self._post_execute.items():
+                        if not status:
+                            continue
+                        try:
+                            func()
+                        except:
+                            self.showtraceback()
+                            # Deactivate failing function
+                            self._post_execute[func] = False
                 
         if store_history:
             # Write output to the database. Does nothing unless
@@ -2125,7 +2150,7 @@ class InteractiveShell(Configurable, Magic):
             # Each cell is a *single* input, regardless of how many lines it has
             self.execution_count += 1
             
-    def run_ast_nodes(self, nodelist, cell_name, interactivity='last'):
+    def run_ast_nodes(self, nodelist, cell_name, interactivity='last_expr'):
         """Run a sequence of AST nodes. The execution mode depends on the
         interactivity parameter.
         
@@ -2137,12 +2162,20 @@ class InteractiveShell(Configurable, Magic):
           Will be passed to the compiler as the filename of the cell. Typically
           the value returned by ip.compile.cache(cell).
         interactivity : str
-          'all', 'last' or 'none', specifying which nodes should be run
-          interactively (displaying output from expressions). Other values for
-          this parameter will raise a ValueError.
+          'all', 'last', 'last_expr' or 'none', specifying which nodes should be
+          run interactively (displaying output from expressions). 'last_expr'
+          will run the last node interactively only if it is an expression (i.e.
+          expressions in loops or other blocks are not displayed. Other values
+          for this parameter will raise a ValueError.
         """
         if not nodelist:
             return
+        
+        if interactivity == 'last_expr':
+            if isinstance(nodelist[-1], ast.Expr):
+                interactivity = "last"
+            else:
+                interactivity = "none"
         
         if interactivity == 'none':
             to_run_exec, to_run_interactive = nodelist, []
@@ -2154,144 +2187,38 @@ class InteractiveShell(Configurable, Magic):
             raise ValueError("Interactivity was %r" % interactivity)
             
         exec_count = self.execution_count
-        if to_run_exec:
-            mod = ast.Module(to_run_exec)
-            self.code_to_run = code = self.compile(mod, cell_name, "exec")
-            if self.run_code(code) == 1:
-                return
-                
-        if to_run_interactive:
-            mod = ast.Interactive(to_run_interactive)
-            self.code_to_run = code = self.compile(mod, cell_name, "single")
-            return self.run_code(code)
-    
-    
-    # PENDING REMOVAL: this method is slated for deletion, once our new
-    # input logic has been 100% moved to frontends and is stable.
-    def runlines(self, lines, clean=False):
-        """Run a string of one or more lines of source.
-
-        This method is capable of running a string containing multiple source
-        lines, as if they had been entered at the IPython prompt.  Since it
-        exposes IPython's processing machinery, the given strings can contain
-        magic calls (%magic), special shell access (!cmd), etc.
-        """
         
-        if not isinstance(lines, (list, tuple)):
-            lines = lines.splitlines()
+        for i, node in enumerate(to_run_exec):
+            mod = ast.Module([node])
+            code = self.compile(mod, cell_name, "exec")
+            if self.run_code(code):
+                return True
 
-        if clean:
-            lines = self._cleanup_ipy_script(lines)
+        for i, node in enumerate(to_run_interactive):
+            mod = ast.Interactive([node])
+            code = self.compile(mod, cell_name, "single")
+            if self.run_code(code):
+                return True
 
-        # We must start with a clean buffer, in case this is run from an
-        # interactive IPython session (via a magic, for example).
-        self.reset_buffer()
-
-        # Since we will prefilter all lines, store the user's raw input too
-        # before we apply any transformations
-        self.buffer_raw[:] = [ l+'\n' for l in lines]
-        
-        more = False
-        prefilter_lines = self.prefilter_manager.prefilter_lines
-        with self.builtin_trap, self.display_trap:
-            for line in lines:
-                # skip blank lines so we don't mess up the prompt counter, but
-                # do NOT skip even a blank line if we are in a code block (more
-                # is true)
-            
-                if line or more:
-                    more = self.push_line(prefilter_lines(line, more))
-                    # IPython's run_source returns None if there was an error
-                    # compiling the code.  This allows us to stop processing
-                    # right away, so the user gets the error message at the
-                    # right place.
-                    if more is None:
-                        break
-            # final newline in case the input didn't have it, so that the code
-            # actually does get executed
-            if more:
-                self.push_line('\n')
-
-    def run_source(self, source, filename=None,
-                   symbol='single', post_execute=True):
-        """Compile and run some source in the interpreter.
-
-        Arguments are as for compile_command().
-
-        One several things can happen:
-
-        1) The input is incorrect; compile_command() raised an
-        exception (SyntaxError or OverflowError).  A syntax traceback
-        will be printed by calling the showsyntaxerror() method.
-
-        2) The input is incomplete, and more input is required;
-        compile_command() returned None.  Nothing happens.
-
-        3) The input is complete; compile_command() returned a code
-        object.  The code is executed by calling self.run_code() (which
-        also handles run-time exceptions, except for SystemExit).
-
-        The return value is:
-
-          - True in case 2
-
-          - False in the other cases, unless an exception is raised, where
-          None is returned instead.  This can be used by external callers to
-          know whether to continue feeding input or not.
-
-        The return value can be used to decide whether to use sys.ps1 or
-        sys.ps2 to prompt the next line."""
-
-        # We need to ensure that the source is unicode from here on.
-        if type(source)==bytes:
-            usource = source.decode(self.stdin_encoding)
-        else:
-            usource = source
-
-        if False:  # dbg
-            print('Source:', repr(source))  # dbg
-            print('USource:', repr(usource))  # dbg
-            print('type:', type(source)) # dbg
-            print('encoding', self.stdin_encoding)  # dbg
-        
-        try:
-            code_name = self.compile.cache(usource, self.execution_count)
-            code = self.compile(usource, code_name, symbol)
-        except (OverflowError, SyntaxError, ValueError, TypeError, MemoryError):
-            # Case 1
-            self.showsyntaxerror(filename)
-            return None
-
-        if code is None:
-            # Case 2
-            return True
-
-        # Case 3
-        # We store the code object so that threaded shells and
-        # custom exception handlers can access all this info if needed.
-        # The source corresponding to this can be obtained from the
-        # buffer attribute as '\n'.join(self.buffer).
-        self.code_to_run = code
-        # now actually execute the code object
-        if self.run_code(code, post_execute) == 0:
-            return False
-        else:
-            return None
-
-    # For backwards compatibility
-    runsource = run_source
+        return False
     
-    def run_code(self, code_obj, post_execute=True):
+    def run_code(self, code_obj):
         """Execute a code object.
 
         When an exception occurs, self.showtraceback() is called to display a
         traceback.
 
-        Return value: a flag indicating whether the code to be run completed
-        successfully:
+        Parameters
+        ----------
+        code_obj : code object
+          A compiled code object, to be executed
+        post_execute : bool [default: True]
+          whether to call post_execute hooks after this particular execution.
 
-          - 0: successful execution.
-          - 1: an error occurred.
+        Returns
+        -------
+        False : successful execution.
+        True : an error occurred.
         """
 
         # Set our own excepthook in case the user code tries to call it
@@ -2311,9 +2238,8 @@ class InteractiveShell(Configurable, Magic):
                 # Reset our crash handler in place
                 sys.excepthook = old_excepthook
         except SystemExit:
-            self.reset_buffer()
             self.showtraceback(exception_only=True)
-            warn("To exit: use any of 'exit', 'quit', %Exit or Ctrl-D.", level=1)
+            warn("To exit: use 'exit', 'quit', or Ctrl-D.", level=1)
         except self.custom_exceptions:
             etype,value,tb = sys.exc_info()
             self.CustomTB(etype,value,tb)
@@ -2324,106 +2250,10 @@ class InteractiveShell(Configurable, Magic):
             if softspace(sys.stdout, 0):
                 print()
 
-        # Execute any registered post-execution functions.  Here, any errors
-        # are reported only minimally and just on the terminal, because the
-        # main exception channel may be occupied with a user traceback.
-        # FIXME: we need to think this mechanism a little more carefully.
-        if post_execute:
-            for func in self._post_execute:
-                try:
-                    func()
-                except:
-                    head = '[ ERROR ] Evaluating post_execute function: %s' % \
-                           func
-                    print(head, file=io.Term.cout)
-                    print(self._simple_error(), file=io.Term.cout)
-                    print('Removing from post_execute', file=io.Term.cout)
-                    self._post_execute.remove(func)
-
-        # Flush out code object which has been run (and source)
-        self.code_to_run = None
         return outflag
         
     # For backwards compatibility
     runcode = run_code
-
-    # PENDING REMOVAL: this method is slated for deletion, once our new
-    # input logic has been 100% moved to frontends and is stable.
-    def push_line(self, line):
-        """Push a line to the interpreter.
-
-        The line should not have a trailing newline; it may have
-        internal newlines.  The line is appended to a buffer and the
-        interpreter's run_source() method is called with the
-        concatenated contents of the buffer as source.  If this
-        indicates that the command was executed or invalid, the buffer
-        is reset; otherwise, the command is incomplete, and the buffer
-        is left as it was after the line was appended.  The return
-        value is 1 if more input is required, 0 if the line was dealt
-        with in some way (this is the same as run_source()).
-        """
-
-        # autoindent management should be done here, and not in the
-        # interactive loop, since that one is only seen by keyboard input.  We
-        # need this done correctly even for code run via runlines (which uses
-        # push).
-
-        #print 'push line: <%s>' % line  # dbg
-        self.buffer.append(line)
-        full_source = '\n'.join(self.buffer)
-        more = self.run_source(full_source, self.filename)
-        if not more:
-            self.history_manager.store_inputs(self.execution_count,
-                                        '\n'.join(self.buffer_raw), full_source)
-            self.reset_buffer()
-            self.execution_count += 1
-        return more
-
-    def reset_buffer(self):
-        """Reset the input buffer."""
-        self.buffer[:] = []
-        self.buffer_raw[:] = []
-        self.input_splitter.reset()
-
-    # For backwards compatibility
-    resetbuffer = reset_buffer
-
-    def _is_secondary_block_start(self, s):
-        if not s.endswith(':'):
-            return False
-        if (s.startswith('elif') or 
-            s.startswith('else') or 
-            s.startswith('except') or
-            s.startswith('finally')):
-            return True
-
-    def _cleanup_ipy_script(self, script):
-        """Make a script safe for self.runlines()
-
-        Currently, IPython is lines based, with blocks being detected by
-        empty lines.  This is a problem for block based scripts that may
-        not have empty lines after blocks.  This script adds those empty
-        lines to make scripts safe for running in the current line based
-        IPython.
-        """
-        res = []
-        lines = script.splitlines()
-        level = 0
-
-        for l in lines:
-            lstripped = l.lstrip()
-            stripped = l.strip()                
-            if not stripped:
-                continue
-            newlevel = len(l) - len(lstripped)                    
-            if level > 0 and newlevel == 0 and \
-                   not self._is_secondary_block_start(stripped): 
-                # add empty line
-                res.append('')
-            res.append(l)
-            level = newlevel
-
-        return '\n'.join(res) + '\n'
 
     #-------------------------------------------------------------------------
     # Things related to GUI support and pylab
@@ -2474,12 +2304,12 @@ class InteractiveShell(Configurable, Magic):
     # TODO:  This should be removed when Term is refactored.
     def write(self,data):
         """Write a string to the default output"""
-        io.Term.cout.write(data)
+        io.stdout.write(data)
 
     # TODO:  This should be removed when Term is refactored.
     def write_err(self,data):
         """Write a string to the default error output"""
-        io.Term.cerr.write(data)
+        io.stderr.write(data)
 
     def ask_yes_no(self,prompt,default=True):
         if self.quiet:

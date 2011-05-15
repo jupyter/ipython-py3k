@@ -175,8 +175,8 @@ import shlex
 import sys
 
 from IPython.utils.PyColorize import Parser
+from IPython.utils import io
 from IPython.utils.io import file_read, file_readlines
-import IPython.utils.io
 from IPython.utils.text import marquee
 
 __all__ = ['Demo','IPythonDemo','LineDemo','IPythonLineDemo','DemoError']
@@ -318,7 +318,7 @@ class Demo(object):
         
         if index is None:
             if self.finished:
-                print('Demo finished.  Use <demo_name>.reset() if you want to rerun it.', file=IPython.utils.io.Term.cout)
+                print('Demo finished.  Use <demo_name>.reset() if you want to rerun it.', file=io.stdout)
                 return None
             index = self.block_index
         else:
@@ -388,8 +388,8 @@ class Demo(object):
             return
 
         print(self.marquee('<%s> block # %s (%s remaining)' %
-                           (self.title,index,self.nblocks-index-1)), file=IPython.utils.io.Term.cout)
-        print((self.src_blocks_colored[index]), file=IPython.utils.io.Term.cout)
+                           (self.title,index,self.nblocks-index-1)), file=io.stdout)
+        print((self.src_blocks_colored[index]), file=io.stdout)
         sys.stdout.flush()
 
     def show_all(self):
@@ -403,11 +403,11 @@ class Demo(object):
         for index,block in enumerate(self.src_blocks_colored):
             if silent[index]:
                 print(marquee('<%s> SILENT block # %s (%s remaining)' %
-                              (title,index,nblocks-index-1)), file=IPython.utils.io.Term.cout)
+                              (title,index,nblocks-index-1)), file=io.stdout)
             else:
                 print(marquee('<%s> block # %s (%s remaining)' %
-                              (title,index,nblocks-index-1)), file=IPython.utils.io.Term.cout)
-            print(block, end=' ', file=IPython.utils.io.Term.cout)
+                              (title,index,nblocks-index-1)), file=io.stdout)
+            print(block, end=' ', file=io.stdout)
         sys.stdout.flush()
 
     def run_cell(self,source):
@@ -433,17 +433,17 @@ class Demo(object):
             self.block_index += 1
             if self._silent[index]:
                 print(marquee('Executing silent block # %s (%s remaining)' %
-                              (index,self.nblocks-index-1)), file=IPython.utils.io.Term.cout)
+                              (index,self.nblocks-index-1)), file=io.stdout)
             else:
                 self.pre_cmd()
                 self.show(index)
                 if self.auto_all or self._auto[index]:
-                    print(marquee('output:'), file=IPython.utils.io.Term.cout)
+                    print(marquee('output:'), file=io.stdout)
                 else:
-                    print(marquee('Press <q> to quit, <Enter> to execute...'), end=' ', file=IPython.utils.io.Term.cout)
+                    print(marquee('Press <q> to quit, <Enter> to execute...'), end=' ', file=io.stdout)
                     ans = input().strip()
                     if ans:
-                        print(marquee('Block NOT executed'), file=IPython.utils.io.Term.cout)
+                        print(marquee('Block NOT executed'), file=io.stdout)
                         return
             try:
                 save_argv = sys.argv
@@ -461,10 +461,10 @@ class Demo(object):
         if self.block_index == self.nblocks:
             mq1 = self.marquee('END OF DEMO')
             if mq1:
-                # avoid spurious print >>IPython.utils.io.Term.cout,s if empty marquees are used
-                print(file=IPython.utils.io.Term.cout)
-                print(mq1, file=IPython.utils.io.Term.cout)
-                print(self.marquee('Use <demo_name>.reset() if you want to rerun it.'), file=IPython.utils.io.Term.cout)
+                # avoid spurious print >>io.stdout,s if empty marquees are used
+                print(file=io.stdout)
+                print(mq1, file=io.stdout)
+                print(self.marquee('Use <demo_name>.reset() if you want to rerun it.'), file=io.stdout)
             self.finished = True
 
     # These methods are meant to be overridden by subclasses who may wish to

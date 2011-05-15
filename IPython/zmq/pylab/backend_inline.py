@@ -6,7 +6,9 @@
 
 
 # Standard library imports
+import sys
 
+# Third-party imports
 import matplotlib
 from matplotlib.backends.backend_svg import new_figure_manager
 from matplotlib._pylab_helpers import Gcf
@@ -19,7 +21,7 @@ from IPython.lib.pylabtools import figure_to_svg
 # Functions
 #-----------------------------------------------------------------------------
 
-def show(close=False):
+def show(close=True):
     """Show all figures as SVG payloads sent to the IPython clients.
 
     Parameters
@@ -55,8 +57,6 @@ def flush_svg():
     prior code execution, there had been any calls to draw_if_interactive.
     """
     if show._draw_called:
-        # Show is called with the default close=False here, otherwise, the
-        # Figure will be closed and not available for future plotting.
         show()
         show._draw_called = False
 
@@ -64,7 +64,15 @@ def flush_svg():
 def send_svg_figure(fig):
     """Draw the current figure and send it as an SVG payload.
     """
+    # For an empty figure, don't even bother calling figure_to_svg, to avoid
+    # big blank spaces in the qt console
+    if not fig.axes:
+        return
+
     svg = figure_to_svg(fig)
+    # flush text streams before sending figures, helps a little with output
+    # synchronization in the console (though it's a bandaid, not a real sln)
+    sys.stdout.flush(); sys.stderr.flush()
     publish_display_data(
         'IPython.zmq.pylab.backend_inline.send_svg_figure',
         'Matplotlib Plot',

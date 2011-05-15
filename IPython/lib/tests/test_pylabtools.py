@@ -1,9 +1,4 @@
-"""A one-line description.
-
-A longer description that spans multiple lines.  Explain the purpose of the
-file and provide a short list of the key classes/functions it contains.  This
-is the docstring shown when some does 'import foo;foo?' in IPython, so it
-should be reasonably useful and informative.
+"""Tests for pylab tools module.
 """
 #-----------------------------------------------------------------------------
 # Copyright (c) 2011, the IPython Development Team.
@@ -18,25 +13,17 @@ should be reasonably useful and informative.
 #-----------------------------------------------------------------------------
 
 
-# [remove this comment in production]
-#
-# List all imports, sorted within each section (stdlib/third-party/ipython).
-# For 'import foo', use one import per line.  For 'from foo.bar import a, b, c'
-# it's OK to import multiple items, use the parenthesized syntax 'from foo
-# import (a, b, ...)' if the list needs multiple lines.
-
 # Stdlib imports
 
 # Third-party imports
+import matplotlib; matplotlib.use('Agg')
+import nose.tools as nt
+
+from matplotlib import pyplot as plt
 
 # Our own imports
-
-
-# [remove this comment in production]
-#
-# Use broad section headers like this one that make it easier to navigate the
-# file, with descriptive titles.  For complex classes, simliar (but indented)
-# headers are useful to organize the internal class structure.
+from IPython.testing import decorators as dec
+from .. import pylabtools as pt
 
 #-----------------------------------------------------------------------------
 # Globals and constants
@@ -49,3 +36,19 @@ should be reasonably useful and informative.
 #-----------------------------------------------------------------------------
 # Classes and functions
 #-----------------------------------------------------------------------------
+
+@dec.parametric
+def test_figure_to_svg():
+    # simple empty-figure test
+    fig = plt.figure()
+    yield nt.assert_equal(pt.figure_to_svg(fig), None)
+
+    plt.close('all')
+
+    # simple check for at least svg-looking output
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    ax.plot([1,2,3])
+    plt.draw()
+    svg = pt.figure_to_svg(fig)[:100].lower()
+    yield nt.assert_true('doctype svg' in svg)

@@ -20,7 +20,8 @@ from IPython.external.decorator import decorator
 
 from IPython.parallel import error
 from IPython.parallel import Client
-from IPython.parallel.tests import processes,add_engines
+
+from IPython.parallel.tests import launchers, add_engines
 
 # simple tasks for use in apply tests
 
@@ -28,6 +29,17 @@ def segfault():
     """this will segfault"""
     import ctypes
     ctypes.memset(-1,0,1)
+
+def crash():
+    """from stdlib crashers in the test suite"""
+    import types
+    if sys.platform.startswith('win'):
+        import ctypes
+        ctypes.windll.kernel32.SetErrorMode(0x0002);
+
+    co = types.CodeType(0, 0, 0, 0, b'\x04\x71\x00\x00',
+                             (), (), (), '', '', 1, b'')
+    exec(co)
 
 def wait(n):
     """sleep for a time"""
@@ -86,21 +98,23 @@ class ClusterTestCase(BaseZMQTestCase):
             except error.CompositeError as e:
                 e.raise_exception()
         except error.RemoteError as e:
-            self.assertEquals(etype.__name__, e.ename, "Should have raised %r, but raised %r"%(e.ename, etype.__name__))
+            self.assertEquals(etype.__name__, e.ename, "Should have raised %r, but raised %r"%(etype.__name__, e.ename))
         else:
             self.fail("should have raised a RemoteError")
             
     def setUp(self):
         BaseZMQTestCase.setUp(self)
         self.client = self.connect_client()
+        # start every test with clean engine namespaces:
+        self.client.clear(block=True)
         self.base_engine_count=len(self.client.ids)
         self.engines=[]
     
     def tearDown(self):
         # self.client.clear(block=True)
         # close fds:
-        for e in [e for e in processes if e.poll() is not None]:
-            processes.remove(e)
+        for e in [e for e in launchers if e.poll() is not None]:
+            launchers.remove(e)
         
         # allow flushing of incoming messages to prevent crash on socket close
         self.client.wait(timeout=2)

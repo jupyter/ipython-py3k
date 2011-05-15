@@ -28,19 +28,8 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from .util import ISO8601
 
-# packer priority: jsonlib[2], cPickle, simplejson/json, pickle
-json_name = '' if not jsonapi.jsonmod else jsonapi.jsonmod.__name__
-if json_name in ('jsonlib', 'jsonlib2'):
-    use_json = True
-elif json_name:
-    if cPickle is None:
-        use_json = True
-    else:
-        use_json = False
-else:
-    use_json = False
-
 def squash_unicode(obj):
+    """coerce unicode back to bytestrings."""
     if isinstance(obj,dict):
         for key in list(obj.keys()):
             obj[key] = squash_unicode(obj[key])
@@ -53,18 +42,21 @@ def squash_unicode(obj):
         obj = obj.encode('utf8')
     return obj
 
-json_packer = jsonapi.dumps
+def _date_default(obj):
+    if isinstance(obj, datetime):
+        return obj.strftime(ISO8601)
+    else:
+        raise TypeError("%r is not JSON serializable"%obj)
+
+_default_key = 'on_unknown' if jsonapi.jsonmod.__name__ == 'jsonlib' else 'default'
+json_packer = lambda obj: jsonapi.dumps(obj, **{_default_key:_date_default})
 json_unpacker = lambda s: squash_unicode(jsonapi.loads(s))
 
 pickle_packer = lambda o: pickle.dumps(o,-1)
 pickle_unpacker = pickle.loads
 
-if use_json:
-    default_packer = json_packer
-    default_unpacker = json_unpacker
-else:
-    default_packer = pickle_packer
-    default_unpacker = pickle_unpacker
+default_packer = json_packer
+default_unpacker = json_unpacker
 
 
 DELIM="<IDS|MSG>"

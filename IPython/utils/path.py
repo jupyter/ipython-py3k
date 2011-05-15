@@ -19,6 +19,7 @@ import os
 import sys
 
 import IPython
+from IPython.utils import warn
 from IPython.utils.process import system
 from IPython.utils.importstring import import_item
 
@@ -26,11 +27,19 @@ from IPython.utils.importstring import import_item
 # Code
 #-----------------------------------------------------------------------------
 
+fs_encoding = sys.getfilesystemencoding()
+
+def _cast_unicode(s, enc=None):
+    """Turn 8-bit strings into unicode."""
+    if isinstance(s, bytes):
+        enc = enc or sys.getdefaultencoding()
+        return s.decode(enc)
+    return s
+
 
 def _get_long_path_name(path):
     """Dummy no-op."""
     return path
-
 
 if sys.platform == 'win32':
     def _get_long_path_name(path):
@@ -171,7 +180,7 @@ def get_home_dir():
         root=os.path.abspath(root).rstrip('\\')
         if isdir(os.path.join(root, '_ipython')):
             os.environ["IPYKITROOT"] = root
-        return root.decode(sys.getfilesystemencoding())
+        return root
 
     if os.name == 'posix':
         # Linux, Unix, AIX, OS X
@@ -186,7 +195,7 @@ def get_home_dir():
             homedir = Popen('echo $HOME', shell=True, 
                             stdout=PIPE).communicate()[0].strip()
             if homedir:
-                return homedir.decode(sys.getfilesystemencoding())
+                return homedir
             else:
                 raise HomeDirError('Undefined $HOME, IPython cannot proceed.')
         else:
@@ -391,4 +400,25 @@ def target_update(target,deps,cmd):
 
     if target_outdated(target,deps):
         system(cmd)
+
+def check_for_old_config(ipython_dir=None):
+    """Check for old config files, and present a warning if they exist.
+
+    A link to the docs of the new config is included in the message.
+
+    This should mitigate confusion with the transition to the new
+    config system in 0.11.
+    """
+    if ipython_dir is None:
+        ipython_dir = get_ipython_dir()
+
+    old_configs = ['ipy_user_conf.py', 'ipythonrc']
+    for cfg in old_configs:
+        f = os.path.join(ipython_dir, cfg)
+        if os.path.exists(f):
+            warn.warn("""Found old IPython config file %r.
+    The IPython configuration system has changed as of 0.11, and this file will be ignored.
+    See http://ipython.github.com/ipython-doc/dev/config for details on the new config system.
+    The current default config file is 'ipython_config.py', where you can suppress these
+    warnings with `Global.ignore_old_config = True`."""%f)
 
