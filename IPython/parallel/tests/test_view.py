@@ -1,4 +1,5 @@
 """test View objects"""
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
 #  Copyright (C) 2011  The IPython Development Team
 #
@@ -10,8 +11,10 @@
 # Imports
 #-------------------------------------------------------------------------------
 
+import sys
 import time
 from tempfile import mktemp
+from io import StringIO
 
 import zmq
 
@@ -23,33 +26,37 @@ from IPython.parallel.util import interactive
 
 from IPython.parallel.tests import add_engines
 
-from .clienttest import ClusterTestCase, segfault, wait, skip_without
+from .clienttest import ClusterTestCase, crash, wait, skip_without
 
 def setup():
     add_engines(3)
 
 class TestView(ClusterTestCase):
     
-    def test_segfault_task(self):
+    def test_z_crash_task(self):
         """test graceful handling of engine death (balanced)"""
         # self.add_engines(1)
-        ar = self.client[-1].apply_async(segfault)
+        ar = self.client[-1].apply_async(crash)
         self.assertRaisesRemote(error.EngineError, ar.get)
         eid = ar.engine_id
-        while eid in self.client.ids:
+        tic = time.time()
+        while eid in self.client.ids and time.time()-tic < 5:
             time.sleep(.01)
             self.client.spin()
+        self.assertFalse(eid in self.client.ids, "Engine should have died")
     
-    def test_segfault_mux(self):
+    def test_z_crash_mux(self):
         """test graceful handling of engine death (direct)"""
         # self.add_engines(1)
         eid = self.client.ids[-1]
-        ar = self.client[eid].apply_async(segfault)
+        ar = self.client[eid].apply_async(crash)
         self.assertRaisesRemote(error.EngineError, ar.get)
         eid = ar.engine_id
-        while eid in self.client.ids:
+        tic = time.time()
+        while eid in self.client.ids and time.time()-tic < 5:
             time.sleep(.01)
             self.client.spin()
+        self.assertFalse(eid in self.client.ids, "Engine should have died")
     
     def test_push_pull(self):
         """test pushing and pulling"""
@@ -74,7 +81,7 @@ class TestView(ClusterTestCase):
         r = ar.get()
         self.assertEquals(r, nengines*[data])
         self.client[:].push(dict(a=10,b=20))
-        r = self.client[:].pull(('a','b'))
+        r = self.client[:].pull(('a','b'), block=True)
         self.assertEquals(r, nengines*[[10,20]])
     
     def test_push_pull_function(self):
@@ -83,10 +90,11 @@ class TestView(ClusterTestCase):
             return 2.0*x
         
         t = self.client.ids[-1]
-        self.client[t].block=True
-        push = self.client[t].push
-        pull = self.client[t].pull
-        execute = self.client[t].execute
+        v = self.client[t]
+        v.block=True
+        push = v.push
+        pull = v.pull
+        execute = v.execute
         push({'testf':testf})
         r = pull('testf')
         self.assertEqual(r(1.0), testf(1.0))
@@ -295,7 +303,150 @@ class TestView(ClusterTestCase):
         def findall(pat, s):
             # this globals() step isn't necessary in real code
             # only to prevent a closure in the test
-            return globals()['re'].findall(pat, s)
+            re = globals()['re']
+            return re.findall(pat, s)
         
         self.assertEquals(view.apply_sync(findall, '\w+', 'hello world'), 'hello world'.split())
     
+    # parallel magic tests
+    
+    def test_magic_px_blocking(self):
+        ip = get_ipython()
+        v = self.client[-1]
+        v.activate()
+        v.block=True
+
+        ip.magic_px('a=5')
+        self.assertEquals(v['a'], 5)
+        ip.magic_px('a=10')
+        self.assertEquals(v['a'], 10)
+        sio = StringIO()
+        savestdout = sys.stdout
+        sys.stdout = sio
+        ip.magic_px('print a')
+        sys.stdout = savestdout
+        sio.read()
+        self.assertTrue('[stdout:%i]'%v.targets in sio.buf)
+        self.assertRaisesRemote(ZeroDivisionError, ip.magic_px, '1/0')
+
+    def test_magic_px_nonblocking(self):
+        ip = get_ipython()
+        v = self.client[-1]
+        v.activate()
+        v.block=False
+
+        ip.magic_px('a=5')
+        self.assertEquals(v['a'], 5)
+        ip.magic_px('a=10')
+        self.assertEquals(v['a'], 10)
+        sio = StringIO()
+        savestdout = sys.stdout
+        sys.stdout = sio
+        ip.magic_px('print a')
+        sys.stdout = savestdout
+        sio.read()
+        self.assertFalse('[stdout:%i]'%v.targets in sio.buf)
+        ip.magic_px('1/0')
+        ar = v.get_result(-1)
+        self.assertRaisesRemote(ZeroDivisionError, ar.get)
+    
+    def test_magic_autopx_blocking(self):
+        ip = get_ipython()
+        v = self.client[-1]
+        v.activate()
+        v.block=True
+
+        sio = StringIO()
+        savestdout = sys.stdout
+        sys.stdout = sio
+        ip.magic_autopx()
+        ip.run_cell('\n'.join(('a=5','b=10','c=0')))
+        ip.run_cell('print b')
+        ip.run_cell("b/c")
+        ip.run_code(compile('b*=2', '', 'single'))
+        ip.magic_autopx()
+        sys.stdout = savestdout
+        sio.read()
+        output = sio.buf.strip()
+        self.assertTrue(output.startswith('%autopx enabled'))
+        self.assertTrue(output.endswith('%autopx disabled'))
+        self.assertTrue('RemoteError: ZeroDivisionError' in output)
+        ar = v.get_result(-2)
+        self.assertEquals(v['a'], 5)
+        self.assertEquals(v['b'], 20)
+        self.assertRaisesRemote(ZeroDivisionError, ar.get)
+
+    def test_magic_autopx_nonblocking(self):
+        ip = get_ipython()
+        v = self.client[-1]
+        v.activate()
+        v.block=False
+
+        sio = StringIO()
+        savestdout = sys.stdout
+        sys.stdout = sio
+        ip.magic_autopx()
+        ip.run_cell('\n'.join(('a=5','b=10','c=0')))
+        ip.run_cell('print b')
+        ip.run_cell("b/c")
+        ip.run_code(compile('b*=2', '', 'single'))
+        ip.magic_autopx()
+        sys.stdout = savestdout
+        sio.read()
+        output = sio.buf.strip()
+        self.assertTrue(output.startswith('%autopx enabled'))
+        self.assertTrue(output.endswith('%autopx disabled'))
+        self.assertFalse('ZeroDivisionError' in output)
+        ar = v.get_result(-2)
+        self.assertEquals(v['a'], 5)
+        self.assertEquals(v['b'], 20)
+        self.assertRaisesRemote(ZeroDivisionError, ar.get)
+    
+    def test_magic_result(self):
+        ip = get_ipython()
+        v = self.client[-1]
+        v.activate()
+        v['a'] = 111
+        ra = v['a']
+        
+        ar = ip.magic_result()
+        self.assertEquals(ar.msg_ids, [v.history[-1]])
+        self.assertEquals(ar.get(), 111)
+        ar = ip.magic_result('-2')
+        self.assertEquals(ar.msg_ids, [v.history[-2]])
+    
+    def test_unicode_execute(self):
+        """test executing unicode strings"""
+        v = self.client[-1]
+        v.block=True
+        code="a=u'é'"
+        v.execute(code)
+        self.assertEquals(v['a'], 'é')
+        
+    def test_unicode_apply_result(self):
+        """test unicode apply results"""
+        v = self.client[-1]
+        r = v.apply_sync(lambda : 'é')
+        self.assertEquals(r, 'é')
+    
+    def test_unicode_apply_arg(self):
+        """test passing unicode arguments to apply"""
+        v = self.client[-1]
+        
+        @interactive
+        def check_unicode(a, check):
+            assert isinstance(a, str), "%r is not unicode"%a
+            assert isinstance(check, bytes), "%r is not bytes"%check
+            assert a.encode('utf8') == check, "%s != %s"%(a,check)
+        
+        for s in [ 'é', 'ßø®∫','asdf'.decode() ]:
+            try:
+                v.apply_sync(check_unicode, s, s.encode('utf8'))
+            except error.RemoteError as e:
+                if e.ename == 'AssertionError':
+                    self.fail(e.evalue)
+                else:
+                    raise e
+        
+
+

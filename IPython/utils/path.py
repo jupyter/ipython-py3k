@@ -18,6 +18,7 @@ import os
 import sys
 
 import IPython
+from IPython.utils import warn
 from IPython.utils.process import system
 from IPython.utils.importstring import import_item
 
@@ -25,11 +26,19 @@ from IPython.utils.importstring import import_item
 # Code
 #-----------------------------------------------------------------------------
 
+fs_encoding = sys.getfilesystemencoding()
+
+def _cast_unicode(s, enc=None):
+    """Turn 8-bit strings into unicode."""
+    if isinstance(s, bytes):
+        enc = enc or sys.getdefaultencoding()
+        return s.decode(enc)
+    return s
+
 
 def _get_long_path_name(path):
     """Dummy no-op."""
     return path
-
 
 if sys.platform == 'win32':
     def _get_long_path_name(path):
@@ -170,7 +179,7 @@ def get_home_dir():
         root=os.path.abspath(root).rstrip('\\')
         if isdir(os.path.join(root, '_ipython')):
             os.environ["IPYKITROOT"] = root
-        return root.decode(sys.getfilesystemencoding())
+        return _cast_unicode(root, fs_encoding)
 
     if os.name == 'posix':
         # Linux, Unix, AIX, OS X
@@ -185,11 +194,11 @@ def get_home_dir():
             homedir = Popen('echo $HOME', shell=True, 
                             stdout=PIPE).communicate()[0].strip()
             if homedir:
-                return homedir.decode(sys.getfilesystemencoding())
+                return _cast_unicode(homedir, fs_encoding)
             else:
                 raise HomeDirError('Undefined $HOME, IPython cannot proceed.')
         else:
-            return homedir.decode(sys.getfilesystemencoding())
+            return _cast_unicode(homedir, fs_encoding)
     elif os.name == 'nt':
         # Now for win9x, XP, Vista, 7?
         # For some strange reason all of these return 'nt' for os.name.
@@ -203,7 +212,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return _cast_unicode(homedir, fs_encoding)
 
         # Now look for a local home directory
         try:
@@ -212,7 +221,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return _cast_unicode(homedir, fs_encoding)
 
         # Now the users profile directory
         try:
@@ -221,7 +230,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return _cast_unicode(homedir, fs_encoding)
 
         # Use the registry to get the 'My Documents' folder.
         try:
@@ -236,7 +245,7 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return _cast_unicode(homedir, fs_encoding)
 
         # A user with a lot of unix tools in win32 may have defined $HOME.
         # Try this as a last ditch option.
@@ -246,13 +255,13 @@ def get_home_dir():
             pass
         else:
             if isdir(homedir):
-                return homedir.decode(sys.getfilesystemencoding())
+                return _cast_unicode(homedir, fs_encoding)
 
         # If all else fails, raise HomeDirError
         raise HomeDirError('No valid home directory could be found')
     elif os.name == 'dos':
         # Desperate, may do absurd things in classic MacOS. May work under DOS.
-        return 'C:\\'.decode(sys.getfilesystemencoding())
+        return 'C:\\'
     else:
         raise HomeDirError('No valid home directory could be found for your OS')
 
@@ -270,7 +279,7 @@ def get_xdg_dir():
         # use ~/.config if not set OR empty
         xdg = env.get("XDG_CONFIG_HOME", None) or os.path.join(get_home_dir(), '.config')
         if xdg and isdir(xdg):
-            return xdg.decode(sys.getfilesystemencoding())
+            return _cast_unicode(xdg, fs_encoding)
     
     return None
     
@@ -308,14 +317,14 @@ def get_ipython_dir():
         if ipdir is None:
             # not using XDG
             ipdir = home_ipdir
-    
-    return ipdir.decode(sys.getfilesystemencoding())
+
+    return _cast_unicode(ipdir, fs_encoding)
 
 
 def get_ipython_package_dir():
     """Get the base directory where IPython itself is installed."""
     ipdir = os.path.dirname(IPython.__file__)
-    return ipdir.decode(sys.getfilesystemencoding())
+    return _cast_unicode(ipdir, fs_encoding)
 
 
 def get_ipython_module_path(module_str):
@@ -330,7 +339,7 @@ def get_ipython_module_path(module_str):
     mod = import_item(module_str)
     the_path = mod.__file__.replace('.pyc', '.py')
     the_path = the_path.replace('.pyo', '.py')
-    return the_path.decode(sys.getfilesystemencoding())
+    return _cast_unicode(the_path, fs_encoding)
 
 
 def expand_path(s):
@@ -390,4 +399,25 @@ def target_update(target,deps,cmd):
 
     if target_outdated(target,deps):
         system(cmd)
+
+def check_for_old_config(ipython_dir=None):
+    """Check for old config files, and present a warning if they exist.
+
+    A link to the docs of the new config is included in the message.
+
+    This should mitigate confusion with the transition to the new
+    config system in 0.11.
+    """
+    if ipython_dir is None:
+        ipython_dir = get_ipython_dir()
+
+    old_configs = ['ipy_user_conf.py', 'ipythonrc']
+    for cfg in old_configs:
+        f = os.path.join(ipython_dir, cfg)
+        if os.path.exists(f):
+            warn.warn("""Found old IPython config file %r.
+    The IPython configuration system has changed as of 0.11, and this file will be ignored.
+    See http://ipython.github.com/ipython-doc/dev/config for details on the new config system.
+    The current default config file is 'ipython_config.py', where you can suppress these
+    warnings with `Global.ignore_old_config = True`."""%f)
 

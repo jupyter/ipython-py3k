@@ -24,7 +24,7 @@ def which(fname):
     return
 
 def which_alias(fname):
-    for al, tgt in list(list(ip.alias_table.items())):
+    for al, tgt in list(ip.alias_table.items()):
         if not (al == fname or fnmatch(al, fname)):
             continue
         if isinstance(tgt, collections.Callable):

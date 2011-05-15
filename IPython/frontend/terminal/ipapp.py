@@ -37,7 +37,7 @@ from IPython.config.loader import (
     PyFileConfigLoader
 )
 from IPython.lib import inputhook
-from IPython.utils.path import filefind, get_ipython_dir
+from IPython.utils.path import filefind, get_ipython_dir, check_for_old_config
 from IPython.core import usage
 
 #-----------------------------------------------------------------------------
@@ -443,7 +443,7 @@ class IPythonApp(Application):
         if hasattr(config.Global, 'classic'):
             if config.Global.classic:
                 config.InteractiveShell.cache_size = 0
-                config.PlainTextFormatter.pprint = 0
+                config.PlainTextFormatter.pprint = False
                 config.InteractiveShell.prompt_in1 = '>>> '
                 config.InteractiveShell.prompt_in2 = '... '
                 config.InteractiveShell.prompt_out = ''
@@ -570,7 +570,7 @@ class IPythonApp(Application):
                     try:
                         self.log.info("Running code in user namespace: %s" %
                                       line)
-                        self.shell.run_cell(line)
+                        self.shell.run_cell(line, store_history=False)
                     except:
                         self.log.warn("Error in executing line in user "
                                       "namespace: %s" % line)
@@ -615,7 +615,7 @@ class IPythonApp(Application):
             try:
                 self.log.info("Running code given at command line (-c): %s" %
                               line)
-                self.shell.run_cell(line)
+                self.shell.run_cell(line, store_history=False)
             except:
                 self.log.warn("Error in executing line in user namespace: %s" %
                               line)
@@ -635,6 +635,8 @@ class IPythonApp(Application):
                 self.shell.showtraceback()
 
     def start_app(self):
+        if not getattr(self.master_config.Global, 'ignore_old_config', False):
+            check_for_old_config(self.ipython_dir)
         if self.master_config.Global.interact:
             self.log.debug("Starting IPython's mainloop...")
             self.shell.mainloop()

@@ -136,6 +136,7 @@ def find_packages():
     add_package(packages, 'utils', tests=True)
     add_package(packages, 'zmq')
     add_package(packages, 'zmq.pylab')
+    add_package(packages, 'zmq.gui')
     return packages
 
 #---------------------------------------------------------------------------
@@ -266,12 +267,10 @@ def find_scripts(entry_points=False):
         return setuptools entry_point-style definitions
     else:
         return file paths of plain scripts [default]
-    
     """
     if entry_points:
-        scripts = [
+        console_scripts = [
             'ipython = IPython.frontend.terminal.ipapp:launch_new_instance',
-            'ipython-qtconsole = IPython.frontend.qt.console.ipythonqt:main',
             'pycolor = IPython.utils.PyColorize:main',
             'ipcontroller = IPython.parallel.apps.ipcontrollerapp:launch_new_instance',
             'ipengine = IPython.parallel.apps.ipengineapp:launch_new_instance',
@@ -280,6 +279,10 @@ def find_scripts(entry_points=False):
             'iptest = IPython.testing.iptest:main',
             'irunner = IPython.lib.irunner:main'
         ]
+        gui_scripts = [
+            'ipython-qtconsole = IPython.frontend.qt.console.ipythonqt:main',
+        ]
+        scripts = dict(console_scripts=console_scripts, gui_scripts=gui_scripts)
     else:
         parallel_scripts = pjoin('IPython','parallel','scripts')
         main_scripts = pjoin('IPython','scripts')
@@ -293,8 +296,7 @@ def find_scripts(entry_points=False):
                    pjoin(main_scripts, 'pycolor'),
                    pjoin(main_scripts, 'irunner'),
                    pjoin(main_scripts, 'iptest')
-                  ]
-    
+        ]
     return scripts
 
 #---------------------------------------------------------------------------
@@ -310,7 +312,7 @@ def check_for_dependencies():
         print_line, print_raw, print_status,
         check_for_sphinx, check_for_pygments,
         check_for_nose, check_for_pexpect,
-        check_for_pyzmq
+        check_for_pyzmq, check_for_readline
     )
     print_line()
     print_raw("BUILDING IPYTHON")
@@ -327,7 +329,7 @@ def check_for_dependencies():
     check_for_nose()
     check_for_pexpect()
     check_for_pyzmq()
-
+    check_for_readline()
 
 def record_commit_info(pkg_dir, build_cmd=build_py):
     """ Return extended build command class for recording commit

@@ -101,11 +101,16 @@ def test_for(mod, min_version=None):
 have = {}
 
 have['curses'] = test_for('_curses')
+have['matplotlib'] = test_for('matplotlib')
+have['pexpect'] = test_for('pexpect')
+have['pymongo'] = test_for('pymongo')
 have['wx'] = test_for('wx')
 have['wx.aui'] = test_for('wx.aui')
-have['pexpect'] = test_for('pexpect')
-have['zmq'] = test_for('zmq', '2.0.10')
-have['pymongo'] = test_for('pymongo')
+if os.name == 'nt':
+    have['zmq'] = test_for('zmq', '2.1dev')
+else:
+    have['zmq'] = test_for('zmq', '2.1.4')
+have['qt'] = test_for('IPython.external.qt')
 
 #-----------------------------------------------------------------------------
 # Functions and classes
@@ -182,14 +187,22 @@ def make_exclude():
 
     if not have['pexpect']:
         exclusions.extend([ipjoin('scripts', 'irunner'),
-                           ipjoin('lib', 'irunner')])
+                           ipjoin('lib', 'irunner'),
+                           ipjoin('lib', 'tests', 'test_irunner')])
 
     if not have['zmq']:
         exclusions.append(ipjoin('zmq'))
+        exclusions.append(ipjoin('frontend', 'qt'))
         exclusions.append(ipjoin('parallel'))
+    elif not have['qt']:
+        exclusions.append(ipjoin('frontend', 'qt'))
     
     if not have['pymongo']:
         exclusions.append(ipjoin('parallel', 'controller', 'mongodb'))
+
+    if not have['matplotlib']:
+        exclusions.extend([ipjoin('lib', 'pylabtools'),
+                           ipjoin('lib', 'tests', 'test_pylabtools')])
 
     # This is needed for the reg-exp to match on win32 in the ipdoctest plugin.
     if sys.platform == 'win32':

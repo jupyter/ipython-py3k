@@ -282,24 +282,41 @@ class XReqSocketChannel(ZmqSocketChannel):
         self._queue_request(msg)
         return msg['header']['msg_id']
 
-    def history_tail(self, n=10, raw=True, output=False):
-        """Get the history list.
+    def history(self, raw=True, output=False, hist_access_type='range', **kwargs):
+        """Get entries from the history list.
 
         Parameters
         ----------
-        n : int
-            The number of lines of history to get.
         raw : bool
             If True, return the raw input.
         output : bool
             If True, then return the output as well.
+        hist_access_type : str
+            'range' (fill in session, start and stop params), 'tail' (fill in n)
+             or 'search' (fill in pattern param).
+        
+        session : int
+            For a range request, the session from which to get lines. Session
+            numbers are positive integers; negative ones count back from the
+            current session.
+        start : int
+            The first line number of a history range.
+        stop : int
+            The final (excluded) line number of a history range.
+        
+        n : int
+            The number of lines of history to get for a tail request.
+            
+        pattern : str
+            The glob-syntax pattern for a search request.
 
         Returns
         -------
         The msg_id of the message sent.
         """
-        content = dict(n=n, raw=raw, output=output)
-        msg = self.session.msg('history_tail_request', content)
+        content = dict(raw=raw, output=output, hist_access_type=hist_access_type,
+                                                                    **kwargs)
+        msg = self.session.msg('history_request', content)
         self._queue_request(msg)
         return msg['header']['msg_id']
 
@@ -573,7 +590,8 @@ class HBSocketChannel(ZmqSocketChannel):
                                 # list, poll is working correctly even if it
                                 # returns quickly. Note: poll timeout is in
                                 # milliseconds.
-                                self.poller.poll(1000*until_dead)
+                                if until_dead > 0.0:
+                                    self.poller.poll(1000 * until_dead)
                             
                                 since_last_heartbeat = time.time()-request_time
                                 if since_last_heartbeat > self.time_to_dead:
@@ -721,6 +739,9 @@ class KernelManager(HasTraits):
         -----------
         ipython : bool, optional (default True)
              Whether to use an IPython kernel instead of a plain Python kernel.
+
+        **kw : optional
+             See respective options for IPython and Python kernels.
         """
         xreq, sub, rep, hb = self.xreq_address, self.sub_address, \
             self.rep_address, self.hb_address
@@ -772,30 +793,39 @@ class KernelManager(HasTraits):
             if self.has_kernel:
                 self.kill_kernel()
     
-    def restart_kernel(self, now=False):
-        """Restarts a kernel with the same arguments that were used to launch
-        it. If the old kernel was launched with random ports, the same ports
-        will be used for the new kernel.
+    def restart_kernel(self, now=False, **kw):
+        """Restarts a kernel with the arguments that were used to launch it.
+        
+        If the old kernel was launched with random ports, the same ports will be
+        used for the new kernel.
 
         Parameters
         ----------
         now : bool, optional
-          If True, the kernel is forcefully restarted *immediately*, without
-          having a chance to do any cleanup action.  Otherwise the kernel is
-          given 1s to clean up before a forceful restart is issued.
+            If True, the kernel is forcefully restarted *immediately*, without
+            having a chance to do any cleanup action.  Otherwise the kernel is
+            given 1s to clean up before a forceful restart is issued.
 
-          In all cases the kernel is restarted, the only difference is whether
-          it is given a chance to perform a clean shutdown or not.
+            In all cases the kernel is restarted, the only difference is whether
+            it is given a chance to perform a clean shutdown or not.
+
+        **kw : optional
+            Any options specified here will replace those used to launch the
+            kernel.
         """
         if self._launch_args is None:
             raise RuntimeError("Cannot restart the kernel. "
                                "No previous call to 'start_kernel'.")
         else:
+            # Stop currently running kernel.
             if self.has_kernel:
                 if now:
                     self.kill_kernel()
                 else:
                     self.shutdown_kernel(restart=True)
+
+            # Start new kernel.
+            self._launch_args.update(kw)
             self.start_kernel(**self._launch_args)
 
             # FIXME: Messages get dropped in Windows due to probable ZMQ bug
@@ -823,8 +853,15 @@ class KernelManager(HasTraits):
             except OSError as e:
                 # In Windows, we will get an Access Denied error if the process
                 # has already terminated. Ignore it.
-                if not (sys.platform == 'win32' and e.winerror == 5):
-                    raise
+                if sys.platform == 'win32':
+                    if e.winerror != 5:
+                        raise
+                # On Unix, we may get an ESRCH error if the process has already
+                # terminated. Ignore it.
+                else:
+                    from errno import ESRCH
+                    if e.errno != ESRCH:
+                        raise
             self.kernel = None
         else:
             raise RuntimeError("Cannot kill kernel. No kernel is running!")

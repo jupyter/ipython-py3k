@@ -54,7 +54,6 @@ from IPython.lib.pylabtools import mpl_runner
 from IPython.external.Itpl import itpl, printpl
 from IPython.testing import decorators as testdec
 from IPython.utils.io import file_read, nlprint
-import IPython.utils.io
 from IPython.utils.path import get_py_filename
 from IPython.utils.process import arg_split, abbrev_cwd
 from IPython.utils.terminal import set_term_title
@@ -1008,7 +1007,7 @@ Currently the magic system has the following functions:\n"""
                 del(user_ns[i])
             
         else:                     # Hard reset
-            self.shell.reset(new_session = True)
+            self.shell.reset(new_session = False)
             
         
 
@@ -2504,14 +2503,6 @@ Defaulting color scheme to 'NoColor'"""
         ptformatter.pprint = bool(1 - ptformatter.pprint)
         print('Pretty printing has been turned', \
               ['OFF','ON'][ptformatter.pprint])
-                
-    def magic_Exit(self, parameter_s=''):
-        """Exit IPython."""
-
-        self.shell.ask_exit()
-
-    # Add aliases as magics so all common forms work: exit, quit, Exit, Quit.
-    magic_exit = magic_quit = magic_Quit = magic_Exit
 
     #......................................................................
     # Functions to implement unix shell-type things
@@ -3289,7 +3280,7 @@ Defaulting color scheme to 'NoColor'"""
 
         This magic replaces IPython's threaded shells that were activated
         using the (pylab/wthread/etc.) command line flags.  GUI toolkits
-        can now be enabled, disabled and swtiched at runtime and keyboard
+        can now be enabled, disabled and changed at runtime and keyboard
         interrupts should work without any problems.  The following toolkits
         are supported:  wxPython, PyQt4, PyGTK, and Tk::
 

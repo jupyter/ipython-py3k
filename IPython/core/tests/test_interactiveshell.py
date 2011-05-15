@@ -20,7 +20,10 @@ Authors
 #-----------------------------------------------------------------------------
 # stdlib
 import unittest
+from io import StringIO
+
 from IPython.testing import decorators as dec
+from IPython.utils import io
 
 #-----------------------------------------------------------------------------
 # Tests
@@ -41,7 +44,9 @@ class InteractiveShellTestCase(unittest.TestCase):
         """Just make sure we don't get a horrible error with a blank
         cell of input. Yes, I did overlook that."""
         ip = get_ipython()
+        old_xc = ip.execution_count
         ip.run_cell('')
+        self.assertEquals(ip.execution_count, old_xc)
 
     def test_run_cell_multiline(self):
         """Multi-block, multi-line cells must execute correctly.
@@ -64,7 +69,6 @@ class InteractiveShellTestCase(unittest.TestCase):
         ip.run_cell('tmp=1;"""a\nb"""\n')
         self.assertEquals(ip.user_ns['tmp'], 1)
 
-    @dec.skip_known_failure
     def test_dont_cache_with_semicolon(self):
         "Ending a line with semicolon should not cache the returned object (GH-307)"
         ip = get_ipython()
@@ -85,3 +89,21 @@ class InteractiveShellTestCase(unittest.TestCase):
         newlen = len(ip.user_ns['In'])
         self.assertEquals(oldlen+1, newlen)
         self.assertEquals(ip.user_ns['In'][-1],'1;')
+        
+    def test_magic_names_in_string(self):
+        ip = get_ipython()
+        ip.run_cell('a = """\n%exit\n"""')
+        self.assertEquals(ip.user_ns['a'], '\n%exit\n')
+    
+    def test_alias_crash(self):
+        """Errors in prefilter can't crash IPython"""
+        ip = get_ipython()
+        ip.run_cell('%alias parts echo first %s second %s')
+        # capture stderr:
+        save_err = io.stderr
+        io.stderr = StringIO()
+        ip.run_cell('parts 1')
+        err = io.stderr.getvalue()
+        io.stderr = save_err
+        self.assertEquals(err.split(':')[0], 'ERROR')
+

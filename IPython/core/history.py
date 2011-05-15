@@ -13,20 +13,18 @@
 
 
 # Stdlib imports
+import atexit
 import datetime
-import json
 import os
 import re
 import sqlite3
-
-from collections import defaultdict
+import threading
 
 # Our own packages
 from IPython.config.configurable import Configurable
-import IPython.utils.io
 
 from IPython.testing import decorators as testdec
-from IPython.utils.io import ask_yes_no
+from IPython.utils import io
 from IPython.utils.traitlets import Bool, Dict, Instance, Int, List, Unicode
 from IPython.utils.warn import warn
 
@@ -54,11 +52,10 @@ class HistoryManager(Configurable):
             return []
 
     # A dict of output history, keyed with ints from the shell's
-    # execution count. If there are several outputs from one command,
-    # only the last one is stored.
+    # execution count.
     output_hist = Dict()
-    # Contains all outputs, in lists of reprs.
-    output_hist_reprs = Instance(defaultdict, args=(list,))
+    # The text/plain repr of outputs.
+    output_hist_reprs = Dict()
 
     # String holding the path to the history file
     hist_file = Unicode(config=True)
@@ -76,6 +73,11 @@ class HistoryManager(Configurable):
     db_input_cache = List()
     db_output_cache = List()
     
+    # History saving in separate thread
+    save_thread = Instance('IPython.core.history.HistorySavingThread')
+    # N.B. Event is a function returning an instance of _Event.
+    save_flag = Instance(threading._Event)
+    
     # Private interface
     # Variables used to store the three last inputs from the user.  On each new
     # history update, we populate the user's namespace with these, shifted as
@@ -85,11 +87,10 @@ class HistoryManager(Configurable):
     _ii = Unicode('')
     _iii = Unicode('')
 
-    # A set with all forms of the exit command, so that we don't store them in
-    # the history (it's annoying to rewind the first entry and land on an exit
-    # call).
-    _exit_commands = Instance(set, args=(['Quit', 'quit', 'Exit', 'exit',
-        '%Quit', '%quit', '%Exit', '%exit'],))
+    # A regex matching all forms of the exit command, so that we don't store
+    # them in the history (it's annoying to rewind the first entry and land on
+    # an exit call).
+    _exit_re = re.compile(r"(exit|quit)(\s*\(.*\))?$")
 
     def __init__(self, shell, config=None, **traits):
         """Create a new history manager associated with a shell instance.
@@ -119,6 +120,12 @@ class HistoryManager(Configurable):
             else:
                 # The hist_file is probably :memory: or something else.
                 raise
+                
+        self.save_flag = threading.Event()
+        self.db_input_cache_lock = threading.Lock()
+        self.db_output_cache_lock = threading.Lock()
+        self.save_thread = HistorySavingThread(self)
+        self.save_thread.start()
 
         self.new_session()
 
@@ -139,10 +146,13 @@ class HistoryManager(Configurable):
                         PRIMARY KEY (session, line))""")
         self.db.commit()
     
-    def new_session(self):
+    def new_session(self, conn=None):
         """Get a new session number."""
-        with self.db:
-            cur = self.db.execute("""INSERT INTO sessions VALUES (NULL, ?, NULL,
+        if conn is None:
+            conn = self.db
+        
+        with conn:
+            cur = conn.execute("""INSERT INTO sessions VALUES (NULL, ?, NULL,
                             NULL, "") """, (datetime.datetime.now(),))
             self.session_number = cur.lastrowid
             
@@ -164,15 +174,15 @@ class HistoryManager(Configurable):
     def reset(self, new_session=True):
         """Clear the session history, releasing all object references, and
         optionally open a new session."""
-        if self.session_number:
-            self.end_session()
-        self.input_hist_parsed[:] = [""]
-        self.input_hist_raw[:] = [""]
         self.output_hist.clear()
         # The directory history can't be completely empty
         self.dir_hist[:] = [os.getcwd()]
         
         if new_session:
+            if self.session_number:
+                self.end_session()
+            self.input_hist_parsed[:] = [""]
+            self.input_hist_raw[:] = [""]
             self.new_session()
     
     ## -------------------------------
@@ -202,9 +212,7 @@ class HistoryManager(Configurable):
         cur = self.db.execute("SELECT session, line, %s FROM %s " %\
                                 (toget, sqlfrom) + sql, params)
         if output:    # Regroup into 3-tuples, and parse JSON
-            loads = lambda out: json.loads(out) if out else None
-            return ((ses, lin, (inp, loads(out))) \
-                                        for ses, lin, inp, out in cur)
+            return ((ses, lin, (inp, out)) for ses, lin, inp, out in cur)
         return cur
         
     
@@ -367,16 +375,17 @@ class HistoryManager(Configurable):
         source_raw = source_raw.rstrip('\n')
             
         # do not store exit/quit commands
-        if source_raw.strip() in self._exit_commands:
+        if self._exit_re.match(source_raw.strip()):
             return
         
         self.input_hist_parsed.append(source)
         self.input_hist_raw.append(source_raw)
         
-        self.db_input_cache.append((line_num, source, source_raw))
-        # Trigger to flush cache and write to DB.
-        if len(self.db_input_cache) >= self.db_cache_size:
-            self.writeout_cache()
+        with self.db_input_cache_lock:
+            self.db_input_cache.append((line_num, source, source_raw))
+            # Trigger to flush cache and write to DB.
+            if len(self.db_input_cache) >= self.db_cache_size:
+                self.save_flag.set()
 
         # update the auto _i variables
         self._iii = self._ii
@@ -402,49 +411,94 @@ class HistoryManager(Configurable):
         line_num : int
           The line number from which to save outputs
         """
-        if (not self.db_log_output) or not self.output_hist_reprs[line_num]:
+        if (not self.db_log_output) or (line_num not in self.output_hist_reprs):
             return
-        output = json.dumps(self.output_hist_reprs[line_num])
+        output = self.output_hist_reprs[line_num]
         
-        self.db_output_cache.append((line_num, output))
+        with self.db_output_cache_lock:
+            self.db_output_cache.append((line_num, output))
         if self.db_cache_size <= 1:
-            self.writeout_cache()
-        
-    def _writeout_input_cache(self):
-        for line in self.db_input_cache:
-            with self.db:
-                self.db.execute("INSERT INTO history VALUES (?, ?, ?, ?)",
+            self.save_flag.set()
+    
+    def _writeout_input_cache(self, conn):
+        with conn:
+            for line in self.db_input_cache:
+                conn.execute("INSERT INTO history VALUES (?, ?, ?, ?)",
                                 (self.session_number,)+line)
     
-    def _writeout_output_cache(self):
-        for line in self.db_output_cache:
-            with self.db:
-                self.db.execute("INSERT INTO output_history VALUES (?, ?, ?)",
+    def _writeout_output_cache(self, conn):
+        with conn:
+            for line in self.db_output_cache:
+                conn.execute("INSERT INTO output_history VALUES (?, ?, ?)",
                                 (self.session_number,)+line)
     
-    def writeout_cache(self):
+    def writeout_cache(self, conn=None):
         """Write any entries in the cache to the database."""
-        try:
-            self._writeout_input_cache()
-        except sqlite3.IntegrityError:
-            self.new_session()
-            print("ERROR! Session/line number was not unique in",
-                  "database. History logging moved to new session",
-                                            self.session_number)
-            try: # Try writing to the new session. If this fails, don't recurse
-                self.writeout_cache()
-            except sqlite3.IntegrityError:
-                pass
-        finally:
-            self.db_input_cache = []
+        if conn is None:
+            conn = self.db
             
+        with self.db_input_cache_lock:
+            try:
+                self._writeout_input_cache(conn)
+            except sqlite3.IntegrityError:
+                self.new_session(conn)
+                print("ERROR! Session/line number was not unique in",
+                      "database. History logging moved to new session",
+                                                self.session_number)
+                try: # Try writing to the new session. If this fails, don't recurse
+                    self._writeout_input_cache(conn)
+                except sqlite3.IntegrityError:
+                    pass
+            finally:
+                self.db_input_cache = []
+
+        with self.db_output_cache_lock:
+            try:
+                self._writeout_output_cache(conn)
+            except sqlite3.IntegrityError:
+                print("!! Session/line number for output was not unique",
+                      "in database. Output will not be stored.")
+            finally:
+                self.db_output_cache = []
+
+
+class HistorySavingThread(threading.Thread):
+    """This thread takes care of writing history to the database, so that
+    the UI isn't held up while that happens.
+    
+    It waits for the HistoryManager's save_flag to be set, then writes out
+    the history cache. The main thread is responsible for setting the flag when
+    the cache size reaches a defined threshold."""
+    daemon = True
+    stop_now = False
+    def __init__(self, history_manager):
+        super(HistorySavingThread, self).__init__()
+        self.history_manager = history_manager
+        atexit.register(self.stop)
+        
+    def run(self):
+        # We need a separate db connection per thread:
         try:
-            self._writeout_output_cache()
-        except sqlite3.IntegrityError:
-            print("!! Session/line number for output was not unique",
-                  "in database. Output will not be stored.")
-        finally:
-            self.db_output_cache = []
+            self.db = sqlite3.connect(self.history_manager.hist_file)
+            while True:
+                self.history_manager.save_flag.wait()
+                if self.stop_now:
+                    return
+                self.history_manager.save_flag.clear()
+                self.history_manager.writeout_cache(self.db)
+        except Exception as e:
+            print(("The history saving thread hit an unexpected error (%s)."
+                   "History will not be written to the database.") % repr(e))
+        
+    def stop(self):
+        """This can be called from the main thread to safely stop this thread.
+        
+        Note that it does not attempt to write out remaining history before
+        exiting. That should be done by calling the HistoryManager's
+        end_session method."""
+        self.stop_now = True
+        self.history_manager.save_flag.set()
+        self.join()
 
         
 # To match, e.g. ~5/8-~2/3
@@ -575,12 +629,12 @@ def magic_history(self, parameter_s = ''):
     try:
         outfname = opts['f']
     except KeyError:
-        outfile = IPython.utils.io.Term.cout  # default
+        outfile = io.stdout  # default
         # We don't want to close stdout at the end!
         close_at_end = False
     else:
         if os.path.exists(outfname):
-            if not ask_yes_no("File %r exists. Overwrite?" % outfname): 
+            if not io.ask_yes_no("File %r exists. Overwrite?" % outfname): 
                 print('Aborting.')
                 return
 
@@ -634,7 +688,7 @@ def magic_history(self, parameter_s = ''):
                 inline = "\n... ".join(inline.splitlines()) + "\n..."
         print(inline, file=outfile)
         if get_output and output:
-            print("\n".join(output), file=outfile)
+            print(output, file=outfile)
 
     if close_at_end:
         outfile.close()

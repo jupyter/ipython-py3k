@@ -151,7 +151,7 @@ class TestMagicRunSimple(tt.TempFileMixin):
                "def f(): return foo()")
         self.mktmp(src)
         _ip.magic('run %s' % self.fname)
-        _ip.runlines('t = isinstance(f(), foo)')
+        _ip.run_cell('t = isinstance(f(), foo)')
         nt.assert_true(_ip.user_ns['t'])
 
     # We have to skip these in win32 because getoutputerr() crashes,
@@ -188,7 +188,7 @@ class TestMagicRunSimple(tt.TempFileMixin):
                "       print i;break\n" % empty.fname)
         self.mktmp(src)
         _ip.magic('run %s' % self.fname)
-        _ip.runlines('ip == get_ipython()')
+        _ip.run_cell('ip == get_ipython()')
         tt.assert_equals(_ip.user_ns['i'], 5)
 
     @dec.skip_win32
@@ -196,11 +196,15 @@ class TestMagicRunSimple(tt.TempFileMixin):
         mydir = os.path.dirname(__file__)
         tc = os.path.join(mydir, 'tclass')
         src = ("%%run '%s' C-first\n"
-               "%%run '%s' C-second\n") % (tc, tc)
+               "%%run '%s' C-second\n"
+               "%%run '%s' C-third\n") % (tc, tc, tc)
         self.mktmp(src, '.ipy')
         out = """\
 ARGV 1-: [u'C-first']
 ARGV 1-: [u'C-second']
 tclass.py: deleting object: C-first
+ARGV 1-: [u'C-third']
+tclass.py: deleting object: C-second
+tclass.py: deleting object: C-third
 """
         tt.ipexec_validate(self.fname, out)

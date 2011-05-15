@@ -16,7 +16,7 @@ Utilities for warnings.  Shoudn't we just use the built in warnings module.
 
 import sys
 
-import IPython.utils.io
+from IPython.utils import io
 
 #-----------------------------------------------------------------------------
 # Code
@@ -25,7 +25,7 @@ import IPython.utils.io
 def warn(msg,level=2,exit_val=1):
     """Standard warning printer. Gives formatting consistency.
 
-    Output is sent to IPython.utils.io.Term.cerr (sys.stderr by default).
+    Output is sent to io.stderr (sys.stderr by default).
 
     Options:
 
@@ -41,9 +41,9 @@ def warn(msg,level=2,exit_val=1):
 
     if level>0:
         header = ['','','WARNING: ','ERROR: ','FATAL ERROR: ']
-        print('%s%s' % (header[level],msg), file=IPython.utils.io.Term.cerr)
+        print('%s%s' % (header[level],msg), file=io.stderr)
         if level == 4:
-            print('Exiting.\n', file=IPython.utils.io.Term.cerr)
+            print('Exiting.\n', file=io.stderr)
             sys.exit(exit_val)
 
             

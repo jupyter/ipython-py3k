@@ -122,7 +122,7 @@ class Kernel(Configurable):
 
         # Build dict of handlers for message types
         msg_types = [ 'execute_request', 'complete_request', 
-                      'object_info_request', 'history_tail_request',
+                      'object_info_request', 'history_request',
                       'connect_request', 'shutdown_request']
         self.handlers = {}
         for msg_type in msg_types:
@@ -236,12 +236,11 @@ class Kernel(Configurable):
                 shell.run_code(code)
             else:
                 # FIXME: the shell calls the exception handler itself.
-                shell._reply_content = None
                 shell.run_cell(code)
         except:
             status = 'error'
             # FIXME: this code right now isn't being used yet by default,
-            # because the runlines() call above directly fires off exception
+            # because the run_cell() call above directly fires off exception
             # reporting.  This code, therefore, is only active in the scenario
             # where runlines itself has an unhandled exception.  We need to
             # uniformize this, for all exception construction to come from a
@@ -261,6 +260,8 @@ class Kernel(Configurable):
         # runlines.  We'll need to clean up this logic later.
         if shell._reply_content is not None:
             reply_content.update(shell._reply_content)
+            # reset after use
+            shell._reply_content = None
 
         # At this point, we can tell whether the main code execution succeeded
         # or not.  If it did, we proceed to evaluate user_variables/expressions
@@ -323,15 +324,32 @@ class Kernel(Configurable):
                                 oinfo, parent, ident)
         logger.debug(msg)
 
-    def history_tail_request(self, ident, parent):
+    def history_request(self, ident, parent):
         # We need to pull these out, as passing **kwargs doesn't work with
         # unicode keys before Python 2.6.5.
-        n = parent['content']['n']
+        hist_access_type = parent['content']['hist_access_type']
         raw = parent['content']['raw']
         output = parent['content']['output']
-        hist = self.shell.history_manager.get_tail(n, raw=raw, output=output)
+        if hist_access_type == 'tail':
+            n = parent['content']['n']
+            hist = self.shell.history_manager.get_tail(n, raw=raw, output=output,
+                                                            include_latest=True)
+        
+        elif hist_access_type == 'range':
+            session = parent['content']['session']
+            start = parent['content']['start']
+            stop = parent['content']['stop']
+            hist = self.shell.history_manager.get_range(session, start, stop,
+                                                        raw=raw, output=output)
+        
+        elif hist_access_type == 'search':
+            pattern = parent['content']['pattern']
+            hist = self.shell.history_manager.search(pattern, raw=raw, output=output)
+        
+        else:
+            hist = []
         content = {'history' : list(hist)}
-        msg = self.session.send(self.reply_socket, 'history_tail_reply',
+        msg = self.session.send(self.reply_socket, 'history_reply',
                                 content, parent, ident)
         logger.debug(str(msg))
 
@@ -551,7 +569,8 @@ class GTKKernel(Kernel):
 #-----------------------------------------------------------------------------
 
 def launch_kernel(ip=None, xrep_port=0, pub_port=0, req_port=0, hb_port=0,
-                  independent=False, pylab=False, colors=None):
+                  stdin=None, stdout=None, stderr=None,
+                  executable=None, independent=False, pylab=False, colors=None):
     """Launches a localhost kernel, binding to the specified ports.
 
     Parameters
@@ -570,6 +589,12 @@ def launch_kernel(ip=None, xrep_port=0, pub_port=0, req_port=0, hb_port=0,
 
     hb_port : int, optional
         The port to use for the hearbeat REP channel.
+
+    stdin, stdout, stderr : optional (default None)
+        Standards streams, as defined in subprocess.Popen.
+
+    executable : str, optional (default sys.executable)
+        The Python executable to use for the kernel process.
 
     independent : bool, optional (default False) 
         If set, the kernel process is guaranteed to survive if this process
@@ -605,7 +630,8 @@ def launch_kernel(ip=None, xrep_port=0, pub_port=0, req_port=0, hb_port=0,
         extra_arguments.append(colors)
     return base_launch_kernel('from IPython.zmq.ipkernel import main; main()',
                               xrep_port, pub_port, req_port, hb_port, 
-                              independent, extra_arguments)
+                              stdin, stdout, stderr,
+                              executable, independent, extra_arguments)
 
 
 def main():
@@ -616,7 +642,7 @@ def main():
                         const='auto', help = \
 "Pre-load matplotlib and numpy for interactive use. If GUI is not \
 given, the GUI backend is matplotlib's, otherwise use one of: \
-['tk', 'gtk', 'qt', 'wx', 'inline'].")
+['tk', 'gtk', 'qt', 'wx', 'osx', 'inline'].")
     parser.add_argument('--colors',
         type=str, dest='colors',
         help="Set the color scheme (NoColor, Linux, and LightBG).",
@@ -629,6 +655,7 @@ given, the GUI backend is matplotlib's, otherwise use one of: \
         'qt' : QtKernel,
         'qt4': QtKernel,
         'inline': Kernel,
+        'osx': TkKernel,
         'wx' : WxKernel,
         'tk' : TkKernel,
         'gtk': GTKKernel,

@@ -26,8 +26,7 @@ import builtins
 
 from IPython.config.configurable import Configurable
 from IPython.core import prompts
-import IPython.utils.generics
-import IPython.utils.io
+from IPython.utils import io
 from IPython.utils.traitlets import Instance, List
 from IPython.utils.warn import warn
 
@@ -162,7 +161,8 @@ class DisplayHook(Configurable):
         """Should we silence the display hook because of ';'?"""
         # do not print output if input ends in ';'
         try:
-            if self.shell.history_manager.input_hist_parsed[self.prompt_count].endswith(';\n'):
+            cell = self.shell.history_manager.input_hist_parsed[self.prompt_count]
+            if cell.rstrip().endswith(';'):
                 return True
         except IndexError:
             # some uses of ipshellembed may fail here
@@ -177,13 +177,13 @@ class DisplayHook(Configurable):
         """Write the output prompt.
 
         The default implementation simply writes the prompt to
-        ``io.Term.cout``.
+        ``io.stdout``.
         """
         # Use write, not print which adds an extra space.
-        IPython.utils.io.Term.cout.write(self.output_sep)
+        io.stdout.write(self.output_sep)
         outprompt = str(self.prompt_out)
         if self.do_full_cache:
-            IPython.utils.io.Term.cout.write(outprompt)
+            io.stdout.write(outprompt)
 
     def compute_format_data(self, result):
         """Compute format data of the object to be displayed.
@@ -218,7 +218,7 @@ class DisplayHook(Configurable):
         """Write the format data dict to the frontend.
 
         This default version of this method simply writes the plain text
-        representation of the object to ``io.Term.cout``. Subclasses should
+        representation of the object to ``io.stdout``. Subclasses should
         override this method to send the entire `format_dict` to the
         frontends.
 
@@ -243,7 +243,7 @@ class DisplayHook(Configurable):
                 # But avoid extraneous empty lines.
                 result_repr = '\n' + result_repr
 
-        print(result_repr, file=IPython.utils.io.Term.cout)
+        print(result_repr, file=io.stdout)
 
     def update_user_ns(self, result):
         """Update user_ns with various things like _, __, _1, etc."""
@@ -281,14 +281,13 @@ class DisplayHook(Configurable):
         """Log the output."""
         if self.shell.logger.log_output:
             self.shell.logger.log_write(format_dict['text/plain'], 'output')
-        # This is a defaultdict of lists, so we can always append
-        self.shell.history_manager.output_hist_reprs[self.prompt_count]\
-                                    .append(format_dict['text/plain'])
+        self.shell.history_manager.output_hist_reprs[self.prompt_count] = \
+                                                    format_dict['text/plain']
 
     def finish_displayhook(self):
         """Finish up all displayhook activities."""
-        IPython.utils.io.Term.cout.write(self.output_sep2)
-        IPython.utils.io.Term.cout.flush()
+        io.stdout.write(self.output_sep2)
+        io.stdout.flush()
 
     def __call__(self, result=None):
         """Printing with history cache management.
