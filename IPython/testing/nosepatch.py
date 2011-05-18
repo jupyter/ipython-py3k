@@ -16,6 +16,7 @@ Note: merely importing this module causes the monkeypatch to be applied."""
 # Imports
 #-----------------------------------------------------------------------------
 
+import functools
 import unittest
 import nose.loader
 from inspect import ismethod, isfunction
@@ -61,7 +62,7 @@ def getTestCaseNames(self, testCaseClass):
         try:
             cases.sort(key=self.sortTestMethodsUsing)
         except TypeError: # Takes care of things trying to use old cmp functions.
-            cases.sort(key=unittest.CmpToKey(self.sortTestMethodsUsing))
+            cases.sort(key=functools.cmp_to_key(self.sortTestMethodsUsing))
     return cases
 
 

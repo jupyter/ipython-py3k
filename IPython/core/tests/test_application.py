@@ -43,7 +43,7 @@ def test_unicode_ipdir():
     
     old_ipdir1 = os.environ.pop("IPYTHONDIR", None)
     old_ipdir2 = os.environ.pop("IPYTHON_DIR", None)
-    os.environ["IPYTHONDIR"] = ipdir.encode("utf-8")
+    os.environ["IPYTHONDIR"] = ipdir
     try:
         app = Application()
         # The lines below are copied from Application.initialize()

@@ -64,8 +64,8 @@ class TeeTestCase(dec.ParametricTestCase):
 def test_io_init():
     """Test that io.stdin/out/err exist at startup"""
     for name in ('stdin', 'stdout', 'stderr'):
-        p = Popen([sys.executable, '-c', "from IPython.utils import io;print io.%s.__class__"%name],
+        p = Popen([sys.executable, '-c', "from IPython.utils import io;print(io.%s.__class__)"%name],
                     stdout=PIPE)
         p.wait()
         classname = p.stdout.read().strip()
-        nt.assert_equals(classname, 'IPython.utils.io.IOStream')
+        nt.assert_equals(classname, b"<class 'IPython.utils.io.IOStream'>")

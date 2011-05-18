@@ -204,7 +204,7 @@ class TestMagicRunSimple(tt.TempFileMixin):
 ARGV 1-: ['C-first']
 ARGV 1-: ['C-second']
 tclass.py: deleting object: C-first
-ARGV 1-: [u'C-third']
+ARGV 1-: ['C-third']
 tclass.py: deleting object: C-second
 tclass.py: deleting object: C-third
 """
