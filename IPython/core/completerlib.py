@@ -66,10 +66,6 @@ def shlex_split(x):
     # Example:
     # %run "c:/python -> ['%run','"c:/python']
 
-    # shlex.split has unicode bugs, so encode first to str
-    if isinstance(x, str):
-        x = x.encode(sys.stdin.encoding)
-
     endofline = []
     while x != '':
         try:
