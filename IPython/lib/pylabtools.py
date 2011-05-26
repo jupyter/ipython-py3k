@@ -33,6 +33,17 @@ backends = {'tk': 'TkAgg',
             'osx': 'MacOSX',
             'inline' : 'module://IPython.zmq.pylab.backend_inline'}
 
+# We also need a reverse backends2guis mapping that will properly choose which
+# GUI support to activate based on the desired matplotlib backend.  For the
+# most part it's just a reverse of the above dict, but we also need to add a
+# few others that map to the same GUI manually:
+backend2gui = dict(list(zip(list(backends.values()), list(backends.keys()))))
+# In the reverse mapping, there are a few extra valid matplotlib backends that
+# map to the same GUI support
+backend2gui['GTK'] = backend2gui['GTKCairo'] = 'gtk'
+backend2gui['WX'] = 'wx'
+backend2gui['CocoaAgg'] = 'osx'
+
 #-----------------------------------------------------------------------------
 # Matplotlib utilities
 #-----------------------------------------------------------------------------
@@ -60,7 +71,8 @@ def getfigs(*fig_nums):
             f = Gcf.figs.get(num)
             if f is None:
                 print(('Warning: figure %s not available.' % num))
-            figs.append(f.canvas.figure)
+            else:
+                figs.append(f.canvas.figure)
         return figs
 
 
@@ -166,9 +178,7 @@ def find_gui_and_backend(gui=None):
         backend = matplotlib.rcParams['backend']
         # In this case, we need to find what the appropriate gui selection call
         # should be for IPython, so we can activate inputhook accordingly
-        g2b = backends  # maps gui names to mpl backend names
-        b2g = dict(list(zip(list(g2b.values()), list(g2b.keys()))))  # reverse dict
-        gui = b2g.get(backend, None)
+        gui = backend2gui.get(backend, None)
     return gui, backend
 
 
