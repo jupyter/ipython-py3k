@@ -96,7 +96,7 @@ def test_info():
     "Check that Inspector.info fills out various fields as expected."
     i = inspector.info(Call, oname='Call')
     nt.assert_equal(i['type_name'], 'type')
-    nt.assert_equal(i['base_class'], "<type 'type'>")
+    nt.assert_equal(i['base_class'], "<class 'type'>")
     nt.assert_equal(i['string_form'], "<class 'IPython.core.tests.test_oinspect.Call'>")
     fname = __file__
     if fname.endswith(".pyc"):
@@ -124,8 +124,8 @@ def test_info():
     
     # Test old-style classes, which for example may not have an __init__ method.
     i = inspector.info(OldStyle)
-    nt.assert_equal(i['type_name'], 'classobj')
+    nt.assert_equal(i['type_name'], 'type')
     
     i = inspector.info(OldStyle())
-    nt.assert_equal(i['type_name'], 'instance')
+    nt.assert_equal(i['type_name'], 'OldStyle')
     nt.assert_equal(i['docstring'], OldStyle.__doc__)

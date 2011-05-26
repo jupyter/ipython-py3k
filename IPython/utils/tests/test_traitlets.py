@@ -26,7 +26,7 @@ from unittest import TestCase
 
 from IPython.utils.traitlets import (
     HasTraits, MetaHasTraits, TraitType, Any,
-    Int, Float, Complex, Unicode, TraitError,
+    Int, Float, Complex, Unicode, CUnicode, TraitError,
     Undefined, Type, This, Instance, TCPAddress, List, Tuple
 )
 
@@ -750,7 +750,7 @@ class TestTupleTrait(TraitTestBase):
     def test_invalid_args(self):
         self.assertRaises(TypeError, Tuple, 5)
         self.assertRaises(TypeError, Tuple, default_value='hello')
-        t = Tuple(Int, CStr, default_value=(1,5))
+        t = Tuple(Int, CUnicode, default_value=(1,5))
 
 class LooseTupleTrait(HasTraits):
 
@@ -767,12 +767,12 @@ class TestLooseTupleTrait(TraitTestBase):
     def test_invalid_args(self):
         self.assertRaises(TypeError, Tuple, 5)
         self.assertRaises(TypeError, Tuple, default_value='hello')
-        t = Tuple(Int, CStr, default_value=(1,5))
+        t = Tuple(Int, CUnicode, default_value=(1,5))
 
 
 class MultiTupleTrait(HasTraits):
 
-    value = Tuple(Int, Str, default_value=[99,'bottles'])
+    value = Tuple(Int, Unicode, default_value=[99,'bottles'])
 
 class TestMultiTuple(TraitTestBase):
 

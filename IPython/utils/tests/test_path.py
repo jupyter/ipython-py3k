@@ -290,7 +290,7 @@ def test_get_ipython_dir_6():
 def test_get_ipython_dir_7():
     """test_get_ipython_dir_7, test home directory expansion on IPYTHON_DIR"""
     home_dir = os.path.expanduser('~/')
-    env['IPYTHON_DIR'] = '~/somewhere'
+    env['IPYTHON3_DIR'] = '~/somewhere'
     ipdir = path.get_ipython_dir()
     nt.assert_equal(ipdir, os.path.join(home_dir, 'somewhere'))
 
