@@ -269,7 +269,7 @@ def find_scripts(entry_points=False):
         return file paths of plain scripts [default]
     """
     if entry_points:
-        scripts = [
+        console_scripts = [
             'ipython3 = IPython.frontend.terminal.ipapp:launch_new_instance',
             'pycolor3 = IPython.utils.PyColorize:main',
             'ipcontroller3 = IPython.parallel.apps.ipcontrollerapp:launch_new_instance',
