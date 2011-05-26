@@ -318,7 +318,9 @@ def get_ipython_dir():
         if ipdir is None:
             # not using XDG
             ipdir = home_ipdir
-    
+
+    ipdir = os.path.normpath(os.path.expanduser(ipdir))
+
     return ipdir
 
 
