@@ -57,7 +57,7 @@ if sys.platform == 'darwin' and have_readline:
     dt = 1e-3
     while dt < 1:
         p = Popen(['otool', '-L', _rl.__file__], stdout=PIPE, stderr=PIPE)
-        otool,err = p.communicate()
+        otool, err = p.communicate()
 
         if p.returncode == 4:
             # EINTR
@@ -65,12 +65,12 @@ if sys.platform == 'darwin' and have_readline:
             dt *= 2
             continue
         elif p.returncode:
-            warnings.warn("libedit detection failed: %s"%err)
+            warnings.warn("libedit detection failed: {0}".format(err))
             break
         else:
             break
 
-    if p.returncode == 0 and re.search(r'/libedit[\.\d+]*\.dylib\s', otool):
+    if p.returncode == 0 and re.search(br'/libedit[\.\d+]*\.dylib\s', otool):
         # we are bound to libedit - new in Leopard
         _rl.parse_and_bind("bind ^I rl_complete")
         warnings.warn("Leopard libedit detected - readline will not be well behaved "
