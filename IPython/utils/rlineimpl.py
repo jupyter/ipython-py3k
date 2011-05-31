@@ -70,7 +70,7 @@ if sys.platform == 'darwin' and have_readline:
         else:
             break
 
-    if p.returncode == 0 and re.search(r'/libedit[\.\d+]*\.dylib\s', str(otool)):
+    if p.returncode == 0 and re.search(br'/libedit[\.\d+]*\.dylib\s', otool):
         # we are bound to libedit - new in Leopard
         _rl.parse_and_bind("bind ^I rl_complete")
         warnings.warn("Leopard libedit detected - readline will not be well behaved "
