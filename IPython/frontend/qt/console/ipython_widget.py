@@ -102,7 +102,6 @@ class IPythonWidget(FrontendWidget):
         super(IPythonWidget, self).__init__(*args, **kw)
 
         # IPythonWidget protected variables.
-        self._code_to_load = None
         self._payload_handlers = { 
             self._payload_source_edit : self._handle_payload_edit,
             self._payload_source_exit : self._handle_payload_exit,
@@ -185,6 +184,10 @@ class IPythonWidget(FrontendWidget):
                 self._append_plain_text(self.output_sep)
                 self._append_html(self._make_out_prompt(prompt_number))
                 text = data['text/plain']
+                # If the repr is multiline, make sure we start on a new line,
+                # so that its lines are aligned.
+                if "\n" in text and not self.output_sep.endswith("\n"):
+                    self._append_plain_text('\n')
                 self._append_plain_text(text + self.output_sep2)
 
     def _handle_display_data(self, msg):
@@ -322,11 +325,6 @@ class IPythonWidget(FrontendWidget):
         self._set_continuation_prompt(
             self._make_continuation_prompt(self._prompt), html=True)
 
-        # Load code from the %loadpy magic, if necessary.
-        if self._code_to_load is not None:
-            self.input_buffer = dedent(self._code_to_load.rstrip())
-            self._code_to_load = None
-
     def _show_interpreter_prompt_for_reply(self, msg):
         """ Reimplemented for IPython-style prompts.
         """
@@ -460,9 +458,7 @@ class IPythonWidget(FrontendWidget):
         self.exit_requested.emit()
 
     def _handle_payload_next_input(self, item):
-        # Simply store the text for now. It is written to the buffer when
-        # _show_interpreter_prompt is called.
-        self._code_to_load = item['text']
+        self.input_buffer = dedent(item['text'].rstrip())
 
     def _handle_payload_page(self, item):
         # Since the plain text widget supports only a very small subset of HTML

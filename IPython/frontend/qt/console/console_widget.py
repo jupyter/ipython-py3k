@@ -173,6 +173,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         self._filter_drag = False
         self._filter_resize = False
         self._html_exporter = HtmlExporter(self._control)
+        self._input_buffer_executing = ''
+        self._input_buffer_pending = ''
         self._kill_ring = QtKillRing(self._control)
         self._prompt = ''
         self._prompt_html = None
@@ -438,7 +440,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         else:
             if complete:
                 self._append_plain_text('\n')
-                self._executing_input_buffer = self.input_buffer
+                self._input_buffer_executing = self.input_buffer
                 self._executing = True
                 self._prompt_finished()
 
@@ -477,11 +479,14 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
     def _get_input_buffer(self):
         """ The text that the user has entered entered at the current prompt.
+
+        If the console is currently executing, the text that is executing will
+        always be returned.
         """
         # If we're executing, the input buffer may not even exist anymore due to
         # the limit imposed by 'buffer_size'. Therefore, we store it.
         if self._executing:
-            return self._executing_input_buffer
+            return self._input_buffer_executing
 
         cursor = self._get_end_cursor()
         cursor.setPosition(self._prompt_pos, QtGui.QTextCursor.KeepAnchor)
@@ -491,11 +496,16 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         return input_buffer.replace('\n' + self._continuation_prompt, '\n')
 
     def _set_input_buffer(self, string):
-        """ Replaces the text in the input buffer with 'string'.
+        """ Sets the text in the input buffer.
+
+        If the console is currently executing, this call has no *immediate*
+        effect. When the execution is finished, the input buffer will be updated
+        appropriately.
         """
-        # For now, it is an error to modify the input buffer during execution.
+        # If we're executing, store the text for later.
         if self._executing:
-            raise RuntimeError("Cannot change input buffer during execution.")
+            self._input_buffer_pending = string
+            return
 
         # Remove old text.
         cursor = self._get_end_cursor()
@@ -597,7 +607,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """Change the font size by the specified amount (in points).
         """
         font = self.font
-        font.setPointSize(font.pointSize() + delta)
+        size = max(font.pointSize() + delta, 1) # minimum 1 point
+        font.setPointSize(size)
         self._set_font(font)
 
     def select_all(self):
@@ -988,12 +999,16 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             elif key in (QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete):
                 intercepted = True
 
-            elif key == QtCore.Qt.Key_Plus:
+            elif key in (QtCore.Qt.Key_Plus, QtCore.Qt.Key_Equal):
                 self.change_font_size(1)
                 intercepted = True
 
             elif key == QtCore.Qt.Key_Minus:
                 self.change_font_size(-1)
+                intercepted = True
+
+            elif key == QtCore.Qt.Key_0:
+                self.reset_font()
                 intercepted = True
 
         #------ Alt modifier ---------------------------------------------------
@@ -1569,9 +1584,15 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         self._control.setReadOnly(False)
         self._control.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
 
-        self._control.moveCursor(QtGui.QTextCursor.End)
         self._executing = False
         self._prompt_started_hook()
+
+        # If the input buffer has changed while executing, load it.
+        if self._input_buffer_pending:
+            self.input_buffer = self._input_buffer_pending
+            self._input_buffer_pending = ''
+
+        self._control.moveCursor(QtGui.QTextCursor.End)
 
     def _readline(self, prompt='', callback=None):
         """ Reads one line of input from the user. 

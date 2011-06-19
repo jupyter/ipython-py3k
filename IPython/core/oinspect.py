@@ -201,7 +201,7 @@ def call_tip(oinfo, format_call=True):
       (regular functions).
     """
     # Get call definition
-    argspec = oinfo['argspec']
+    argspec = oinfo.get('argspec')
     if argspec is None:
         call_line = None
     else:
@@ -220,11 +220,11 @@ def call_tip(oinfo, format_call=True):
 
     # Now get docstring.
     # The priority is: call docstring, constructor docstring, main one.
-    doc = oinfo['call_docstring']
+    doc = oinfo.get('call_docstring')
     if doc is None:
-        doc = oinfo['init_docstring']
+        doc = oinfo.get('init_docstring')
     if doc is None:
-        doc = oinfo['docstring']
+        doc = oinfo.get('docstring','')
 
     return call_line, doc
 
@@ -355,7 +355,7 @@ class Inspector:
         # where the object is defined
         ofile = inspect.getabsfile(obj)
 
-        if (ofile.endswith('.so') or ofile.endswith('.dll')):
+        if ofile.endswith(('.so', '.dll', '.pyd')):
             print('File %r is binary, not printing.' % ofile)
         elif not os.path.isfile(ofile):
             print('File %r does not exist, not printing.' % ofile)
@@ -547,7 +547,7 @@ class Inspector:
                     fname = inspect.getabsfile(obj.__class__)
             if fname.endswith('<string>'):
                 fname = 'Dynamically generated function. No source code available.'
-            if (fname.endswith('.so') or fname.endswith('.dll')):
+            if fname.endswith(('.so', '.dll', '.pyd')):
                 binary_file = True
             out['file'] = fname
         except:
