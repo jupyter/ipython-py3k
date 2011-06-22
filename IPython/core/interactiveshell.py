@@ -1647,7 +1647,7 @@ class InteractiveShell(SingletonConfigurable, Magic):
 
             # Remove some chars from the delimiters list.  If we encounter
             # unicode chars, discard them.
-            delims = readline.get_completer_delims().encode("ascii", "ignore")
+            delims = readline.get_completer_delims()
             for d in self.readline_remove_delims:
                 delims = delims.replace(d, "")
             delims = delims.replace(ESC_MAGIC, '')

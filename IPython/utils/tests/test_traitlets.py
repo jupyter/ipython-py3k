@@ -27,7 +27,7 @@ from unittest import TestCase
 
 from IPython.utils.traitlets import (
     HasTraits, MetaHasTraits, TraitType, Any, CBytes,
-    Int, Long, Float, Complex, Bytes, Unicode, TraitError,
+    Int, Float, Complex, Bytes, Unicode, TraitError,
     Undefined, Type, This, Instance, TCPAddress, List, Tuple,
     ObjectName, DottedObjectName
 )
@@ -683,27 +683,27 @@ class TestComplex(TraitTestBase):
     _default_value = 99.0-99.0j
     _good_values   = [10, -10, 10.1, -10.1, 10j, 10+10j, 10-10j, 
                       10.1j, 10.1+10.1j, 10.1-10.1j]
-    _bad_values    = [10, -10, '10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
+    _bad_values    = ['10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
 
 
 class BytesTrait(HasTraits):
 
-    value = Bytes('string')
+    value = Bytes(b'string')
 
 class TestBytes(TraitTestBase):
 
     obj = BytesTrait()
 
-    _default_value = 'string'
-    _good_values   = ['10', '-10', '10L',
-                      '-10L', '10.1', '-10.1', 'string']
+    _default_value = b'string'
+    _good_values   = [b'10', b'-10', b'10L',
+                      b'-10L', b'10.1', b'-10.1', b'string']
     _bad_values    = [10, -10, 10, -10, 10.1, -10.1, 1j, [10],
                       ['ten'],{'ten': 10},(10,), None,  'string']
 
 
 class UnicodeTrait(HasTraits):
 
-    value = Unicode('string')
+    value = Unicode('unicode')
 
 class TestUnicode(TraitTestBase):
 

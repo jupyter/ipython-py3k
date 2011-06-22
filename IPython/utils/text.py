@@ -586,9 +586,9 @@ class EvalFormatter(Formatter):
     
     In [1]: f = EvalFormatter()
     In [2]: f.format('{n/4}', n=8)
-    Out[2]: '2'
+    Out[2]: '2.0'
     
-    In [3]: f.format('{range(3)}')
+    In [3]: f.format('{list(range(3))}')
     Out[3]: '[0, 1, 2]'
 
     In [4]: f.format('{3*2}')
