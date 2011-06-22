@@ -308,9 +308,7 @@ class IPythonRunner(InteractiveRunner):
     def __init__(self,program = 'ipython3',args=None,out=sys.stdout,echo=True):
         """New runner, optionally passing the ipython command to use."""
         
-        args0 = ['--colors','NoColor',
-                 '-pi1','In [\\#]: ',
-                 '-pi2','   .\\D.: ',
+        args0 = ['colors=NoColor',
                  '--no-term-title',
                  '--no-autoindent']
         if args is None: args = args0

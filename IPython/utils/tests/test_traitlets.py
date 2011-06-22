@@ -22,12 +22,14 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
+import sys
 from unittest import TestCase
 
 from IPython.utils.traitlets import (
-    HasTraits, MetaHasTraits, TraitType, Any,
-    Int, Float, Complex, Unicode, CUnicode, TraitError,
-    Undefined, Type, This, Instance, TCPAddress, List, Tuple
+    HasTraits, MetaHasTraits, TraitType, Any, CBytes,
+    Int, Long, Float, Complex, Bytes, Unicode, TraitError,
+    Undefined, Type, This, Instance, TCPAddress, List, Tuple,
+    ObjectName, DottedObjectName
 )
 
 
@@ -681,7 +683,22 @@ class TestComplex(TraitTestBase):
     _default_value = 99.0-99.0j
     _good_values   = [10, -10, 10.1, -10.1, 10j, 10+10j, 10-10j, 
                       10.1j, 10.1+10.1j, 10.1-10.1j]
-    _bad_values    = ['10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
+    _bad_values    = [10, -10, '10L', '-10L', 'ten', [10], {'ten': 10},(10,), None]
+
+
+class BytesTrait(HasTraits):
+
+    value = Bytes('string')
+
+class TestBytes(TraitTestBase):
+
+    obj = BytesTrait()
+
+    _default_value = 'string'
+    _good_values   = ['10', '-10', '10L',
+                      '-10L', '10.1', '-10.1', 'string']
+    _bad_values    = [10, -10, 10, -10, 10.1, -10.1, 1j, [10],
+                      ['ten'],{'ten': 10},(10,), None,  'string']
 
 
 class UnicodeTrait(HasTraits):
@@ -692,11 +709,42 @@ class TestUnicode(TraitTestBase):
 
     obj = UnicodeTrait()
 
-    _default_value = 'string'
-    _good_values   = ['10', '-10', '10L',
-                      '-10L', '10.1', '-10.1', 'string']
-    _bad_values    = [10, -10, 10.1, -10.1, 1j, [10],
-                      ['ten'],{'ten': 10},(10,), None]
+    _default_value = 'unicode'
+    _good_values   = ['10', '-10', '10L', '-10L', '10.1', 
+                      '-10.1', '', '', 'string', 'string', "€"]
+    _bad_values    = [10, -10, 10, -10, 10.1, -10.1, 1j,
+                      [10], ['ten'], ['ten'], {'ten': 10},(10,), None]
+
+
+class ObjectNameTrait(HasTraits):
+    value = ObjectName("abc")
+    
+class TestObjectName(TraitTestBase):
+    obj = ObjectNameTrait()
+    
+    _default_value = "abc"
+    _good_values = ["a", "gh", "g9", "g_", "_G", "a345_"]
+    _bad_values = [1, "", "€", "9g", "!", "#abc", "aj@", "a.b", "a()", "a[0]",
+                                                            object(), object]
+    if sys.version_info[0] < 3:
+        _bad_values.append("þ")
+    else:
+        _good_values.append("þ")  # þ=1 is valid in Python 3 (PEP 3131).
+
+
+class DottedObjectNameTrait(HasTraits):
+    value = DottedObjectName("a.b")
+
+class TestDottedObjectName(TraitTestBase):
+    obj = DottedObjectNameTrait()
+    
+    _default_value = "a.b"
+    _good_values = ["A", "y.t", "y765.__repr__", "os.path.join", "os.path.join"]
+    _bad_values = [1, "abc.€", "_.@", ".", ".abc", "abc.", ".abc."]
+    if sys.version_info[0] < 3:
+        _bad_values.append("t.þ")
+    else:
+        _good_values.append("t.þ")
 
 
 class TCPAddressTrait(HasTraits):
@@ -750,7 +798,7 @@ class TestTupleTrait(TraitTestBase):
     def test_invalid_args(self):
         self.assertRaises(TypeError, Tuple, 5)
         self.assertRaises(TypeError, Tuple, default_value='hello')
-        t = Tuple(Int, CUnicode, default_value=(1,5))
+        t = Tuple(Int, CBytes, default_value=(1,5))
 
 class LooseTupleTrait(HasTraits):
 
@@ -767,7 +815,7 @@ class TestLooseTupleTrait(TraitTestBase):
     def test_invalid_args(self):
         self.assertRaises(TypeError, Tuple, 5)
         self.assertRaises(TypeError, Tuple, default_value='hello')
-        t = Tuple(Int, CUnicode, default_value=(1,5))
+        t = Tuple(Int, CBytes, default_value=(1,5))
 
 
 class MultiTupleTrait(HasTraits):

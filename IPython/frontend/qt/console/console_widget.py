@@ -19,7 +19,7 @@ from IPython.external.qt import QtCore, QtGui
 from IPython.config.configurable import Configurable
 from IPython.frontend.qt.rich_text import HtmlExporter
 from IPython.frontend.qt.util import MetaQObjectHasTraits, get_font
-from IPython.utils.traitlets import Bool, Enum, Int
+from IPython.utils.traitlets import Bool, Enum, Int, Unicode
 from .ansi_code_processor import QtAnsiCodeProcessor
 from .completion_widget import CompletionWidget
 from .kill_ring import QtKillRing
@@ -54,33 +54,66 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
     #------ Configuration ------------------------------------------------------
 
-    # Whether to process ANSI escape codes.
-    ansi_codes = Bool(True, config=True)
-
-    # The maximum number of lines of text before truncation. Specifying a
-    # non-positive number disables text truncation (not recommended).
-    buffer_size = Int(500, config=True)
-
-    # Whether to use a list widget or plain text output for tab completion.
-    gui_completion = Bool(False, config=True)
-
-    # The type of underlying text widget to use. Valid values are 'plain', which
-    # specifies a QPlainTextEdit, and 'rich', which specifies a QTextEdit.
+    ansi_codes = Bool(True, config=True,
+        help="Whether to process ANSI escape codes."
+    )
+    buffer_size = Int(500, config=True,
+        help="""
+        The maximum number of lines of text before truncation. Specifying a
+        non-positive number disables text truncation (not recommended).
+        """
+    )
+    gui_completion = Bool(False, config=True,
+        help="""
+        Use a list widget instead of plain text output for tab completion.
+        """
+    )
     # NOTE: this value can only be specified during initialization.
-    kind = Enum(['plain', 'rich'], default_value='plain', config=True)
-
-    # The type of paging to use. Valid values are:
-    #     'inside' : The widget pages like a traditional terminal.
-    #     'hsplit' : When paging is requested, the widget is split
-    #                horizontally. The top pane contains the console, and the
-    #                bottom pane contains the paged text.
-    #     'vsplit' : Similar to 'hsplit', except that a vertical splitter used.
-    #     'custom' : No action is taken by the widget beyond emitting a
-    #                'custom_page_requested(str)' signal.
-    #     'none'   : The text is written directly to the console.
+    kind = Enum(['plain', 'rich'], default_value='plain', config=True,
+        help="""
+        The type of underlying text widget to use. Valid values are 'plain',
+        which specifies a QPlainTextEdit, and 'rich', which specifies a
+        QTextEdit.
+        """
+    )
     # NOTE: this value can only be specified during initialization.
     paging = Enum(['inside', 'hsplit', 'vsplit', 'custom', 'none'], 
-                  default_value='inside', config=True)
+                  default_value='inside', config=True,
+        help="""
+        The type of paging to use. Valid values are:
+        
+            'inside' : The widget pages like a traditional terminal.
+            'hsplit' : When paging is requested, the widget is split
+                       horizontally. The top pane contains the console, and the
+                       bottom pane contains the paged text.
+            'vsplit' : Similar to 'hsplit', except that a vertical splitter
+                       used.
+            'custom' : No action is taken by the widget beyond emitting a
+                       'custom_page_requested(str)' signal.
+            'none'   : The text is written directly to the console.
+        """)
+
+    font_family = Unicode(config=True,
+        help="""The font family to use for the console.
+        On OSX this defaults to Monaco, on Windows the default is
+        Consolas with fallback of Courier, and on other platforms
+        the default is Monospace.
+        """)
+    def _font_family_default(self):
+        if sys.platform == 'win32':
+            # Consolas ships with Vista/Win7, fallback to Courier if needed
+            return 'Consolas'
+        elif sys.platform == 'darwin':
+            # OSX always has Monaco, no need for a fallback
+            return 'Monaco'
+        else:
+            # Monospace should always exist, no need for a fallback
+            return 'Monospace'
+
+    font_size = Int(config=True,
+        help="""The font size. If unconfigured, Qt will be entrusted
+        with the size of the font.
+        """)
 
     # Whether to override ShortcutEvents for the keybindings defined by this
     # widget (Ctrl+n, Ctrl+a, etc). Enable this if you want this widget to take
@@ -165,6 +198,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
 
         # Initialize protected variables. Some variables contain useful state
         # information for subclasses; they should be considered read-only.
+        self._append_before_prompt_pos = 0
         self._ansi_processor = QtAnsiCodeProcessor()
         self._completion_widget = CompletionWidget(self._control)
         self._continuation_prompt = '> '
@@ -477,7 +511,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """
         self._html_exporter.export()
 
-    def _get_input_buffer(self):
+    def _get_input_buffer(self, force=False):
         """ The text that the user has entered entered at the current prompt.
 
         If the console is currently executing, the text that is executing will
@@ -485,7 +519,7 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """
         # If we're executing, the input buffer may not even exist anymore due to
         # the limit imposed by 'buffer_size'. Therefore, we store it.
-        if self._executing:
+        if self._executing and not force:
             return self._input_buffer_executing
 
         cursor = self._get_end_cursor()
@@ -590,16 +624,18 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         """
         if sys.platform == 'win32':
             # Consolas ships with Vista/Win7, fallback to Courier if needed
-            family, fallback = 'Consolas', 'Courier'
+            fallback = 'Courier'
         elif sys.platform == 'darwin':
-            # OSX always has Monaco, no need for a fallback
-            family, fallback = 'Monaco', None
+            # OSX always has Monaco
+            fallback = 'Monaco'
         else:
-            # FIXME: remove Consolas as a default on Linux once our font
-            # selections are configurable by the user.
-            family, fallback = 'Consolas', 'Monospace'
-        font = get_font(family, fallback)
-        font.setPointSize(QtGui.qApp.font().pointSize())
+            # Monospace should always exist
+            fallback = 'Monospace'
+        font = get_font(self.font_family, fallback)
+        if self.font_size:
+            font.setPointSize(self.font_size)
+        else:
+            font.setPointSize(QtGui.qApp.font().pointSize())
         font.setStyleHint(QtGui.QFont.TypeWriter)
         self._set_font(font)
 
@@ -686,36 +722,47 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
     # 'ConsoleWidget' protected interface
     #--------------------------------------------------------------------------
 
-    def _append_html(self, html):
-        """ Appends html at the end of the console buffer.
+    def _append_custom(self, insert, input, before_prompt=False):
+        """ A low-level method for appending content to the end of the buffer.
+        
+        If 'before_prompt' is enabled, the content will be inserted before the
+        current prompt, if there is one.
         """
-        cursor = self._get_end_cursor()
-        self._insert_html(cursor, html)
+        # Determine where to insert the content.
+        cursor = self._control.textCursor()
+        if before_prompt and not self._executing:
+            cursor.setPosition(self._append_before_prompt_pos)
+        else:
+            cursor.movePosition(QtGui.QTextCursor.End)
+        start_pos = cursor.position()
 
-    def _append_html_fetching_plain_text(self, html):
-        """ Appends 'html', then returns the plain text version of it.
+        # Perform the insertion.
+        result = insert(cursor, input)
+
+        # Adjust the prompt position if we have inserted before it. This is safe
+        # because buffer truncation is disabled when not executing.
+        if before_prompt and not self._executing:
+            diff = cursor.position() - start_pos
+            self._append_before_prompt_pos += diff
+            self._prompt_pos += diff
+            
+        return result
+
+    def _append_html(self, html, before_prompt=False):
+        """ Appends HTML at the end of the console buffer.
         """
-        cursor = self._get_end_cursor()
-        return self._insert_html_fetching_plain_text(cursor, html)
+        self._append_custom(self._insert_html, html, before_prompt)
 
-    def _append_plain_text(self, text):
-        """ Appends plain text at the end of the console buffer, processing
-            ANSI codes if enabled.
+    def _append_html_fetching_plain_text(self, html, before_prompt=False):
+        """ Appends HTML, then returns the plain text version of it.
         """
-        cursor = self._get_end_cursor()
-        self._insert_plain_text(cursor, text)
+        return self._append_custom(self._insert_html_fetching_plain_text,
+                                   html, before_prompt)
 
-    def _append_plain_text_keeping_prompt(self, text):
-        """ Writes 'text' after the current prompt, then restores the old prompt
-            with its old input buffer.
+    def _append_plain_text(self, text, before_prompt=False):
+        """ Appends plain text, processing ANSI codes if enabled.
         """
-        input_buffer = self.input_buffer
-        self._append_plain_text('\n')
-        self._prompt_finished()
-
-        self._append_plain_text(text)
-        self._show_prompt()
-        self.input_buffer = input_buffer
+        self._append_custom(self._insert_plain_text, text, before_prompt)
 
     def _cancel_text_completion(self):
         """ If text completion is progress, cancel it.
@@ -1584,7 +1631,8 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
         self._control.setReadOnly(False)
         self._control.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
 
-        self._executing = False
+        if not self._reading:
+            self._executing = False
         self._prompt_started_hook()
 
         # If the input buffer has changed while executing, load it.
@@ -1627,11 +1675,11 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             self._reading_callback = None
             while self._reading:
                 QtCore.QCoreApplication.processEvents()
-            return self.input_buffer.rstrip('\n')
+            return self._get_input_buffer(force=True).rstrip('\n')
 
         else:
             self._reading_callback = lambda: \
-                callback(self.input_buffer.rstrip('\n'))
+                callback(self._get_input_buffer(force=True).rstrip('\n'))
 
     def _set_continuation_prompt(self, prompt, html=False):
         """ Sets the continuation prompt.
@@ -1684,14 +1732,16 @@ class ConsoleWidget(Configurable, QtGui.QWidget, metaclass=MetaQObjectHasTraits)
             If set, a new line will be written before showing the prompt if 
             there is not already a newline at the end of the buffer.
         """
+        # Save the current end position to support _append*(before_prompt=True).
+        cursor = self._get_end_cursor()
+        self._append_before_prompt_pos = cursor.position()
+        
         # Insert a preliminary newline, if necessary.
-        if newline:
-            cursor = self._get_end_cursor()
-            if cursor.position() > 0:
-                cursor.movePosition(QtGui.QTextCursor.Left, 
-                                    QtGui.QTextCursor.KeepAnchor)
-                if cursor.selection().toPlainText() != '\n':
-                    self._append_plain_text('\n')
+        if newline and cursor.position() > 0:
+            cursor.movePosition(QtGui.QTextCursor.Left, 
+                                QtGui.QTextCursor.KeepAnchor)
+            if cursor.selection().toPlainText() != '\n':
+                self._append_plain_text('\n')
 
         # Write the prompt.
         self._append_plain_text(self._prompt_sep)

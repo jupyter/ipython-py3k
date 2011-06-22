@@ -53,6 +53,7 @@ from IPython.core.magic import Magic
 from IPython.core.payload import PayloadManager
 from IPython.core.plugin import PluginManager
 from IPython.core.prefilter import PrefilterManager, ESC_MAGIC
+from IPython.core.profiledir import ProfileDir
 from IPython.external.Itpl import ItplNS
 from IPython.utils import PyColorize
 from IPython.utils import io
@@ -65,8 +66,8 @@ from IPython.utils.process import system, getoutput
 from IPython.utils.strdispatch import StrDispatch
 from IPython.utils.syspathcontext import prepended_to_syspath
 from IPython.utils.text import num_ini_spaces, format_screen, LSString, SList
-from IPython.utils.traitlets import (Int, Unicode, CBool, CaselessStrEnum, Enum,
-                                     List, Instance, Type)
+from IPython.utils.traitlets import (Int, CBool, CaselessStrEnum, Enum,
+                                     List, Unicode, Instance, Type)
 from IPython.utils.warn import warn, error, fatal
 import IPython.core.hooks
 import collections
@@ -118,7 +119,7 @@ def get_default_colors():
         return 'Linux'
 
 
-class SeparateStr(Unicode):
+class SeparateUnicode(Unicode):
     """A Unicode subclass to validate separate_in, separate_out, etc.
 
     This is a Unicode based trait that converts '0'->'' and '\\n'->'\n'.
@@ -127,7 +128,7 @@ class SeparateStr(Unicode):
     def validate(self, obj, value):
         if value == '0': value = ''
         value = value.replace('\\n','\n')
-        return super(SeparateStr, self).validate(obj, value)
+        return super(SeparateUnicode, self).validate(obj, value)
 
 
 class ReadlineNoRecord(object):
@@ -235,7 +236,9 @@ class InteractiveShell(SingletonConfigurable, Magic):
         """
     )
     colors = CaselessStrEnum(('NoColor','LightBG','Linux'), 
-                             default_value=get_default_colors(), config=True)
+                             default_value=get_default_colors(), config=True,
+        help="Set the color scheme (NoColor, Linux, or LightBG)."
+    )
     debug = CBool(False, config=True)
     deep_reload = CBool(False, config=True, help=
         """
@@ -289,7 +292,6 @@ class InteractiveShell(SingletonConfigurable, Magic):
         """
     )
 
-    profile = Unicode('', config=True)
     prompt_in1 = Unicode('In [\\#]: ', config=True)
     prompt_in2 = Unicode('   .\\D.: ', config=True)
     prompt_out = Unicode('Out[\\#]: ', config=True)
@@ -323,9 +325,9 @@ class InteractiveShell(SingletonConfigurable, Magic):
 
     # TODO: this part of prompt management should be moved to the frontends.
     # Use custom TraitTypes that convert '0'->'' and '\\n'->'\n'
-    separate_in = SeparateStr('\n', config=True)
-    separate_out = SeparateStr('', config=True)
-    separate_out2 = SeparateStr('', config=True)
+    separate_in = SeparateUnicode('\n', config=True)
+    separate_out = SeparateUnicode('', config=True)
+    separate_out2 = SeparateUnicode('', config=True)
     wildcards_case_sensitive = CBool(True, config=True)
     xmode = CaselessStrEnum(('Context','Plain', 'Verbose'), 
                             default_value='Context', config=True)
@@ -340,10 +342,18 @@ class InteractiveShell(SingletonConfigurable, Magic):
     payload_manager = Instance('IPython.core.payload.PayloadManager')
     history_manager = Instance('IPython.core.history.HistoryManager')
 
+    profile_dir = Instance('IPython.core.application.ProfileDir')
+    @property
+    def profile(self):
+        if self.profile_dir is not None:
+            name = os.path.basename(self.profile_dir.location)
+            return name.replace('profile_','')
+
+
     # Private interface
     _post_execute = Instance(dict)
 
-    def __init__(self, config=None, ipython_dir=None,
+    def __init__(self, config=None, ipython_dir=None, profile_dir=None,
                  user_ns=None, user_global_ns=None,
                  custom_exceptions=((), None)):
 
@@ -353,6 +363,7 @@ class InteractiveShell(SingletonConfigurable, Magic):
 
         # These are relatively independent and stateless
         self.init_ipython_dir(ipython_dir)
+        self.init_profile_dir(profile_dir)
         self.init_instance_attrs()
         self.init_environment()
 
@@ -370,7 +381,7 @@ class InteractiveShell(SingletonConfigurable, Magic):
         # While we're trying to have each part of the code directly access what
         # it needs without keeping redundant references to objects, we have too
         # much legacy code that expects ip.db to exist.
-        self.db = PickleShareDB(os.path.join(self.ipython_dir, 'db'))
+        self.db = PickleShareDB(os.path.join(self.profile_dir.location, 'db'))
 
         self.init_history()
         self.init_encoding()
@@ -455,16 +466,16 @@ class InteractiveShell(SingletonConfigurable, Magic):
     def init_ipython_dir(self, ipython_dir):
         if ipython_dir is not None:
             self.ipython_dir = ipython_dir
-            self.config.Global.ipython_dir = self.ipython_dir
             return
 
-        if hasattr(self.config.Global, 'ipython_dir'):
-            self.ipython_dir = self.config.Global.ipython_dir
-        else:
-            self.ipython_dir = get_ipython_dir()
+        self.ipython_dir = get_ipython_dir()
 
-        # All children can just read this
-        self.config.Global.ipython_dir = self.ipython_dir
+    def init_profile_dir(self, profile_dir):
+        if profile_dir is not None:
+            self.profile_dir = profile_dir
+            return
+        self.profile_dir =\
+            ProfileDir.create_profile_dir_by_name(self.ipython_dir, 'default')
 
     def init_instance_attrs(self):
         self.more = False
@@ -1636,8 +1647,9 @@ class InteractiveShell(SingletonConfigurable, Magic):
 
             # Remove some chars from the delimiters list.  If we encounter
             # unicode chars, discard them.
-            delims = readline.get_completer_delims()
-            delims = delims.translate(self.readline_remove_delims)
+            delims = readline.get_completer_delims().encode("ascii", "ignore")
+            for d in self.readline_remove_delims:
+                delims = delims.replace(d, "")
             delims = delims.replace(ESC_MAGIC, '')
             readline.set_completer_delims(delims)
             # otherwise we end up with a monster history after a while:

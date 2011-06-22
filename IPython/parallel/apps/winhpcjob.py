@@ -3,10 +3,16 @@
 """
 Job and task components for writing .xml files that the Windows HPC Server 
 2008 can use to start jobs.
+
+Authors:
+
+* Brian Granger
+* MinRK
+
 """
 
 #-----------------------------------------------------------------------------
-#  Copyright (C) 2008-2009  The IPython Development Team
+#  Copyright (C) 2008-2011  The IPython Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
@@ -24,8 +30,8 @@ from xml.etree import ElementTree as ET
 
 from IPython.config.configurable import Configurable
 from IPython.utils.traitlets import (
-    Int, List, Instance,
-    Enum, Bool, Unicode, CUnicode
+    Unicode, Int, List, Instance,
+    Enum, Bool
 )
 
 #-----------------------------------------------------------------------------
@@ -175,11 +181,11 @@ class WinHPCTask(Configurable):
     min_nodes = Int(1, config=True)
     max_nodes = Int(1, config=True)
     unit_type = Unicode("Core", config=True)
-    command_line = CUnicode('', config=True)
-    work_directory = CUnicode('', config=True)
+    command_line = Unicode('', config=True)
+    work_directory = Unicode('', config=True)
     is_rerunnaable = Bool(True, config=True)
-    std_out_file_path = CUnicode('', config=True)
-    std_err_file_path = CUnicode('', config=True)
+    std_out_file_path = Unicode('', config=True)
+    std_err_file_path = Unicode('', config=True)
     is_parametric = Bool(False, config=True)
     environment_variables = Instance(dict, args=(), config=True)
 
@@ -246,10 +252,10 @@ class IPControllerTask(WinHPCTask):
 
     task_name = Unicode('IPController', config=True)
     controller_cmd = List(['ipcontroller.exe'], config=True)
-    controller_args = List(['--log-to-file', '--log-level', '40'], config=True)
+    controller_args = List(['--log-to-file', 'log-level=40'], config=True)
     # I don't want these to be configurable
-    std_out_file_path = CUnicode('', config=False)
-    std_err_file_path = CUnicode('', config=False)
+    std_out_file_path = Unicode('', config=False)
+    std_err_file_path = Unicode('', config=False)
     min_cores = Int(1, config=False)
     max_cores = Int(1, config=False)
     min_sockets = Int(1, config=False)
@@ -257,7 +263,7 @@ class IPControllerTask(WinHPCTask):
     min_nodes = Int(1, config=False)
     max_nodes = Int(1, config=False)
     unit_type = Unicode("Core", config=False)
-    work_directory = CUnicode('', config=False)
+    work_directory = Unicode('', config=False)
 
     def __init__(self, config=None):
         super(IPControllerTask, self).__init__(config=config)
@@ -274,10 +280,10 @@ class IPEngineTask(WinHPCTask):
 
     task_name = Unicode('IPEngine', config=True)
     engine_cmd = List(['ipengine.exe'], config=True)
-    engine_args = List(['--log-to-file', '--log-level', '40'], config=True)
+    engine_args = List(['--log-to-file', 'log_level=40'], config=True)
     # I don't want these to be configurable
-    std_out_file_path = CUnicode('', config=False)
-    std_err_file_path = CUnicode('', config=False)
+    std_out_file_path = Unicode('', config=False)
+    std_err_file_path = Unicode('', config=False)
     min_cores = Int(1, config=False)
     max_cores = Int(1, config=False)
     min_sockets = Int(1, config=False)
@@ -285,7 +291,7 @@ class IPEngineTask(WinHPCTask):
     min_nodes = Int(1, config=False)
     max_nodes = Int(1, config=False)
     unit_type = Unicode("Core", config=False)
-    work_directory = CUnicode('', config=False)
+    work_directory = Unicode('', config=False)
 
     def __init__(self, config=None):
         super(IPEngineTask,self).__init__(config=config)

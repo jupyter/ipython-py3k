@@ -51,6 +51,7 @@ Authors:
 
 
 import inspect
+import re
 import sys
 import types
 from types import FunctionType
@@ -916,11 +917,39 @@ class CComplex(Complex):
             self.error(obj, value)
 
 
+# We should always be explicit about whether we're using bytes or unicode, both
+# for Python 3 conversion and for reliable unicode behaviour on Python 2. So
+# we don't have a Str type.
+class Bytes(TraitType):
+    """A trait for byte strings."""
+
+    default_value = ''
+    info_text = 'a string'
+
+    def validate(self, obj, value):
+        if isinstance(value, bytes):
+            return value
+        self.error(obj, value)
+
+
+class CBytes(Bytes):
+    """A casting version of the byte string trait."""
+
+    def validate(self, obj, value):
+        try:
+            return bytes(value)
+        except:
+            try:
+                return str(value)
+            except:
+                self.error(obj, value)
+
+
 class Unicode(TraitType):
     """A trait for unicode strings."""
 
     default_value = ''
-    info_text = 'a string'
+    info_text = 'a unicode string'
 
     def validate(self, obj, value):
         if isinstance(value, str):
@@ -929,36 +958,57 @@ class Unicode(TraitType):
 
 
 class CUnicode(Unicode):
-    """A casting version of the unicode string trait."""
+    """A casting version of the unicode trait."""
 
     def validate(self, obj, value):
         try:
             return str(value)
         except:
-            try:
-                return str(value)
-            except:
-                self.error(obj, value)
-                
-class Bytes(TraitType):
-    """A trait for byte strings."""
+            self.error(obj, value)
+  
+            
+class ObjectName(TraitType):
+    """A string holding a valid object name in this version of Python.
+    
+    This does not check that the name exists in any scope."""
+    info_text = "a valid object identifier in Python"
 
-    default_value = b''
-    info_text = 'a string'
-
+    if sys.version_info[0] < 3:
+        # Python 2:
+        _name_re = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*$")
+        def isidentifier(self, s):
+            return bool(self._name_re.match(s))
+        
+        def coerce_str(self, obj, value):
+            "In Python 2, coerce ascii-only unicode to str"
+            if isinstance(value, str):
+                try:
+                    return str(value)
+                except UnicodeEncodeError:
+                    self.error(obj, value)
+            return value
+    
+    else:
+        # Python 3:
+        isidentifier = staticmethod(lambda s: s.isidentifier())
+        coerce_str = staticmethod(lambda _,s: s)
+    
     def validate(self, obj, value):
-        if isinstance(value, bytes):
+        value = self.coerce_str(obj, value)
+        
+        if isinstance(value, str) and self.isidentifier(value):
             return value
         self.error(obj, value)
-        
-class CBytes(Bytes):
-    """A casting version of the byte string trait."""
 
+class DottedObjectName(ObjectName):
+    """A string holding a valid dotted object name in Python, such as A.b3._c"""
     def validate(self, obj, value):
-        try:
-            return bytes(value)
-        except:
-            self.error(obj, value)
+        value = self.coerce_str(obj, value)
+        
+        if isinstance(value, str) and all(self.isidentifier(x) \
+                                                    for x in value.split('.')):
+            return value
+        self.error(obj, value)
 
 class Bool(TraitType):
     """A boolean (True, False) trait."""
