@@ -13,7 +13,7 @@ from IPython.external.qt import QtCore, QtGui
 from IPython.core.inputsplitter import InputSplitter, transform_classic_prompt
 from IPython.core.oinspect import call_tip
 from IPython.frontend.qt.base_frontend_mixin import BaseFrontendMixin
-from IPython.utils.traitlets import Bool
+from IPython.utils.traitlets import Bool, Instance
 from .bracket_matcher import BracketMatcher
 from .call_tip_widget import CallTipWidget
 from .completion_lexer import CompletionLexer
@@ -22,8 +22,7 @@ from .pygments_highlighter import PygmentsHighlighter
 
 
 class FrontendHighlighter(PygmentsHighlighter):
-    """ A PygmentsHighlighter that can be turned on and off and that ignores
-        prompts.
+    """ A PygmentsHighlighter that understands and ignores prompts.
     """
 
     def __init__(self, frontend):
@@ -50,14 +49,12 @@ class FrontendHighlighter(PygmentsHighlighter):
         else:
             prompt = self._frontend._continuation_prompt
 
-        # Don't highlight the part of the string that contains the prompt.
+        # Only highlight if we can identify a prompt, but make sure not to
+        # highlight the prompt.
         if string.startswith(prompt):
             self._current_offset = len(prompt)
             string = string[len(prompt):]
-        else:
-            self._current_offset = 0
-
-        PygmentsHighlighter.highlightBlock(self, string)
+            super(FrontendHighlighter, self).highlightBlock(string)
 
     def rehighlightBlock(self, block):
         """ Reimplemented to temporarily enable highlighting if disabled.
@@ -71,7 +68,7 @@ class FrontendHighlighter(PygmentsHighlighter):
         """ Reimplemented to highlight selectively.
         """
         start += self._current_offset
-        PygmentsHighlighter.setFormat(self, start, count, format)
+        super(FrontendHighlighter, self).setFormat(start, count, format)
 
 
 class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
@@ -106,6 +103,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     _ExecutionRequest = namedtuple('_ExecutionRequest', ['id', 'kind'])
     _input_splitter_class = InputSplitter
     _local_kernel = False
+    _highlighter = Instance(FrontendHighlighter)
 
     #---------------------------------------------------------------------------
     # 'object' interface
@@ -183,7 +181,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
 
         See parent class :meth:`execute` docstring for full details.
         """
-        msg_id = self.kernel_manager.xreq_channel.execute(source, hidden)
+        msg_id = self.kernel_manager.shell_channel.execute(source, hidden)
         self._request_info['execute'] = self._ExecutionRequest(msg_id, 'user')
         self._hidden = hidden
         if not hidden:
@@ -329,7 +327,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self.kernel_manager.sub_channel.flush()
 
         def callback(line):
-            self.kernel_manager.rep_channel.input(line)
+            self.kernel_manager.stdin_channel.input(line)
         self._readline(msg['content']['prompt'], callback=callback)
 
     def _handle_kernel_died(self, since_last_heartbeat):
@@ -371,14 +369,8 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         """ Handle display hook output.
         """
         if not self._hidden and self._is_from_this_session(msg):
-            data = msg['content']['data']
-            if isinstance(data, str):
-                # plaintext data from pure Python kernel
-                text = data
-            else:
-                # formatted output from DisplayFormatter (IPython kernel)
-                text = data.get('text/plain', '')
-            self._append_plain_text(text + '\n')
+            text = msg['content']['data']
+            self._append_plain_text(text + '\n', before_prompt=True)
 
     def _handle_stream(self, msg):
         """ Handle stdout, stderr, and stdin.
@@ -389,7 +381,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             # widget's tab width.
             text = msg['content']['data'].expandtabs(8)
             
-            self._append_plain_text(text)
+            self._append_plain_text(text, before_prompt=True)
             self._control.moveCursor(QtGui.QTextCursor.End)
 
     def _handle_shutdown_reply(self, msg):
@@ -526,7 +518,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
 
         # Send the metadata request to the kernel
         name = '.'.join(context)
-        msg_id = self.kernel_manager.xreq_channel.object_info(name)
+        msg_id = self.kernel_manager.shell_channel.object_info(name)
         pos = self._get_cursor().position()
         self._request_info['call_tip'] = self._CallTipRequest(msg_id, pos)
         return True
@@ -537,7 +529,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         context = self._get_context()
         if context:
             # Send the completion request to the kernel
-            msg_id = self.kernel_manager.xreq_channel.complete(
+            msg_id = self.kernel_manager.shell_channel.complete(
                 '.'.join(context),                       # text
                 self._get_input_buffer_cursor_line(),    # line
                 self._get_input_buffer_cursor_column(),  # cursor_pos
