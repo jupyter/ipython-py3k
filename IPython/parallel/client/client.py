@@ -348,7 +348,7 @@ class Client(HasTraits):
         self.session = Session(**extra_args)
         
         self._query_socket = self._context.socket(zmq.XREQ)
-        self._query_socket.setsockopt(zmq.IDENTITY, self.session.session)
+        self._query_socket.setsockopt(zmq.IDENTITY, self.session.session.encode('ascii'))
         if self._ssh:
             tunnel.tunnel_connection(self._query_socket, url, sshserver, **ssh_kwargs)
         else:

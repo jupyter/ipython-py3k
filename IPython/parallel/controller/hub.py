@@ -250,7 +250,7 @@ class HubFactory(RegistrationFactory):
 
         # monitor socket
         sub = ctx.socket(zmq.SUB)
-        sub.setsockopt(zmq.SUBSCRIBE, "")
+        sub.setsockopt(zmq.SUBSCRIBE, b"")
         sub.bind(self.monitor_url)
         sub.bind('inproc://monitor')
         sub = ZMQStream(sub, loop)
@@ -289,7 +289,7 @@ class HubFactory(RegistrationFactory):
         # resubmit stream
         r = ZMQStream(ctx.socket(zmq.XREQ), loop)
         url = util.disambiguate_url(self.client_info['task'][-1])
-        r.setsockopt(zmq.IDENTITY, self.session.session)
+        r.setsockopt(zmq.IDENTITY, self.session.session.encode('ascii'))
         r.connect(url)
 
         self.hub = Hub(loop=loop, session=self.session, monitor=sub, heartmonitor=self.heartmonitor,

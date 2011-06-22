@@ -83,7 +83,7 @@ default_packer = json_packer
 default_unpacker = json_unpacker
 
 
-DELIM="<IDS|MSG>"
+DELIM=b"<IDS|MSG>"
 
 #-----------------------------------------------------------------------------
 # Classes
@@ -240,10 +240,10 @@ class Session(Configurable):
         else:
             self.unpack = import_item(str(new))
         
-    session = Bytes(b'', config=True,
+    session = Unicode('', config=True,
         help="""The UUID identifying this session.""")
     def _session_default(self):
-        return bytes(uuid.uuid4())
+        return str(uuid.uuid4())
     
     username = Unicode(os.environ.get('USER','username'), config=True,
         help="""Username for the Session. Default is your system username.""")
@@ -369,7 +369,7 @@ class Session(Configurable):
         h = self.auth.copy()
         for m in msg:
             h.update(m)
-        return h.hexdigest()
+        return h.hexdigest().encode('ascii')
     
     def serialize(self, msg, ident=None):
         """Serialize the message components to bytes.
