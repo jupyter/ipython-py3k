@@ -670,10 +670,10 @@ def _make_help_call(target, esc, lspace, next_input=None):
                 else 'pinfo'
         
     if next_input:
-        tpl = '%sget_ipython().magic(u"%s %s", next_input=%s)'
+        tpl = '%sget_ipython().magic("%s %s", next_input=%s)'
         return tpl % (lspace, method, target, make_quoted_expr(next_input))
     else:
-        return '%sget_ipython().magic(u"%s %s")' % (lspace, method, target)
+        return '%sget_ipython().magic("%s %s")' % (lspace, method, target)
 
 _initial_space_re = re.compile(r'\s*')
 _help_end_re = re.compile(r"""(%?

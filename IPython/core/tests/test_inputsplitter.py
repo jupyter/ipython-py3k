@@ -446,9 +446,9 @@ syntax = \
         ('%hist?', 'get_ipython().magic("pinfo %hist")'),
         ('f*?', 'get_ipython().magic("psearch f*")'),
         ('ax.*aspe*?', 'get_ipython().magic("psearch ax.*aspe*")'),
-        ('a = abc?', 'get_ipython().magic("pinfo abc", next_input=u"a = abc")'),
-        ('a = abc.qe??', 'get_ipython().magic("pinfo2 abc.qe", next_input=u"a = abc.qe")'),
-        ('a = *.items?', 'get_ipython().magic("psearch *.items", next_input=u"a = *.items")'),
+        ('a = abc?', 'get_ipython().magic("pinfo abc", next_input="a = abc")'),
+        ('a = abc.qe??', 'get_ipython().magic("pinfo2 abc.qe", next_input="a = abc.qe")'),
+        ('a = *.items?', 'get_ipython().magic("psearch *.items", next_input="a = *.items")'),
         ('a*2 #comment?', 'a*2 #comment?'),
         ],
 
@@ -485,11 +485,11 @@ syntax = \
          
        # Check that we transform prompts before other transforms
        mixed =
-       [ ('In [1]: %lsmagic', 'get_ipython().magic(u"lsmagic")'),
-         ('>>> %lsmagic', 'get_ipython().magic(u"lsmagic")'),
-         ('In [2]: !ls', 'get_ipython().system(u"ls")'),
-         ('In [3]: abs?', 'get_ipython().magic(u"pinfo abs")'),
-         ('In [4]: b = %who', 'b = get_ipython().magic(u"who")'),
+       [ ('In [1]: %lsmagic', 'get_ipython().magic("lsmagic")'),
+         ('>>> %lsmagic', 'get_ipython().magic("lsmagic")'),
+         ('In [2]: !ls', 'get_ipython().system("ls")'),
+         ('In [3]: abs?', 'get_ipython().magic("pinfo abs")'),
+         ('In [4]: b = %who', 'b = get_ipython().magic("who")'),
          ],
        )
 
