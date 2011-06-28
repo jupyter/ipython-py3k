@@ -327,9 +327,15 @@ class IPControllerApp(BaseParallelApplication):
                                 hub.monitor_url, hub.client_info['notification'])
             kwargs = dict(logname='scheduler', loglevel=self.log_level,
                             log_url = self.log_url, config=dict(self.config))
-            q = Process(target=launch_scheduler, args=sargs, kwargs=kwargs)
-            q.daemon=True
-            children.append(q)
+            if 'Process' in self.mq_class:
+                # run the Python scheduler in a Process
+                q = Process(target=launch_scheduler, args=sargs, kwargs=kwargs)
+                q.daemon=True
+                children.append(q)
+            else:
+                # single-threaded Controller
+                kwargs['in_thread'] = True
+                launch_scheduler(*sargs, **kwargs)
 
     
     def save_urls(self):
@@ -399,6 +405,20 @@ class IPControllerApp(BaseParallelApplication):
 
 def launch_new_instance():
     """Create and run the IPython controller"""
+    if sys.platform == 'win32':
+        # make sure we don't get called from a multiprocessing subprocess
+        # this can result in infinite Controllers being started on Windows
+        # which doesn't have a proper fork, so multiprocessing is wonky
+        
+        # this only comes up when IPython has been installed using vanilla
+        # setuptools, and *not* distribute.
+        import multiprocessing
+        p = multiprocessing.current_process()
+        # the main process has name 'MainProcess'
+        # subprocesses will have names like 'Process-1'
+        if p.name != 'MainProcess':
+            # we are a subprocess, don't start another Controller!
+            return
     app = IPControllerApp.instance()
     app.initialize()
     app.start()

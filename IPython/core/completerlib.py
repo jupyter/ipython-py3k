@@ -65,7 +65,6 @@ def shlex_split(x):
     #
     # Example:
     # %run "c:/python -> ['%run','"c:/python']
-
     endofline = []
     while x != '':
         try:

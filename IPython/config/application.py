@@ -31,7 +31,7 @@ from IPython.config.loader import (
 )
 
 from IPython.utils.traitlets import (
-    Unicode, List, Int, Enum, Dict, Instance
+    Unicode, List, Int, Enum, Dict, Instance, TraitError
 )
 from IPython.utils.importstring import import_item
 from IPython.utils.text import indent, wrap_paragraphs, dedent
@@ -161,7 +161,12 @@ class Application(SingletonConfigurable):
         """
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(self.log_level)
-        self._log_handler = logging.StreamHandler()
+        if sys.executable.endswith('pythonw.exe'):
+            # this should really go to a file, but file-logging is only
+            # hooked up in parallel applications
+            self._log_handler = logging.StreamHandler(open(os.devnull, 'w'))
+        else:
+            self._log_handler = logging.StreamHandler()
         self._log_formatter = logging.Formatter("[%(name)s] %(message)s")
         self._log_handler.setFormatter(self._log_formatter)
         self.log.addHandler(self._log_handler)
@@ -326,12 +331,12 @@ class Application(SingletonConfigurable):
                                         flags=self.flags)
         try:
             config = loader.load_config()
-        except ArgumentError as e:
-            self.log.fatal(str(e))
+            self.update_config(config)
+        except (TraitError, ArgumentError) as e:
             self.print_description()
             self.print_help()
+            self.log.fatal(str(e))
             self.exit(1)
-        self.update_config(config)
         # store unparsed args in extra_args
         self.extra_args = loader.extra_args
 
