@@ -181,7 +181,7 @@ steps:
 
 1. Create a cluster profile using: ``ipython profile create --parallel profile=mycluster``
 
-2. Edit configuration files in the directory :file:`.ipython3\\cluster_mycluster`
+2. Edit configuration files in the directory :file:`.ipython\\cluster_mycluster`
 
 3. Start the cluster using: ``ipcluser start profile=mycluster n=32``
 
@@ -195,11 +195,11 @@ with a particular cluster configuration. The profile name is used by
 
 Associated with each cluster profile is a cluster directory. This cluster
 directory is a specially named directory (typically located in the
-:file:`.ipython3` subdirectory of your home directory) that contains the
+:file:`.ipython` subdirectory of your home directory) that contains the
 configuration files for a particular cluster profile, as well as log files and
 security keys. The naming convention for cluster directories is:
 :file:`profile_<profile name>`. Thus, the cluster directory for a profile named
-"foo" would be :file:`.ipython3\\cluster_foo`.
+"foo" would be :file:`.ipython\\cluster_foo`.
 
 To create a new cluster profile (named "mycluster") and the associated cluster
 directory, type the following command at the Windows Command Prompt::

@@ -39,13 +39,13 @@ hosts ``host1``-``hostn``. The following steps are then required:
    (:file:`ipcontroller-engine.json`) is located.
 
 At this point, the controller and engines will be connected. By default, the JSON files
-created by the controller are put into the :file:`~/.ipython3/profile_default/security`
+created by the controller are put into the :file:`~/.ipython/profile_default/security`
 directory. If the engines share a filesystem with the controller, step 2 can be skipped as
 the engines will automatically look at that location.
 
 The final step required to actually use the running controller from a client is to move
 the JSON file :file:`ipcontroller-client.json` from ``host0`` to any host where clients
-will be run. If these file are put into the :file:`~/.ipython3/profile_default/security`
+will be run. If these file are put into the :file:`~/.ipython/profile_default/security`
 directory of the client's host, they will be found automatically. Otherwise, the full path
 to them has to be passed to the client's constructor.
 
@@ -68,7 +68,7 @@ controller and engines in the following situations:
 .. note::
 
     Currently :command:`ipcluster` requires that the
-    :file:`~/.ipython3/profile_<name>/security` directory live on a shared filesystem that is
+    :file:`~/.ipython/profile_<name>/security` directory live on a shared filesystem that is
     seen by both the controller and engines. If you don't have a shared file
     system you will need to use :command:`ipcontroller` and
     :command:`ipengine` directly.
@@ -476,7 +476,7 @@ Log files
 
 All of the components of IPython have log files associated with them.
 These log files can be extremely useful in debugging problems with
-IPython and can be found in the directory :file:`~/.ipython3/profile_<name>/log`.
+IPython and can be found in the directory :file:`~/.ipython/profile_<name>/log`.
 Sending the log files to us will often help us to debug any problems.
 
 
