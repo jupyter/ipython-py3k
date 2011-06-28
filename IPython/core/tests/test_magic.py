@@ -301,8 +301,8 @@ def test_parse_options():
     
 def test_dirops():
     """Test various directory handling operations."""
-    curpath = lambda :os.path.splitdrive(os.getcwd())[1].replace('\\','/')
-
+    # curpath = lambda :os.path.splitdrive(os.getcwdu())[1].replace('\\','/')
+    curpath = os.getcwd
     startdir = os.getcwd()
     ipdir = _ip.ipython_dir
     try:
