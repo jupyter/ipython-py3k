@@ -312,7 +312,7 @@ class IPEngineTask(WinHPCTask):
 # t = WinHPCTask(None)
 # t.task_name = 'Controller'
 # t.command_line = r"\\blue\domainusers$\bgranger\Python\Python25\Scripts\ipcontroller.exe --log-to-file -p default --log-level 10"
-# t.work_directory = r"\\blue\domainusers$\bgranger\.ipython3\cluster_default"
+# t.work_directory = r"\\blue\domainusers$\bgranger\.ipython\cluster_default"
 # t.std_out_file_path = 'controller-out.txt'
 # t.std_err_file_path = 'controller-err.txt'
 # t.environment_variables['PYTHONPATH'] = r"\\blue\domainusers$\bgranger\Python\Python25\Lib\site-packages"

@@ -289,20 +289,20 @@ def get_ipython_dir():
     """Get the IPython directory for this platform and user.
     
     This uses the logic in `get_home_dir` to find the home directory
-    and the adds .ipython3 to the end of the path.
+    and then adds .ipython to the end of the path.
     """
     
     env = os.environ
     pjoin = os.path.join
     exists = os.path.exists
     
-    ipdir_def = '.ipython3'
-    xdg_def = 'ipython3'
+    ipdir_def = '.ipython'
+    xdg_def = 'ipython'
     
     home_dir = get_home_dir()
     xdg_dir = get_xdg_dir()
     # import pdb; pdb.set_trace()  # dbg
-    ipdir = env.get('IPYTHON3_DIR', None)
+    ipdir = env.get('IPYTHON_DIR', env.get('IPYTHONDIR', None))
     if ipdir is None:
         # not set explicitly, use XDG_CONFIG_HOME or HOME
         home_ipdir = pjoin(home_dir, ipdir_def)

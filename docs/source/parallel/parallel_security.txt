@@ -127,7 +127,7 @@ way. The key itself is never sent over the network.
 There is exactly one shared key per cluster - it must be the same everywhere. Typically,
 the controller creates this key, and stores it in the private connection files
 `ipython-{engine|client}.json`. These files are typically stored in the
-`~/.ipython3/profile_<name>/security` directory, and are maintained as readable only by the
+`~/.ipython/profile_<name>/security` directory, and are maintained as readable only by the
 owner, just as is common practice with a user's keys in their `.ssh` directory.
 
 .. warning::

@@ -97,7 +97,7 @@ class BaseIPythonApplication(Application):
     def _config_file_paths_default(self):
         return [os.getcwd()]
 
-    profile = Unicode('default', config=True,
+    profile = Unicode('python3', config=True,
         help="""The IPython profile to use."""
     )
     def _profile_changed(self, name, old, new):
@@ -213,7 +213,7 @@ class BaseIPythonApplication(Application):
                 p = ProfileDir.find_profile_dir_by_name(self.ipython_dir, self.profile, self.config)
             except ProfileDirError:
                 # not found, maybe create it (always create default profile)
-                if self.auto_create or self.profile=='default':
+                if self.auto_create or self.profile=='python3':
                     try:
                         p = ProfileDir.create_profile_dir_by_name(self.ipython_dir, self.profile, self.config)
                     except ProfileDirError:

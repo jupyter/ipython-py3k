@@ -475,7 +475,7 @@ class InteractiveShell(SingletonConfigurable, Magic):
             self.profile_dir = profile_dir
             return
         self.profile_dir =\
-            ProfileDir.create_profile_dir_by_name(self.ipython_dir, 'default')
+            ProfileDir.create_profile_dir_by_name(self.ipython_dir, 'python3')
 
     def init_instance_attrs(self):
         self.more = False

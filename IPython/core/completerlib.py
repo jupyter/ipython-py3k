@@ -39,7 +39,7 @@ from IPython.core.ipapi import get as get_ipython
 #-----------------------------------------------------------------------------
 
 # Time in seconds after which the rootmodules will be stored permanently in the
-# ipython ip.db database (kept in the user's .ipython3 dir).
+# ipython ip.db database (kept in the user's .ipython dir).
 TIMEOUT_STORAGE = 2
 
 # Time in seconds after which we give up
