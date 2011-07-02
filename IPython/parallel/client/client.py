@@ -319,19 +319,25 @@ class Client(HasTraits):
         if exec_key:
             cfg['exec_key'] = exec_key
         exec_key = cfg['exec_key']
-        sshserver=cfg['ssh']
-        url = cfg['url']
         location = cfg.setdefault('location', None)
         cfg['url'] = util.disambiguate_url(cfg['url'], location)
         url = cfg['url']
-        if location is not None:
-            proto,addr,port = util.split_url(url)
-            if addr == '127.0.0.1' and location not in LOCAL_IPS and not sshserver:
-                sshserver = location
-                warnings.warn(
-                    "Controller appears to be listening on localhost, but is not local. "
-                    "IPython will try to use SSH tunnels to %s"%location,
-                    RuntimeWarning)
+        proto,addr,port = util.split_url(url)
+        if location is not None and addr == '127.0.0.1':
+            # location specified, and connection is expected to be local
+            if location not in LOCAL_IPS and not sshserver:
+                # load ssh from JSON *only* if the controller is not on
+                # this machine
+                sshserver=cfg['ssh']
+            if location not in LOCAL_IPS and not sshserver:
+                # warn if no ssh specified, but SSH is probably needed
+                # This is only a warning, because the most likely cause
+                # is a local Controller on a laptop whose IP is dynamic
+                warnings.warn("""
+            Controller appears to be listening on localhost, but not on this machine.
+            If this is true, you should specify Client(...,sshserver='you@%s')
+            or instruct your controller to listen on an external IP."""%location,
+                RuntimeWarning)
         
         self._config = cfg
         
@@ -1300,14 +1306,15 @@ class Client(HasTraits):
         Individual results can be purged by msg_id, or the entire
         history of specific targets can be purged.
         
+        Use `purge_results('all')` to scrub everything from the Hub's db.
+        
         Parameters
         ----------
         
         jobs : str or list of str or AsyncResult objects
                 the msg_ids whose results should be forgotten.
         targets : int/str/list of ints/strs
-                The targets, by uuid or int_id, whose entire history is to be purged.
-                Use `targets='all'` to scrub everything from the Hub's memory.
+                The targets, by int_id, whose entire history is to be purged.
                 
                 default : None
         """
@@ -1317,19 +1324,22 @@ class Client(HasTraits):
             targets = self._build_targets(targets)[1]
         
         # construct msg_ids from jobs
-        msg_ids = []
-        if isinstance(jobs, (str,AsyncResult)):
-            jobs = [jobs]
-        bad_ids = [obj for obj in jobs if not isinstance(obj, (str, AsyncResult))]
-        if bad_ids:
-            raise TypeError("Invalid msg_id type %r, expected str or AsyncResult"%bad_ids[0])
-        for j in jobs:
-            if isinstance(j, AsyncResult):
-                msg_ids.extend(j.msg_ids)
-            else:
-                msg_ids.append(j)
-        
-        content = dict(targets=targets, msg_ids=msg_ids)
+        if jobs == 'all':
+            msg_ids = jobs
+        else:
+            msg_ids = []
+            if isinstance(jobs, (str,AsyncResult)):
+                jobs = [jobs]
+            bad_ids = [obj for obj in jobs if not isinstance(obj, (str, AsyncResult))]
+            if bad_ids:
+                raise TypeError("Invalid msg_id type %r, expected str or AsyncResult"%bad_ids[0])
+            for j in jobs:
+                if isinstance(j, AsyncResult):
+                    msg_ids.extend(j.msg_ids)
+                else:
+                    msg_ids.append(j)
+
+        content = dict(engine_ids=targets, msg_ids=msg_ids)
         self.session.send(self._query_socket, "purge_request", content=content)
         idents, msg = self.session.recv(self._query_socket, 0)
         if self.debug:

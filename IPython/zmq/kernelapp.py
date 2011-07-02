@@ -82,7 +82,17 @@ class KernelApp(BaseIPythonApplication):
     heartbeat = Instance(Heartbeat)
     session = Instance('IPython.zmq.session.Session')
     ports = Dict()
-
+    
+    # inherit config file name from parent:
+    parent_appname = Unicode(config=True)
+    def _parent_appname_changed(self, name, old, new):
+        if self.config_file_specified:
+            # it was manually specified, ignore
+            return
+        self.config_file_name = new.replace('-','_') + '_config.py'
+        # don't let this count as specifying the config file
+        self.config_file_specified = False
+        
     # connection info:
     ip = Unicode(LOCALHOST, config=True,
         help="Set the IP or interface on which the kernel will listen.")
@@ -131,7 +141,7 @@ class KernelApp(BaseIPythonApplication):
 
     def init_sockets(self):
         # Create a context, a session, and the kernel sockets.
-        io.raw_print("Starting the kernel at pid:", os.getpid())
+        self.log.info("Starting the kernel at pid:", os.getpid())
         context = zmq.Context.instance()
         # Uncomment this to try closing the context.
         # atexit.register(context.term)
@@ -154,8 +164,9 @@ class KernelApp(BaseIPythonApplication):
 
         # Helper to make it easier to connect to an existing kernel, until we have
         # single-port connection negotiation fully implemented.
-        self.log.info("To connect another client to this kernel, use:")
-        self.log.info("--external shell={0} iopub={1} stdin={2} hb={3}".format(
+        # set log-level to critical, to make sure it is output
+        self.log.critical("To connect another client to this kernel, use:")
+        self.log.critical("--existing shell={0} iopub={1} stdin={2} hb={3}".format(
             self.shell_port, self.iopub_port, self.stdin_port, self.hb_port))
 
 
