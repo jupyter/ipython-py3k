@@ -27,6 +27,7 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
+import glob
 import logging
 import os
 import shutil
@@ -77,6 +78,7 @@ class BaseIPythonApplication(Application):
     
     aliases = Dict(base_aliases)
     flags = Dict(base_flags)
+    classes = List([ProfileDir])
     
     # Track whether the config_file has changed,
     # because some logic happens only if we aren't using the default.
@@ -253,8 +255,8 @@ class BaseIPythonApplication(Application):
     def init_config_files(self):
         """[optionally] copy default config files into profile dir."""
         # copy config files
+        path = self.builtin_profile_dir
         if self.copy_config_files:
-            path = self.builtin_profile_dir
             src = self.profile
             
             cfg = self.config_file_name
@@ -265,6 +267,19 @@ class BaseIPythonApplication(Application):
                 self.profile_dir.copy_config_file(cfg, path=path, overwrite=self.overwrite)
             else:
                 self.stage_default_config_file()
+        else:
+            # Still stage *bundled* config files, but not generated ones
+            # This is necessary for `ipython profile=sympy` to load the profile
+            # on the first go
+            files = glob.glob(os.path.join(path, '*.py'))
+            for fullpath in files:
+                cfg = os.path.basename(fullpath)
+                if self.profile_dir.copy_config_file(cfg, path=path, overwrite=False):
+                    # file was copied
+                    self.log.warn("Staging bundled %s from %s into %r"%(
+                            cfg, self.profile, self.profile_dir.location)
+                    )
+            
     
     def stage_default_config_file(self):
         """auto generate default config file, and stage it into the profile."""

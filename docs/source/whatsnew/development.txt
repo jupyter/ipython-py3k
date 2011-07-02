@@ -16,7 +16,7 @@ As of the 0.11 version of IPython, a signifiant portion of the core has been
 refactored.  This refactoring is founded on a number of new abstractions.
 The main new classes that implement these abstractions are:
 
-* :class:`IPython.utils.traitlets.HasTraitlets`.
+* :class:`IPython.utils.traitlets.HasTraits`.
 * :class:`IPython.config.configurable.Configurable`.
 * :class:`IPython.config.application.Application`.
 * :class:`IPython.config.loader.ConfigLoader`.
@@ -48,6 +48,24 @@ be started by calling ``ipython qtconsole``. The protocol is :ref:`documented
 The parallel computing framework has also been rewritten using ZMQ. The
 protocol is described :ref:`here <parallel_messages>`, and the code is in the
 new :mod:`IPython.parallel` module.
+
+Python 3 support
+----------------
+
+A Python 3 version of IPython has been prepared. For the time being, this is
+maintained separately and updated from the main codebase. Its code can be found
+`here <https://github.com/ipython/ipython-py3k>`_. Note that the parallel
+computing features do not yet work in Python 3.
+
+Unicode
+-------
+
+Entering non-ascii characters in unicode literals (``u"€ø"``) now works properly
+on all platforms. However, entering these in byte/string literals (``"€ø"``)
+will not work as expected on Windows (or any platform where the terminal encoding
+is not UTF-8, as it typically is for Linux & Mac OS X). You can use escape sequences
+(``"\xe9\x82"``) to get bytes above 128, or use unicode literals and encode
+them. This is a limitation of Python 2 which we cannot easily work around.
 
 New features
 ------------
@@ -275,3 +293,16 @@ Backwards incompatible changes
   refactoring in the core. With proper updates, these should still work.
 
 
+Known Regressions
+-----------------
+
+We do our best to improve IPython, but there are some known regressions in 0.11 relative
+to 0.10.2.
+
+* The machinery that adds functionality to the 'sh' profile for using IPython as your
+  system shell has not been updated to use the new APIs.  As a result, only the aesthetic
+  (prompt) changes are still implemented. We intend to fix this by 0.12.
+
+* The installation of scripts on Windows was broken without setuptools, so we now
+  depend on setuptools on Windows.  We hope to fix setuptools-less installation,
+  and then remove the setuptools dependency.
