@@ -51,7 +51,6 @@ from IPython.core.macro import Macro
 from IPython.core import page
 from IPython.core.prefilter import ESC_MAGIC
 from IPython.lib.pylabtools import mpl_runner
-from IPython.external.Itpl import itpl, printpl
 from IPython.testing.skipdoctest import skip_doctest
 from IPython.utils.io import file_read, nlprint
 from IPython.utils.path import get_py_filename
@@ -911,8 +910,7 @@ Currently the magic system has the following functions:\n"""
         datalabel = 'Data/Info'
         colsep = 3
         # variable format strings
-        vformat    = "$vname.ljust(varwidth)$vtype.ljust(typewidth)"
-        vfmt_short = '$vstr[:25]<...>$vstr[-25:]'
+        vformat    = "{0:<{varwidth}}{1:<{typewidth}}"
         aformat    = "%s: %s elems, type `%s`, %s bytes"
         # find the size of the columns to format the output nicely
         varwidth = max(max(list(map(len,varnames))), len(varlabel)) + colsep
@@ -924,7 +922,7 @@ Currently the magic system has the following functions:\n"""
         kb = 1024
         Mb = 1048576  # kb**2
         for vname,var,vtype in zip(varnames,varlist,typelist):
-            print(itpl(vformat), end=' ')
+            print(vformat.format(vname, vtype, varwidth=varwidth, typewidth=typewidth), end=' ')
             if vtype in seq_types:
                 print("n="+str(len(var)))
             elif vtype in [array_type,ndarray_type]:
@@ -958,7 +956,7 @@ Currently the magic system has the following functions:\n"""
                 if len(vstr) < 50:
                     print(vstr)
                 else:
-                    printpl(vfmt_short)
+                    print(vstr[:25] + "<...>" + vstr[-25:])
                 
     def magic_reset(self, parameter_s=''):
         """Resets the namespace by removing all names defined by the user.
@@ -1680,6 +1678,7 @@ Currently the magic system has the following functions:\n"""
                                     return
                             except (KeyError):
                                 nruns = 1
+                            twall0 = time.time()
                             if nruns == 1:
                                 t0 = clock2()
                                 runner(filename,prog_ns,prog_ns,
@@ -1688,8 +1687,8 @@ Currently the magic system has the following functions:\n"""
                                 t_usr = t1[0]-t0[0]
                                 t_sys = t1[1]-t0[1]
                                 print("\nIPython CPU timings (estimated):")
-                                print("  User  : %10s s." % t_usr)
-                                print("  System: %10s s." % t_sys)
+                                print("  User   : %10.2f s." % t_usr)
+                                print("  System : %10.2f s." % t_sys)
                             else:
                                 runs = list(range(nruns))
                                 t0 = clock2()
@@ -1701,10 +1700,12 @@ Currently the magic system has the following functions:\n"""
                                 t_sys = t1[1]-t0[1]
                                 print("\nIPython CPU timings (estimated):")
                                 print("Total runs performed:",nruns)
-                                print("  Times : %10s    %10s" % ('Total','Per run'))
-                                print("  User  : %10s s, %10s s." % (t_usr,t_usr/nruns))
-                                print("  System: %10s s, %10s s." % (t_sys,t_sys/nruns))
-                                
+                                print("  Times  : %10.2f    %10.2f" % ('Total','Per run'))
+                                print("  User   : %10.2f s, %10.2f s." % (t_usr,t_usr/nruns))
+                                print("  System : %10.2f s, %10.2f s." % (t_sys,t_sys/nruns))
+                            twall1 = time.time()
+                            print("Wall time: %10.2f s." % (twall1-twall0))
+
                         else:
                             # regular execution
                             runner(filename,prog_ns,prog_ns,exit_ignore=exit_ignore)

@@ -2386,7 +2386,7 @@ class InteractiveShell(SingletonConfigurable, Magic):
     # Things related to GUI support and pylab
     #-------------------------------------------------------------------------
 
-    def enable_pylab(self, gui=None):
+    def enable_pylab(self, gui=None, inport_all=True):
         raise NotImplementedError('Implement enable_pylab in a subclass')
 
     #-------------------------------------------------------------------------

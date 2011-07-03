@@ -30,7 +30,6 @@ from itertools import zip_longest
 # IPython's own
 import IPython.utils.io
 from IPython.core import page
-from IPython.external.Itpl import itpl
 from IPython.utils import PyColorize
 from IPython.utils.text import indent
 from IPython.utils.wildcard import list_namespace
@@ -297,21 +296,23 @@ class Inspector:
         -formatter: a function to run the docstring through for specially
         formatted docstrings."""
 
-        head = self.__head  # so that itpl can find it even if private
+        head = self.__head  # For convenience
         ds = getdoc(obj)
         if formatter:
             ds = formatter(ds)
         if inspect.isclass(obj):
             init_ds = getdoc(obj.__init__)
-            output = itpl('$head("Class Docstring:")\n'
-                          '$indent(ds)\n'
-                          '$head("Constructor Docstring"):\n'
-                          '$indent(init_ds)')
+            output = "\n".join([head("Class Docstring:"),
+                                indent(ds),
+                                head("Constructor Docstring:"),
+                                indent(init_ds)])
         elif isinstance(obj,object) and hasattr(obj,'__call__'):
             call_ds = getdoc(obj.__call__)
             if call_ds:
-                output = itpl('$head("Class Docstring:")\n$indent(ds)\n'
-                              '$head("Calling Docstring:")\n$indent(call_ds)')
+                output = "\n".join([head("Class Docstring:"),
+                                    indent(ds),
+                                    head("Calling Docstring:"),
+                                    indent(call_ds)])
             else:
                 output = ds
         else:

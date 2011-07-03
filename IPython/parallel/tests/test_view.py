@@ -43,7 +43,7 @@ class TestView(ClusterTestCase):
         # self.add_engines(1)
         eid = self.client.ids[-1]
         ar = self.client[eid].apply_async(crash)
-        self.assertRaisesRemote(error.EngineError, ar.get)
+        self.assertRaisesRemote(error.EngineError, ar.get, 10)
         eid = ar.engine_id
         tic = time.time()
         while eid in self.client.ids and time.time()-tic < 5:
@@ -413,7 +413,10 @@ class TestView(ClusterTestCase):
         """test executing unicode strings"""
         v = self.client[-1]
         v.block=True
-        code="a=u'é'"
+        if sys.version_info[0] >= 3:
+            code="a='é'"
+        else:
+            code="a=u'é'"
         v.execute(code)
         self.assertEquals(v['a'], 'é')
         
@@ -433,7 +436,7 @@ class TestView(ClusterTestCase):
             assert isinstance(check, bytes), "%r is not bytes"%check
             assert a.encode('utf8') == check, "%s != %s"%(a,check)
         
-        for s in [ 'é', 'ßø®∫','asdf'.decode() ]:
+        for s in [ 'é', 'ßø®∫','asdf' ]:
             try:
                 v.apply_sync(check_unicode, s, s.encode('utf8'))
             except error.RemoteError as e:
