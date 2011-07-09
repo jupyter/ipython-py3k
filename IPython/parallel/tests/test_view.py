@@ -316,7 +316,7 @@ class TestView(ClusterTestCase):
         sio = StringIO()
         savestdout = sys.stdout
         sys.stdout = sio
-        ip.magic_px('print a')
+        ip.magic_px('print(a)')
         sys.stdout = savestdout
         buf = sio.getvalue()
         self.assertTrue('[stdout:%i]'%v.targets in buf)
