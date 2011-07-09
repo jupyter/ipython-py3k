@@ -2127,9 +2127,6 @@ class InteractiveShell(SingletonConfigurable, Magic):
         kw.setdefault('exit_ignore', False)
 
         fname = os.path.abspath(os.path.expanduser(fname))
-        # Make sure we have a .py file
-        if not fname.endswith('.py'):
-            warn('File must end with .py to be run using execfile: <%s>' % fname)
 
         # Make sure we can open the file
         try:
@@ -2172,10 +2169,6 @@ class InteractiveShell(SingletonConfigurable, Magic):
             .ipy extension.
         """
         fname = os.path.abspath(os.path.expanduser(fname))
-
-        # Make sure we have a .py file
-        if not fname.endswith('.ipy'):
-            warn('File must end with .py to be run using execfile: <%s>' % fname)
 
         # Make sure we can open the file
         try:
@@ -2386,7 +2379,7 @@ class InteractiveShell(SingletonConfigurable, Magic):
     # Things related to GUI support and pylab
     #-------------------------------------------------------------------------
 
-    def enable_pylab(self, gui=None, inport_all=True):
+    def enable_pylab(self, gui=None, import_all=True):
         raise NotImplementedError('Implement enable_pylab in a subclass')
 
     #-------------------------------------------------------------------------

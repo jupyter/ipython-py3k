@@ -44,27 +44,27 @@ from IPython.utils.text import indent, wrap_paragraphs, dedent
 # Descriptions for the various sections
 #-----------------------------------------------------------------------------
 
-flag_description = """
-Flags are command-line arguments passed as '--<flag>'.
-These take no parameters, unlike regular key-value arguments.
-They are typically used for setting boolean flags, or enabling
-modes that involve setting multiple options together.
+# merge flags&aliases into options
+option_description = """
+IPython command-line arguments are passed as '--<flag>', or '--<name>=<value>'.
 
-Flags *always* begin with '--', never just one '-'.
-""".strip() # trim newlines of front and back
-
-alias_description = """
-These are commonly set parameters, given abbreviated aliases for convenience.
-They are set in the same `name=value` way as class parameters, where
-<name> is replaced by the real parameter for which it is an alias.
+Arguments that take values are actually aliases to full Configurables, whose
+aliases are listed on the help line. For more information on full
+configurables, see '--help-all'.
 """.strip() # trim newlines of front and back
 
 keyvalue_description = """
 Parameters are set from command-line arguments of the form:
-`Class.trait=value`.  Parameters will *never* be prefixed with '-'.
-This line is evaluated in Python, so simple expressions are allowed, e.g.
-    `C.a='range(3)'`   For setting C.a=[0,1,2]
+`--Class.trait=value`.
+This line is evaluated in Python, so simple expressions are allowed, e.g.::
+`--C.a='range(3)'` For setting C.a=[0,1,2].
 """.strip() # trim newlines of front and back
+
+subcommand_description = """
+Subcommands are launched as `{app} cmd [args]`. For information on using
+subcommand 'cmd', do: `{app} cmd -h`.
+""".strip().format(app=os.path.basename(sys.argv[0]))
+# get running program name
 
 #-----------------------------------------------------------------------------
 # Application class
@@ -86,9 +86,9 @@ class Application(SingletonConfigurable):
     # of the help.
     description = Unicode('This is an application.')
     # default section descriptions
-    flag_description = Unicode(flag_description)
-    alias_description = Unicode(alias_description)
+    option_description = Unicode(option_description)
     keyvalue_description = Unicode(keyvalue_description)
+    subcommand_description = Unicode(subcommand_description)
     
 
     # A sequence of Configurable subclasses whose config=True attributes will
@@ -192,13 +192,7 @@ class Application(SingletonConfigurable):
         if not self.aliases:
             return
         
-        lines = ['Aliases']
-        lines.append('-'*len(lines[0]))
-        lines.append('')
-        for p in wrap_paragraphs(self.alias_description):
-            lines.append(p)
-            lines.append('')
-        
+        lines = []
         classdict = {}
         for cls in self.classes:
             # include all parents (up to, but excluding Configurable) in available names
@@ -210,29 +204,38 @@ class Application(SingletonConfigurable):
             cls = classdict[classname]
             
             trait = cls.class_traits(config=True)[traitname]
-            help = cls.class_get_trait_help(trait)
-            help = help.replace(longname, "%s (%s)"%(alias, longname), 1)
-            lines.append(help)
-        lines.append('')
-        print('\n'.join(lines))
+            help = cls.class_get_trait_help(trait).splitlines()
+            # reformat first line
+            help[0] = help[0].replace(longname, alias) + ' (%s)'%longname
+            lines.extend(help)
+        # lines.append('')
+        print(os.linesep.join(lines))
     
     def print_flag_help(self):
         """Print the flag part of the help."""
         if not self.flags:
             return
         
-        lines = ['Flags']
-        lines.append('-'*len(lines[0]))
-        lines.append('')
-        for p in wrap_paragraphs(self.flag_description):
-            lines.append(p)
-            lines.append('')
-        
+        lines = []
         for m, (cfg,help) in self.flags.items():
             lines.append('--'+m)
             lines.append(indent(dedent(help.strip())))
+        # lines.append('')
+        print(os.linesep.join(lines))
+    
+    def print_options(self):
+        if not self.flags and not self.aliases:
+            return
+        lines = ['Options']
+        lines.append('-'*len(lines[0]))
         lines.append('')
-        print('\n'.join(lines))
+        for p in wrap_paragraphs(self.option_description):
+            lines.append(p)
+            lines.append('')
+        print(os.linesep.join(lines))
+        self.print_flag_help()
+        self.print_alias_help()
+        print()
     
     def print_subcommands(self):
         """Print the subcommand part of the help."""
@@ -241,12 +244,16 @@ class Application(SingletonConfigurable):
         
         lines = ["Subcommands"]
         lines.append('-'*len(lines[0]))
+        lines.append('')
+        for p in wrap_paragraphs(self.subcommand_description):
+            lines.append(p)
+            lines.append('')
         for subc, (cls,help) in self.subcommands.items():
             lines.append("%s : %s"%(subc, cls))
             if help:
                 lines.append(indent(dedent(help.strip())))
         lines.append('')
-        print('\n'.join(lines))
+        print(os.linesep.join(lines))
     
     def print_help(self, classes=False):
         """Print the help for each Configurable class in self.classes.
@@ -254,8 +261,7 @@ class Application(SingletonConfigurable):
         If classes=False (the default), only flags and aliases are printed.
         """
         self.print_subcommands()
-        self.print_flag_help()
-        self.print_alias_help()
+        self.print_options()
         
         if classes:
             if self.classes:

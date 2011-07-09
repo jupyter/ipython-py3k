@@ -323,7 +323,7 @@ class LocalControllerLauncher(LocalProcessLauncher):
     controller_cmd = List(ipcontroller_cmd_argv, config=True,
         help="""Popen command to launch ipcontroller.""")
     # Command line arguments to ipcontroller.
-    controller_args = List(['--log-to-file','log_level=%i'%logging.INFO], config=True,
+    controller_args = List(['--log-to-file','--log_level=%i'%logging.INFO], config=True,
         help="""command-line args to pass to ipcontroller""")
 
     def find_args(self):
@@ -331,7 +331,7 @@ class LocalControllerLauncher(LocalProcessLauncher):
 
     def start(self, profile_dir):
         """Start the controller by profile_dir."""
-        self.controller_args.extend(['profile_dir=%s'%profile_dir])
+        self.controller_args.extend(['--profile_dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         self.log.info("Starting LocalControllerLauncher: %r" % self.args)
         return super(LocalControllerLauncher, self).start()
@@ -343,7 +343,7 @@ class LocalEngineLauncher(LocalProcessLauncher):
     engine_cmd = List(ipengine_cmd_argv, config=True,
         help="""command to launch the Engine.""")
     # Command line arguments for ipengine.
-    engine_args = List(['--log-to-file','log_level=%i'%logging.INFO], config=True,
+    engine_args = List(['--log-to-file','--log_level=%i'%logging.INFO], config=True,
         help="command-line arguments to pass to ipengine"
     )
 
@@ -352,7 +352,7 @@ class LocalEngineLauncher(LocalProcessLauncher):
 
     def start(self, profile_dir):
         """Start the engine by profile_dir."""
-        self.engine_args.extend(['profile_dir=%s'%profile_dir])
+        self.engine_args.extend(['--profile_dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         return super(LocalEngineLauncher, self).start()
 
@@ -362,7 +362,7 @@ class LocalEngineSetLauncher(BaseLauncher):
 
     # Command line arguments for ipengine.
     engine_args = List(
-        ['--log-to-file','log_level=%i'%logging.INFO], config=True,
+        ['--log-to-file','--log_level=%i'%logging.INFO], config=True,
         help="command-line arguments to pass to ipengine"
     )
     # launcher class
@@ -468,20 +468,20 @@ class MPIExecControllerLauncher(MPIExecLauncher):
     controller_cmd = List(ipcontroller_cmd_argv, config=True,
         help="Popen command to launch the Contropper"
     )
-    controller_args = List(['--log-to-file','log_level=%i'%logging.INFO], config=True,
+    controller_args = List(['--log-to-file','--log_level=%i'%logging.INFO], config=True,
         help="Command line arguments to pass to ipcontroller."
     )
     n = Int(1)
 
     def start(self, profile_dir):
         """Start the controller by profile_dir."""
-        self.controller_args.extend(['profile_dir=%s'%profile_dir])
+        self.controller_args.extend(['--profile_dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         self.log.info("Starting MPIExecControllerLauncher: %r" % self.args)
         return super(MPIExecControllerLauncher, self).start(1)
 
     def find_args(self):
-        return self.mpi_cmd + ['-n', self.n] + self.mpi_args + \
+        return self.mpi_cmd + ['-n', str(self.n)] + self.mpi_args + \
                self.controller_cmd + self.controller_args
 
 
@@ -491,14 +491,14 @@ class MPIExecEngineSetLauncher(MPIExecLauncher):
         help="Popen command for ipengine"
     )
     program_args = List(
-        ['--log-to-file','log_level=%i'%logging.INFO], config=True,
+        ['--log-to-file','--log_level=%i'%logging.INFO], config=True,
         help="Command line arguments for ipengine."
     )
     n = Int(1)
 
     def start(self, n, profile_dir):
         """Start n engines by profile or profile_dir."""
-        self.program_args.extend(['profile_dir=%s'%profile_dir])
+        self.program_args.extend(['--profile_dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         self.n = n
         self.log.info('Starting MPIExecEngineSetLauncher: %r' % self.args)
@@ -567,7 +567,7 @@ class SSHControllerLauncher(SSHLauncher):
 
     program = List(ipcontroller_cmd_argv, config=True,
         help="remote ipcontroller command.")
-    program_args = List(['--reuse-files', '--log-to-file','log_level=%i'%logging.INFO], config=True,
+    program_args = List(['--reuse-files', '--log-to-file','--log_level=%i'%logging.INFO], config=True,
         help="Command line arguments to ipcontroller.")
 
 
@@ -745,7 +745,7 @@ class WindowsHPCControllerLauncher(WindowsHPCLauncher):
 
     def start(self, profile_dir):
         """Start the controller by profile_dir."""
-        self.extra_args = ['profile_dir=%s'%profile_dir]
+        self.extra_args = ['--profile_dir=%s'%profile_dir]
         self.profile_dir = str(profile_dir)
         return super(WindowsHPCControllerLauncher, self).start(1)
 
@@ -779,7 +779,7 @@ class WindowsHPCEngineSetLauncher(WindowsHPCLauncher):
 
     def start(self, n, profile_dir):
         """Start the controller by profile_dir."""
-        self.extra_args = ['profile_dir=%s'%profile_dir]
+        self.extra_args = ['--profile_dir=%s'%profile_dir]
         self.profile_dir = str(profile_dir)
         return super(WindowsHPCEngineSetLauncher, self).start(n)
 
@@ -869,19 +869,21 @@ class BatchSystemLauncher(BaseLauncher):
             # third (last) priority is default_template
             self.batch_template = self.default_template
         
-        regex = re.compile(self.job_array_regexp)
-        # print regex.search(self.batch_template)
-        if not regex.search(self.batch_template):
-            self.log.info("adding job array settings to batch script")
-            firstline, rest = self.batch_template.split('\n',1)
-            self.batch_template = '\n'.join([firstline, self.job_array_template, rest])
+            # add jobarray or queue lines to user-specified template
+            # note that this is *only* when user did not specify a template.
+            regex = re.compile(self.job_array_regexp)
+            # print regex.search(self.batch_template)
+            if not regex.search(self.batch_template):
+                self.log.info("adding job array settings to batch script")
+                firstline, rest = self.batch_template.split('\n',1)
+                self.batch_template = '\n'.join([firstline, self.job_array_template, rest])
         
-        regex = re.compile(self.queue_regexp)
-        # print regex.search(self.batch_template)
-        if self.queue and not regex.search(self.batch_template):
-            self.log.info("adding PBS queue settings to batch script")
-            firstline, rest = self.batch_template.split('\n',1)
-            self.batch_template = '\n'.join([firstline, self.queue_template, rest])
+            regex = re.compile(self.queue_regexp)
+            # print regex.search(self.batch_template)
+            if self.queue and not regex.search(self.batch_template):
+                self.log.info("adding PBS queue settings to batch script")
+                firstline, rest = self.batch_template.split('\n',1)
+                self.batch_template = '\n'.join([firstline, self.queue_template, rest])
             
         script_as_string = self.formatter.format(self.batch_template, **self.context)
         self.log.info('Writing instantiated batch script: %s' % self.batch_file)
@@ -934,7 +936,7 @@ class PBSControllerLauncher(PBSLauncher):
     default_template= Unicode("""#!/bin/sh
 #PBS -V
 #PBS -N ipcontroller
-%s --log-to-file profile_dir={profile_dir}
+%s --log-to-file --profile_dir={profile_dir}
 """%(' '.join(ipcontroller_cmd_argv)))
 
     def start(self, profile_dir):
@@ -950,7 +952,7 @@ class PBSEngineSetLauncher(PBSLauncher):
     default_template= Unicode("""#!/bin/sh
 #PBS -V
 #PBS -N ipengine
-%s profile_dir={profile_dir}
+%s --profile_dir={profile_dir}
 """%(' '.join(ipengine_cmd_argv)))
 
     def start(self, n, profile_dir):
@@ -975,7 +977,7 @@ class SGEControllerLauncher(SGELauncher):
     default_template= Unicode("""#$ -V
 #$ -S /bin/sh
 #$ -N ipcontroller
-%s --log-to-file profile_dir={profile_dir}
+%s --log-to-file --profile_dir={profile_dir}
 """%(' '.join(ipcontroller_cmd_argv)))
 
     def start(self, profile_dir):
@@ -990,7 +992,7 @@ class SGEEngineSetLauncher(SGELauncher):
     default_template = Unicode("""#$ -V
 #$ -S /bin/sh
 #$ -N ipengine
-%s profile_dir={profile_dir}
+%s --profile_dir={profile_dir}
 """%(' '.join(ipengine_cmd_argv)))
 
     def start(self, n, profile_dir):
@@ -1010,14 +1012,14 @@ class IPClusterLauncher(LocalProcessLauncher):
     ipcluster_cmd = List(ipcluster_cmd_argv, config=True,
         help="Popen command for ipcluster")
     ipcluster_args = List(
-        ['--clean-logs', '--log-to-file', 'log_level=%i'%logging.INFO], config=True,
+        ['--clean-logs', '--log-to-file', '--log_level=%i'%logging.INFO], config=True,
         help="Command line arguments to pass to ipcluster.")
     ipcluster_subcommand = Unicode('start')
     ipcluster_n = Int(2)
 
     def find_args(self):
-        return self.ipcluster_cmd + ['--'+self.ipcluster_subcommand] + \
-            ['n=%i'%self.ipcluster_n] + self.ipcluster_args
+        return self.ipcluster_cmd + [self.ipcluster_subcommand] + \
+            ['--n=%i'%self.ipcluster_n] + self.ipcluster_args
 
     def start(self):
         self.log.info("Starting ipcluster: %r" % self.args)

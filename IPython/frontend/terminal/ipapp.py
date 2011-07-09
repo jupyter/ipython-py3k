@@ -146,7 +146,8 @@ flags['quick']=(
 
 flags['i'] = (
     {'TerminalIPythonApp' : {'force_interact' : True}},
-    "If running code from the command line, become interactive afterwards."
+    """also works as '-i'
+    If running code from the command line, become interactive afterwards."""
 )
 flags['pylab'] = (
     {'TerminalIPythonApp' : {'pylab' : 'auto'}},
@@ -244,13 +245,13 @@ class TerminalIPythonApp(BaseIPythonApplication, InteractiveShellApp):
             # warn and transform into current syntax
             argv = list(argv) # copy, don't clobber
             warn.warn("`-pylab` flag has been deprecated.\n"
-            "    Use `--pylab` instead, or `pylab=foo` to specify a backend.")
+            "    Use `--pylab` instead, or `--pylab=foo` to specify a backend.")
             sub = '--pylab'
             if len(argv) > idx+1:
                 # check for gui arg, as in '-pylab qt'
                 gui = argv[idx+1]
                 if gui in ('wx', 'qt', 'qt4', 'gtk', 'auto'):
-                    sub = 'pylab='+gui
+                    sub = '--pylab='+gui
                     argv.pop(idx+1)
             argv[idx] = sub
         
@@ -343,7 +344,11 @@ def load_default_config(ipython_dir=None):
         ipython_dir = get_ipython_dir()
     profile_dir = os.path.join(ipython_dir, 'profile_default')
     cl = PyFileConfigLoader(default_config_file_name, profile_dir)
-    config = cl.load_config()
+    try:
+        config = cl.load_config()
+    except IOError:
+        # no config found
+        config = Config()
     return config
 
 
