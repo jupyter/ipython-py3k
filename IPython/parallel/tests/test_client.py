@@ -249,10 +249,19 @@ class TestClient(ClusterTestCase):
         # ensure there are some tasks
         for i in range(5):
             self.client[:].apply_sync(lambda : 1)
+        # Wait for the Hub to realise the result is done:
+        # This prevents a race condition, where we
+        # might purge a result the Hub still thinks is pending.
+        time.sleep(0.1)
+        rc2 = clientmod.Client(profile='iptest')
         hist = self.client.hub_history()
+        ahr = rc2.get_result([hist[-1]])
+        ahr.wait(10)
         self.client.purge_results(hist[-1])
         newhist = self.client.hub_history()
         self.assertEquals(len(newhist)+1,len(hist))
+        rc2.spin()
+        rc2.close()
         
     def test_purge_all_results(self):
         self.client.purge_results('all')
