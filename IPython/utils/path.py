@@ -408,7 +408,7 @@ def filehash(path):
     """Make an MD5 hash of a file, ignoring any differences in line
     ending characters."""
     with open(path, "rU") as f:
-        return md5(f.read()).hexdigest()
+        return md5(f.read().encode()).hexdigest()
 
 # If the config is unmodified from the default, we'll just delete it.
 # These are consistent for 0.10.x, thankfully. We're not going to worry about
