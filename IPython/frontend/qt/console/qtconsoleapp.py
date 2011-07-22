@@ -53,6 +53,15 @@ from IPython.zmq.zmqshell import ZMQInteractiveShell
 from IPython.utils.localinterfaces import LOCALHOST, LOCAL_IPS
 
 #-----------------------------------------------------------------------------
+# Globals
+#-----------------------------------------------------------------------------
+
+_examples = """
+ipython qtconsole                 # start the qtconsole
+ipython qtconsole --pylab=inline  # start with pylab in inline plotting mode
+"""
+
+#-----------------------------------------------------------------------------
 # Classes
 #-----------------------------------------------------------------------------
 
@@ -167,21 +176,20 @@ class MainWindow(QtGui.QMainWindow):
 #-----------------------------------------------------------------------------
 
 flags = dict(ipkernel_flags)
-
-flags.update({
+qt_flags = {
     'existing' : ({'IPythonQtConsoleApp' : {'existing' : True}},
             "Connect to an existing kernel."),
     'pure' : ({'IPythonQtConsoleApp' : {'pure' : True}},
             "Use a pure Python kernel instead of an IPython kernel."),
     'plain' : ({'ConsoleWidget' : {'kind' : 'plain'}},
             "Disable rich text support."),
-})
-flags.update(boolean_flag(
+}
+qt_flags.update(boolean_flag(
     'gui-completion', 'ConsoleWidget.gui_completion',
     "use a GUI widget for tab completion",
     "use plaintext output for completion"
 ))
-flags.update(boolean_flag(
+qt_flags.update(boolean_flag(
     'confirm-exit', 'IPythonQtConsoleApp.confirm_exit',
     """Set to display confirmation dialog on exit. You can always use 'exit' or 'quit',
        to force a direct exit without any confirmation.
@@ -190,34 +198,38 @@ flags.update(boolean_flag(
        if it is owned by the frontend, and leave it alive if it is external.
     """
 ))
+flags.update(qt_flags)
 # the flags that are specific to the frontend
 # these must be scrubbed before being passed to the kernel,
 # or it will raise an error on unrecognized flags
-qt_flags = ['existing', 'pure', 'plain', 'gui-completion', 'no-gui-completion',
-            'confirm-exit', 'no-confirm-exit']
+qt_flags = list(qt_flags.keys())
 
 aliases = dict(ipkernel_aliases)
 
-aliases.update(dict(
+qt_aliases = dict(
     hb = 'IPythonQtConsoleApp.hb_port',
     shell = 'IPythonQtConsoleApp.shell_port',
     iopub = 'IPythonQtConsoleApp.iopub_port',
     stdin = 'IPythonQtConsoleApp.stdin_port',
     ip = 'IPythonQtConsoleApp.ip',
 
-    plain = 'IPythonQtConsoleApp.plain',
-    pure = 'IPythonQtConsoleApp.pure',
-    gui_completion = 'ConsoleWidget.gui_completion',
     style = 'IPythonWidget.syntax_style',
     stylesheet = 'IPythonQtConsoleApp.stylesheet',
     colors = 'ZMQInteractiveShell.colors',
 
     editor = 'IPythonWidget.editor',
-))
+    paging = 'ConsoleWidget.paging',
+)
+aliases.update(qt_aliases)
+# also scrub aliases from the frontend
+qt_flags.extend(list(qt_aliases.keys()))
+
 
 #-----------------------------------------------------------------------------
 # IPythonQtConsole
 #-----------------------------------------------------------------------------
+
+
 class IPythonQtConsoleApp(BaseIPythonApplication):
     name = 'ipython-qtconsole'
     default_config_file_name='ipython_config.py'
@@ -226,18 +238,27 @@ class IPythonQtConsoleApp(BaseIPythonApplication):
         The IPython QtConsole.
         
         This launches a Console-style application using Qt.  It is not a full
-        console, in that launched terminal subprocesses will not.
+        console, in that launched terminal subprocesses will not be able to accept
+        input.
         
-        The QtConsole supports various extra features beyond the
+        The QtConsole supports various extra features beyond the Terminal IPython
+        shell, such as inline plotting with matplotlib, via:
+        
+            ipython qtconsole --pylab=inline
+        
+        as well as saving your session as HTML, and printing the output.
         
     """
-    
+    examples = _examples
+
     classes = [IPKernelApp, IPythonWidget, ZMQInteractiveShell, ProfileDir, Session]
     flags = Dict(flags)
     aliases = Dict(aliases)
 
     kernel_argv = List(Unicode)
 
+    # create requested profiles by default, if they don't exist:
+    auto_create = CBool(True)
     # connection info:
     ip = Unicode(LOCALHOST, config=True,
         help="""Set the kernel\'s IP address [default localhost].
@@ -296,8 +317,11 @@ class IPythonQtConsoleApp(BaseIPythonApplication):
         self.kernel_argv.append("--KernelApp.parent_appname='%s'"%self.name)
         # scrub frontend-specific flags
         for a in argv:
-            if a.startswith('-') and a.lstrip('-') in qt_flags:
-                self.kernel_argv.remove(a)
+            
+            if a.startswith('-'):
+                key = a.lstrip('-').split('=')[0]
+                if key in qt_flags:
+                    self.kernel_argv.remove(a)
 
     def init_kernel_manager(self):
         # Don't let Qt or ZMQ swallow KeyboardInterupts.

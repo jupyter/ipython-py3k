@@ -90,13 +90,13 @@ shell_flags['nosep']=(nosep_config, "Eliminate all spacing between prompts.")
 # it's possible we don't want short aliases for *all* of these:
 shell_aliases = dict(
     autocall='InteractiveShell.autocall',
-    cache_size='InteractiveShell.cache_size',
     colors='InteractiveShell.colors',
     logfile='InteractiveShell.logfile',
     logappend='InteractiveShell.logappend',
     c='InteractiveShellApp.code_to_run',
     ext='InteractiveShellApp.extra_extension',
 )
+shell_aliases['cache-size'] = 'InteractiveShell.cache_size'
 
 #-----------------------------------------------------------------------------
 # Main classes and functions
@@ -187,11 +187,15 @@ class InteractiveShellApp(Configurable):
             self.shell.showtraceback()
 
     def _exec_file(self, fname):
-        full_filename = filefind(fname, ['.', self.ipython_dir])
+        try:
+            full_filename = filefind(fname, ['.', self.ipython_dir])
+        except IOError as e:
+            self.log.warn("File not found: %r"%fname)
+            return
         # Make sure that the running script gets a proper sys.argv as if it
         # were run from a system shell.
         save_argv = sys.argv
-        sys.argv = sys.argv[sys.argv.index(fname):]
+        sys.argv = [full_filename] + self.extra_args[1:]
         try:
             if os.path.isfile(full_filename):
                 if full_filename.endswith('.ipy'):

@@ -58,6 +58,18 @@ from IPython.utils.traitlets import (
 #: The default config file name for this application.
 default_config_file_name = 'ipython_config.py'
 
+_examples = """
+ipython --pylab            # start in pylab mode
+ipython --pylab=qt         # start in pylab mode with the qt4 backend
+ipython --log-level=DEBUG  # set logging to DEBUG
+ipython --profile=foo      # start with profile foo
+
+ipython qtconsole          # start the qtconsole GUI application
+ipython qtconsole -h       # show the help string for the qtconsole subcmd
+
+ipython profile create foo # create profile foo w/ default config files
+ipython profile -h         # show the help string for the profile subcmd
+"""
 
 #-----------------------------------------------------------------------------
 # Crash handler for this application
@@ -146,8 +158,8 @@ flags['quick']=(
 
 flags['i'] = (
     {'TerminalIPythonApp' : {'force_interact' : True}},
-    """also works as '-i'
-    If running code from the command line, become interactive afterwards."""
+    """If running code from the command line, become interactive afterwards.
+    Note: can also be given simply as '-i.'"""
 )
 flags['pylab'] = (
     {'TerminalIPythonApp' : {'pylab' : 'auto'}},
@@ -173,10 +185,12 @@ class TerminalIPythonApp(BaseIPythonApplication, InteractiveShellApp):
     description = usage.cl_usage
     default_config_file_name = default_config_file_name
     crash_handler_class = IPAppCrashHandler
-    
+    examples = _examples
+
     flags = Dict(flags)
     aliases = Dict(aliases)
-    classes = [InteractiveShellApp, TerminalInteractiveShell, ProfileDir, PlainTextFormatter]
+    classes = [InteractiveShellApp, TerminalInteractiveShell, ProfileDir,
+               PlainTextFormatter]
     subcommands = Dict(dict(
         qtconsole=('IPython.frontend.qt.console.qtconsoleapp.IPythonQtConsoleApp',
             """Launch the IPython Qt Console."""
@@ -233,17 +247,14 @@ class TerminalIPythonApp(BaseIPythonApplication, InteractiveShellApp):
 
     def parse_command_line(self, argv=None):
         """override to allow old '-pylab' flag with deprecation warning"""
+
         argv = sys.argv[1:] if argv is None else argv
-        
-        try:
-            idx = argv.index('-pylab')
-        except ValueError:
-            # `-pylab` not given, proceed as normal
-            pass
-        else:
+
+        if '-pylab' in argv:
             # deprecated `-pylab` given,
             # warn and transform into current syntax
-            argv = list(argv) # copy, don't clobber
+            argv = argv[:] # copy, don't clobber
+            idx = argv.index('-pylab')
             warn.warn("`-pylab` flag has been deprecated.\n"
             "    Use `--pylab` instead, or `--pylab=foo` to specify a backend.")
             sub = '--pylab'
@@ -361,4 +372,3 @@ def launch_new_instance():
 
 if __name__ == '__main__':
     launch_new_instance()
-

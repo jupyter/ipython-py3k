@@ -1592,7 +1592,11 @@ Currently the magic system has the following functions:\n"""
         # Make sure that the running script gets a proper sys.argv as if it
         # were run from a system shell.
         save_argv = sys.argv # save it for later restoring
-        sys.argv = [filename]+ arg_lst[1:]  # put in the proper filename
+
+        # simulate shell expansion on arguments, at least tilde expansion
+        args = [ os.path.expanduser(a) for a in arg_lst[1:] ]
+
+        sys.argv = [filename]+ args  # put in the proper filename
 
         if 'i' in opts:
             # Run in user's interactive namespace

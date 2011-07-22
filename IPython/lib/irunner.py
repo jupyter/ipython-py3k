@@ -303,10 +303,11 @@ class IPythonRunner(InteractiveRunner):
     
     def __init__(self,program = 'ipython',args=None,out=sys.stdout,echo=True):
         """New runner, optionally passing the ipython command to use."""
-        
         args0 = ['--colors=NoColor',
                  '--no-term-title',
-                 '--no-autoindent']
+                 '--no-autoindent',
+                 # '--quick' is important, to prevent loading default config:
+                 '--quick']
         if args is None: args = args0
         else: args = args0 + args
         prompts = [r'In \[\d+\]: ',r'   \.*: ']
@@ -402,10 +403,6 @@ interact with IPython at the end of the script (instead of exiting).
 
 The already implemented runners are listed below; adding one for a new program
 is a trivial task, see the source for examples.
-
-WARNING: the SAGE runner only works if you manually configure your SAGE copy
-to use 'colors NoColor' in the ipythonrc config file, since currently the
-prompt matching regexp does not identify color sequences.
 """
 
 def main():

@@ -37,6 +37,7 @@ from IPython.core.application import BaseIPythonApplication
 from IPython.core.profiledir import ProfileDir
 from IPython.utils.daemonize import daemonize
 from IPython.utils.importstring import import_item
+from IPython.utils.sysinfo import num_cpus
 from IPython.utils.traitlets import (Int, Unicode, Bool, CFloat, Dict, List, 
                                         DottedObjectName)
 
@@ -61,9 +62,30 @@ An IPython cluster consists of 1 controller and 1 or more engines.
 This command automates the startup of these processes using a wide
 range of startup methods (SSH, local processes, PBS, mpiexec,
 Windows HPC Server 2008). To start a cluster with 4 engines on your
-local host simply do 'ipcluster start n=4'. For more complex usage
-you will typically do 'ipcluster create profile=mycluster', then edit
-configuration files, followed by 'ipcluster start profile=mycluster n=4'.
+local host simply do 'ipcluster start --n=4'. For more complex usage
+you will typically do 'ipython create mycluster --parallel', then edit
+configuration files, followed by 'ipcluster start --profile=mycluster --n=4'.
+"""
+
+_main_examples = """
+ipcluster start --n=4 # start a 4 node cluster on localhost
+ipcluster start -h    # show the help string for the start subcmd
+
+ipcluster stop -h     # show the help string for the stop subcmd
+ipcluster engines -h  # show the help string for the engines subcmd
+"""
+
+_start_examples = """
+ipython profile create mycluster --parallel # create mycluster profile
+ipcluster start --profile=mycluster --n=4   # start mycluster with 4 nodes
+"""
+
+_stop_examples = """
+ipcluster stop --profile=mycluster  # stop a running cluster by profile name
+"""
+
+_engines_examples = """
+ipcluster engines --profile=mycluster --n=4  # start 4 engines only
 """
 
 
@@ -94,8 +116,8 @@ security related files and are named using the convention
 'profile_<name>' and should be creating using the 'start'
 subcommand of 'ipcluster'. If your cluster directory is in 
 the cwd or the ipython directory, you can simply refer to it
-using its profile name, 'ipcluster start n=4 profile=<profile>`,
-otherwise use the 'profile_dir' option.
+using its profile name, 'ipcluster start --n=4 --profile=<profile>`,
+otherwise use the 'profile-dir' option.
 """
 stop_help = """Stop a running IPython cluster
 
@@ -103,8 +125,8 @@ Stop a running ipython cluster by its profile name or cluster
 directory. Cluster directories are named using the convention
 'profile_<name>'. If your cluster directory is in 
 the cwd or the ipython directory, you can simply refer to it
-using its profile name, 'ipcluster stop profile=<profile>`, otherwise
-use the 'profile_dir' option.
+using its profile name, 'ipcluster stop --profile=<profile>`, otherwise
+use the '--profile-dir' option.
 """
 engines_help = """Start engines connected to an existing IPython cluster
 
@@ -115,8 +137,8 @@ security related files and are named using the convention
 'profile_<name>' and should be creating using the 'start'
 subcommand of 'ipcluster'. If your cluster directory is in 
 the cwd or the ipython directory, you can simply refer to it
-using its profile name, 'ipcluster engines n=4 profile=<profile>`,
-otherwise use the 'profile_dir' option.
+using its profile name, 'ipcluster engines --n=4 --profile=<profile>`,
+otherwise use the 'profile-dir' option.
 """
 stop_aliases = dict(
     signal='IPClusterStop.signal',
@@ -126,6 +148,7 @@ stop_aliases.update(base_aliases)
 class IPClusterStop(BaseParallelApplication):
     name = 'ipcluster'
     description = stop_help
+    examples = _stop_examples
     config_file_name = Unicode(default_config_file_name)
     
     signal = Int(signal.SIGINT, config=True,
@@ -195,6 +218,7 @@ class IPClusterEngines(BaseParallelApplication):
 
     name = 'ipcluster'
     description = engines_help
+    examples = _engines_examples
     usage = None
     config_file_name = Unicode(default_config_file_name)
     default_log_level = logging.INFO
@@ -205,12 +229,32 @@ class IPClusterEngines(BaseParallelApplication):
         eslaunchers = [ l for l in launchers if 'EngineSet' in l.__name__]
         return [ProfileDir]+eslaunchers
     
-    n = Int(2, config=True,
-        help="The number of engines to start.")
+    n = Int(num_cpus(), config=True,
+        help="""The number of engines to start. The default is to use one for each
+        CPU on your machine""")
 
     engine_launcher_class = DottedObjectName('LocalEngineSetLauncher',
         config=True,
-        help="The class for launching a set of Engines."
+        help="""The class for launching a set of Engines. Change this value
+        to use various batch systems to launch your engines, such as PBS,SGE,MPIExec,etc.
+        Each launcher class has its own set of configuration options, for making sure
+        it will work in your environment.
+        
+        You can also write your own launcher, and specify it's absolute import path,
+        as in 'mymodule.launcher.FTLEnginesLauncher`.
+        
+        Examples include:
+        
+            LocalEngineSetLauncher : start engines locally as subprocesses [default]
+            MPIExecEngineSetLauncher : use mpiexec to launch in an MPI environment
+            PBSEngineSetLauncher : use PBS (qsub) to submit engines to a batch queue
+            SGEEngineSetLauncher : use SGE (qsub) to submit engines to a batch queue
+            SSHEngineSetLauncher : use SSH to start the controller
+                                Note that SSH does *not* move the connection files
+                                around, so you will likely have to do this manually
+                                unless the machines are on a shared file system.
+            WindowsHPCEngineSetLauncher : use Windows HPC
+        """
         )
     daemonize = Bool(False, config=True,
         help="""Daemonize the ipcluster program. This implies --log-to-file.
@@ -244,10 +288,14 @@ class IPClusterEngines(BaseParallelApplication):
             # not a module, presume it's the raw name in apps.launcher
             clsname = 'IPython.parallel.apps.launcher.'+clsname
         # print repr(clsname)
-        klass = import_item(clsname)
+        try:
+            klass = import_item(clsname)
+        except (ImportError, KeyError):
+            self.log.fatal("Could not import launcher class: %r"%clsname)
+            self.exit(1)
 
         launcher = klass(
-            work_dir=self.profile_dir.location, config=self.config, log=self.log
+            work_dir='.', config=self.config, log=self.log
         )
         return launcher
     
@@ -321,14 +369,21 @@ start_aliases = {}
 start_aliases.update(engine_aliases)
 start_aliases.update(dict(
     delay='IPClusterStart.delay',
-    clean_logs='IPClusterStart.clean_logs',
     controller = 'IPClusterStart.controller_launcher_class',
 ))
+start_aliases['clean-logs'] = 'IPClusterStart.clean_logs'
+
+# set inherited Start keys directly, to ensure command-line args get higher priority
+# than config file options.
+for key,value in list(start_aliases.items()):
+    if value.startswith('IPClusterEngines'):
+        start_aliases[key] = value.replace('IPClusterEngines', 'IPClusterStart')
 
 class IPClusterStart(IPClusterEngines):
 
     name = 'ipcluster'
     description = start_help
+    examples = _start_examples
     default_log_level = logging.INFO
     auto_create = Bool(True, config=True,
         help="whether to create the profile_dir if it doesn't exist")
@@ -345,7 +400,21 @@ class IPClusterStart(IPClusterEngines):
 
     controller_launcher_class = DottedObjectName('LocalControllerLauncher',
         config=True,
-        help="The class for launching a Controller."
+        helep="""The class for launching a Controller. Change this value if you want
+        your controller to also be launched by a batch system, such as PBS,SGE,MPIExec,etc.
+        
+        Each launcher class has its own set of configuration options, for making sure
+        it will work in your environment.
+        
+        Examples include:
+        
+            LocalControllerLauncher : start engines locally as subprocesses
+            MPIExecControllerLauncher : use mpiexec to launch engines in an MPI universe
+            PBSControllerLauncher : use PBS (qsub) to submit engines to a batch queue
+            SGEControllerLauncher : use SGE (qsub) to submit engines to a batch queue
+            SSHControllerLauncher : use SSH to start the controller
+            WindowsHPCControllerLauncher : use Windows HPC
+        """
         )
     reset = Bool(False, config=True,
         help="Whether to reset config files as part of '--create'."
@@ -426,7 +495,8 @@ base='IPython.parallel.apps.ipclusterapp.IPCluster'
 class IPClusterApp(Application):
     name = 'ipcluster'
     description = _description
-    
+    examples = _main_examples
+
     subcommands = {
                 'start' : (base+'Start', start_help),
                 'stop' : (base+'Stop', stop_help),

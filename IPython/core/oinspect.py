@@ -130,10 +130,13 @@ def getsource(obj,is_binary=False):
     - is_binary: whether the object is known to come from a binary source.
     This implementation will skip returning any output for binary objects, but
     custom extractors may know how to meaningfully process them."""
-    
+
     if is_binary:
         return None
     else:
+        # get source if obj was decorated with @decorator
+        if hasattr(obj,"__wrapped__"):
+            obj = obj.__wrapped__
         try:
             src = inspect.getsource(obj)
         except TypeError:
@@ -296,34 +299,59 @@ class Inspector:
 
         Optional:
         -formatter: a function to run the docstring through for specially
-        formatted docstrings."""
+        formatted docstrings.
+        
+        Examples
+        --------
+        
+        In [1]: class NoInit:
+           ...:     pass
+        
+        In [2]: class NoDoc:
+           ...:     def __init__(self):
+           ...:         pass
+        
+        In [3]: %pdoc NoDoc
+        No documentation found for NoDoc
+        
+        In [4]: %pdoc NoInit
+        No documentation found for NoInit
+
+        In [5]: obj = NoInit()
+        
+        In [6]: %pdoc obj
+        No documentation found for obj
+
+        In [5]: obj2 = NoDoc()
+        
+        In [6]: %pdoc obj2
+        No documentation found for obj2
+        """
 
         head = self.__head  # For convenience
+        lines = []
         ds = getdoc(obj)
         if formatter:
             ds = formatter(ds)
-        if inspect.isclass(obj):
+        if ds:
+            lines.append(head("Class Docstring:"))
+            lines.append(indent(ds))
+        if inspect.isclass(obj) and hasattr(obj, '__init__'):
             init_ds = getdoc(obj.__init__)
-            output = "\n".join([head("Class Docstring:"),
-                                indent(ds),
-                                head("Constructor Docstring:"),
-                                indent(init_ds)])
+            if init_ds is not None:
+                lines.append(head("Constructor Docstring:"))
+                lines.append(indent(init_ds))
         elif (type(obj) is types.InstanceType or isinstance(obj,object)) \
                  and hasattr(obj,'__call__'):
             call_ds = getdoc(obj.__call__)
             if call_ds:
-                output = "\n".join([head("Class Docstring:"),
-                                    indent(ds),
-                                    head("Calling Docstring:"),
-                                    indent(call_ds)])
-            else:
-                output = ds
-        else:
-            output = ds
-        if output is None:
+                lines.append(head("Calling Docstring:"))
+                lines.append(indent(call_ds))
+
+        if not lines:
             self.noinfo('documentation',oname)
-            return
-        page.page(output)
+        else:
+            page.page('\n'.join(lines))
     
     def psource(self,obj,oname=''):
         """Print the source code for an object."""

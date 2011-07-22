@@ -61,9 +61,13 @@ and controller. A controller needs to be started before the engines. The
 engine can be configured using command line options or using a cluster
 directory. Cluster directories contain config, log and security files and are
 usually located in your ipython directory and named as "profile_name".
-See the `profile` and `profile_dir` options for details.
+See the `profile` and `profile-dir` options for details.
 """
 
+_examples = """
+ipengine --ip=192.168.0.1 --port=1000     # connect to hub at ip and port
+ipengine --log-to-file --log-level=DEBUG  # log to a file with DEBUG verbosity
+"""
 
 #-----------------------------------------------------------------------------
 # MPI configuration
@@ -111,7 +115,7 @@ aliases = dict(
 
     ident = 'Session.session',
     user = 'Session.username',
-    exec_key = 'Session.keyfile',
+    keyfile = 'Session.keyfile',
 
     url = 'EngineFactory.url',
     ip = 'EngineFactory.ip',
@@ -126,10 +130,12 @@ aliases = dict(
 )
 aliases.update(base_aliases)
 
+
 class IPEngineApp(BaseParallelApplication):
 
     name = Unicode('ipengine')
     description = Unicode(_description)
+    examples = _examples
     config_file_name = Unicode(default_config_file_name)
     classes = List([ProfileDir, Session, EngineFactory, Kernel, MPI])
 

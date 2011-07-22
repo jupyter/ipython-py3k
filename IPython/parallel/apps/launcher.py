@@ -323,7 +323,7 @@ class LocalControllerLauncher(LocalProcessLauncher):
     controller_cmd = List(ipcontroller_cmd_argv, config=True,
         help="""Popen command to launch ipcontroller.""")
     # Command line arguments to ipcontroller.
-    controller_args = List(['--log-to-file','--log_level=%i'%logging.INFO], config=True,
+    controller_args = List(['--log-to-file','--log-level=%i'%logging.INFO], config=True,
         help="""command-line args to pass to ipcontroller""")
 
     def find_args(self):
@@ -331,7 +331,7 @@ class LocalControllerLauncher(LocalProcessLauncher):
 
     def start(self, profile_dir):
         """Start the controller by profile_dir."""
-        self.controller_args.extend(['--profile_dir=%s'%profile_dir])
+        self.controller_args.extend(['--profile-dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         self.log.info("Starting LocalControllerLauncher: %r" % self.args)
         return super(LocalControllerLauncher, self).start()
@@ -343,7 +343,7 @@ class LocalEngineLauncher(LocalProcessLauncher):
     engine_cmd = List(ipengine_cmd_argv, config=True,
         help="""command to launch the Engine.""")
     # Command line arguments for ipengine.
-    engine_args = List(['--log-to-file','--log_level=%i'%logging.INFO], config=True,
+    engine_args = List(['--log-to-file','--log-level=%i'%logging.INFO], config=True,
         help="command-line arguments to pass to ipengine"
     )
 
@@ -352,7 +352,7 @@ class LocalEngineLauncher(LocalProcessLauncher):
 
     def start(self, profile_dir):
         """Start the engine by profile_dir."""
-        self.engine_args.extend(['--profile_dir=%s'%profile_dir])
+        self.engine_args.extend(['--profile-dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         return super(LocalEngineLauncher, self).start()
 
@@ -362,7 +362,7 @@ class LocalEngineSetLauncher(BaseLauncher):
 
     # Command line arguments for ipengine.
     engine_args = List(
-        ['--log-to-file','--log_level=%i'%logging.INFO], config=True,
+        ['--log-to-file','--log-level=%i'%logging.INFO], config=True,
         help="command-line arguments to pass to ipengine"
     )
     # launcher class
@@ -468,14 +468,14 @@ class MPIExecControllerLauncher(MPIExecLauncher):
     controller_cmd = List(ipcontroller_cmd_argv, config=True,
         help="Popen command to launch the Contropper"
     )
-    controller_args = List(['--log-to-file','--log_level=%i'%logging.INFO], config=True,
+    controller_args = List(['--log-to-file','--log-level=%i'%logging.INFO], config=True,
         help="Command line arguments to pass to ipcontroller."
     )
     n = Int(1)
 
     def start(self, profile_dir):
         """Start the controller by profile_dir."""
-        self.controller_args.extend(['--profile_dir=%s'%profile_dir])
+        self.controller_args.extend(['--profile-dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         self.log.info("Starting MPIExecControllerLauncher: %r" % self.args)
         return super(MPIExecControllerLauncher, self).start(1)
@@ -491,14 +491,14 @@ class MPIExecEngineSetLauncher(MPIExecLauncher):
         help="Popen command for ipengine"
     )
     program_args = List(
-        ['--log-to-file','--log_level=%i'%logging.INFO], config=True,
+        ['--log-to-file','--log-level=%i'%logging.INFO], config=True,
         help="Command line arguments for ipengine."
     )
     n = Int(1)
 
     def start(self, n, profile_dir):
         """Start n engines by profile or profile_dir."""
-        self.program_args.extend(['--profile_dir=%s'%profile_dir])
+        self.program_args.extend(['--profile-dir=%s'%profile_dir])
         self.profile_dir = str(profile_dir)
         self.n = n
         self.log.info('Starting MPIExecEngineSetLauncher: %r' % self.args)
@@ -567,7 +567,7 @@ class SSHControllerLauncher(SSHLauncher):
 
     program = List(ipcontroller_cmd_argv, config=True,
         help="remote ipcontroller command.")
-    program_args = List(['--reuse-files', '--log-to-file','--log_level=%i'%logging.INFO], config=True,
+    program_args = List(['--reuse-files', '--log-to-file','--log-level=%i'%logging.INFO], config=True,
         help="Command line arguments to ipcontroller.")
 
 
@@ -576,7 +576,7 @@ class SSHEngineLauncher(SSHLauncher):
         help="remote ipengine command.")
     # Command line arguments for ipengine.
     program_args = List(
-        ['--log-to-file','log_level=%i'%logging.INFO], config=True,
+        ['--log-to-file','--log_level=%i'%logging.INFO], config=True,
         help="Command line arguments to ipengine."
     )
     
@@ -745,7 +745,7 @@ class WindowsHPCControllerLauncher(WindowsHPCLauncher):
 
     def start(self, profile_dir):
         """Start the controller by profile_dir."""
-        self.extra_args = ['--profile_dir=%s'%profile_dir]
+        self.extra_args = ['--profile-dir=%s'%profile_dir]
         self.profile_dir = str(profile_dir)
         return super(WindowsHPCControllerLauncher, self).start(1)
 
@@ -779,7 +779,7 @@ class WindowsHPCEngineSetLauncher(WindowsHPCLauncher):
 
     def start(self, n, profile_dir):
         """Start the controller by profile_dir."""
-        self.extra_args = ['--profile_dir=%s'%profile_dir]
+        self.extra_args = ['--profile-dir=%s'%profile_dir]
         self.profile_dir = str(profile_dir)
         return super(WindowsHPCEngineSetLauncher, self).start(n)
 
@@ -936,7 +936,7 @@ class PBSControllerLauncher(PBSLauncher):
     default_template= Unicode("""#!/bin/sh
 #PBS -V
 #PBS -N ipcontroller
-%s --log-to-file --profile_dir={profile_dir}
+%s --log-to-file --profile-dir={profile_dir}
 """%(' '.join(ipcontroller_cmd_argv)))
 
     def start(self, profile_dir):
@@ -952,7 +952,7 @@ class PBSEngineSetLauncher(PBSLauncher):
     default_template= Unicode("""#!/bin/sh
 #PBS -V
 #PBS -N ipengine
-%s --profile_dir={profile_dir}
+%s --profile-dir={profile_dir}
 """%(' '.join(ipengine_cmd_argv)))
 
     def start(self, n, profile_dir):
@@ -977,7 +977,7 @@ class SGEControllerLauncher(SGELauncher):
     default_template= Unicode("""#$ -V
 #$ -S /bin/sh
 #$ -N ipcontroller
-%s --log-to-file --profile_dir={profile_dir}
+%s --log-to-file --profile-dir={profile_dir}
 """%(' '.join(ipcontroller_cmd_argv)))
 
     def start(self, profile_dir):
@@ -992,13 +992,85 @@ class SGEEngineSetLauncher(SGELauncher):
     default_template = Unicode("""#$ -V
 #$ -S /bin/sh
 #$ -N ipengine
-%s --profile_dir={profile_dir}
+%s --profile-dir={profile_dir}
 """%(' '.join(ipengine_cmd_argv)))
 
     def start(self, n, profile_dir):
         """Start n engines by profile or profile_dir."""
         self.log.info('Starting %i engines with SGEEngineSetLauncher: %r' % (n, self.args))
         return super(SGEEngineSetLauncher, self).start(n, profile_dir)
+
+
+# LSF launchers
+
+class LSFLauncher(BatchSystemLauncher):
+    """A BatchSystemLauncher subclass for LSF."""
+    
+    submit_command = List(['bsub'], config=True,
+                          help="The PBS submit command ['bsub']")
+    delete_command = List(['bkill'], config=True,
+                          help="The PBS delete command ['bkill']")
+    job_id_regexp = Unicode(r'\d+', config=True,
+                            help="Regular expresion for identifying the job ID [r'\d+']")
+    
+    batch_file = Unicode('')
+    job_array_regexp = Unicode('#BSUB[ \t]-J+\w+\[\d+-\d+\]')
+    job_array_template = Unicode('#BSUB -J ipengine[1-{n}]')
+    queue_regexp = Unicode('#BSUB[ \t]+-q[ \t]+\w+')
+    queue_template = Unicode('#BSUB -q {queue}')
+    
+    def start(self, n, profile_dir):
+        """Start n copies of the process using LSF batch system.
+        This cant inherit from the base class because bsub expects
+        to be piped a shell script in order to honor the #BSUB directives :
+        bsub < script
+        """
+        # Here we save profile_dir in the context so they
+        # can be used in the batch script template as {profile_dir}
+        self.context['profile_dir'] = profile_dir
+        self.profile_dir = str(profile_dir)
+        self.write_batch_script(n)
+        #output = check_output(self.args, env=os.environ)
+        piped_cmd = self.args[0]+'<\"'+self.args[1]+'\"'
+        p = Popen(piped_cmd, shell=True,env=os.environ,stdout=PIPE)
+        output,err = p.communicate()
+        job_id = self.parse_job_id(output)
+        self.notify_start(job_id)
+        return job_id
+
+
+class LSFControllerLauncher(LSFLauncher):
+    """Launch a controller using LSF."""
+    
+    batch_file_name = Unicode('lsf_controller', config=True,
+                              help="batch file name for the controller job.")
+    default_template= Unicode("""#!/bin/sh
+    #BSUB -J ipcontroller
+    #BSUB -oo ipcontroller.o.%%J 
+    #BSUB -eo ipcontroller.e.%%J 
+    %s --log-to-file --profile-dir={profile_dir}
+    """%(' '.join(ipcontroller_cmd_argv)))
+    
+    def start(self, profile_dir):
+        """Start the controller by profile or profile_dir."""
+        self.log.info("Starting LSFControllerLauncher: %r" % self.args)
+        return super(LSFControllerLauncher, self).start(1, profile_dir)
+
+
+class LSFEngineSetLauncher(LSFLauncher):
+    """Launch Engines using LSF"""
+    batch_file_name = Unicode('lsf_engines', config=True,
+                              help="batch file name for the engine(s) job.")
+    default_template= Unicode("""#!/bin/sh
+    #BSUB -oo ipengine.o.%%J 
+    #BSUB -eo ipengine.e.%%J 
+    %s --profile-dir={profile_dir}
+    """%(' '.join(ipengine_cmd_argv)))
+    
+    def start(self, n, profile_dir):
+        """Start n engines by profile or profile_dir."""
+        self.log.info('Starting %i engines with LSFEngineSetLauncher: %r' % (n, self.args))
+        return super(LSFEngineSetLauncher, self).start(n, profile_dir)
 
 
 #-----------------------------------------------------------------------------
@@ -1012,7 +1084,7 @@ class IPClusterLauncher(LocalProcessLauncher):
     ipcluster_cmd = List(ipcluster_cmd_argv, config=True,
         help="Popen command for ipcluster")
     ipcluster_args = List(
-        ['--clean-logs', '--log-to-file', '--log_level=%i'%logging.INFO], config=True,
+        ['--clean-logs', '--log-to-file', '--log-level=%i'%logging.INFO], config=True,
         help="Command line arguments to pass to ipcluster.")
     ipcluster_subcommand = Unicode('start')
     ipcluster_n = Int(2)
@@ -1060,6 +1132,11 @@ sge_launchers = [
     SGEControllerLauncher,
     SGEEngineSetLauncher,
 ]
+lsf_launchers = [
+    LSFLauncher,
+    LSFControllerLauncher,
+    LSFEngineSetLauncher,
+]
 all_launchers = local_launchers + mpi_launchers + ssh_launchers + winhpc_launchers\
-                + pbs_launchers + sge_launchers
+                + pbs_launchers + sge_launchers + lsf_launchers
 

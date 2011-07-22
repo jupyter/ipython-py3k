@@ -74,25 +74,39 @@ where you can edit ipython_config.py to start configuring IPython.
 
 """
 
+_list_examples = "ipython profile list  # list all profiles"
+
+_create_examples = """
+ipython profile create foo         # create profile foo w/ default config files
+ipython profile create foo --reset # restage default config files over current
+ipython profile create foo --parallel # also stage parallel config files
+"""
+
+_main_examples = """
+ipython profile create -h  # show the help string for the create subcommand
+ipython profile list -h    # show the help string for the list subcommand
+"""
+
 #-----------------------------------------------------------------------------
 # Profile Application Class (for `ipython profile` subcommand)
 #-----------------------------------------------------------------------------
 
 
-
 class ProfileList(Application):
     name = 'ipython-profile'
     description = list_help
-    
-    aliases = Dict(dict(
-        ipython_dir = 'ProfileList.ipython_dir',
-        log_level = 'Application.log_level',
-    ))
+    examples = _list_examples
+
+    aliases = Dict({
+        'ipython-dir' : 'ProfileList.ipython_dir',
+        'log-level' : 'Application.log_level',
+    })
     flags = Dict(dict(
         debug = ({'Application' : {'log_level' : 0}},
-            "Set log_level to 0, maximizing log output."
+            "Set Application.log_level to 0, maximizing log output."
         )
     ))
+
     ipython_dir = Unicode(get_ipython_dir(), config=True, 
         help="""
         The name of the IPython directory. This directory is used for logging
@@ -122,15 +136,19 @@ class ProfileList(Application):
 
 create_flags = {}
 create_flags.update(base_flags)
-create_flags.update(boolean_flag('reset', 'ProfileCreate.overwrite', 
-                "reset config files to defaults", "leave existing config files"))
-create_flags.update(boolean_flag('parallel', 'ProfileCreate.parallel', 
-                "Include parallel computing config files", 
-                "Don't include parallel computing config files"))
+# don't include '--init' flag, which implies running profile create in other apps
+create_flags.pop('init')
+create_flags['reset'] = ({'ProfileCreate': {'overwrite' : True}},
+                        "reset config files in this profile to the defaults.")
+create_flags['parallel'] = ({'ProfileCreate': {'parallel' : True}},
+                        "Include the config files for parallel "
+                        "computing apps (ipengine, ipcontroller, etc.)")
+
 
 class ProfileCreate(BaseIPythonApplication):
     name = 'ipython-profile'
     description = create_help
+    examples = _create_examples
     auto_create = Bool(True, config=False)
     
     def _copy_config_files_default(self):
@@ -168,7 +186,10 @@ class ProfileCreate(BaseIPythonApplication):
         apps = [TerminalIPythonApp]
         try:
             from IPython.frontend.qt.console.qtconsoleapp import IPythonQtConsoleApp
-        except ImportError:
+        except Exception:
+            # this should be ImportError, but under weird circumstances
+            # this might be an AttributeError, or possibly others
+            # in any case, nothing should cause the profile creation to crash.
             pass
         else:
             apps.append(IPythonQtConsoleApp)
@@ -196,10 +217,12 @@ class ProfileCreate(BaseIPythonApplication):
     def stage_default_config_file(self):
         pass
 
+
 class ProfileApp(Application):
     name = 'ipython-profile'
     description = profile_help
-    
+    examples = _main_examples
+
     subcommands = Dict(dict(
         create = (ProfileCreate, "Create a new profile dir with default config files"),
         list = (ProfileList, "List existing profiles")

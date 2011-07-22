@@ -130,17 +130,13 @@ if len(sys.argv) >= 2 and sys.argv[1] in ('sdist','bdist_rpm'):
                   ['docs/man/ipengine.1'],
                   'cd docs/man && gzip -9c ipengine.1 > ipengine.1.gz'),
 
+                 ('docs/man/iplogger.1.gz',
+                  ['docs/man/iplogger.1'],
+                  'cd docs/man && gzip -9c iplogger.1 > iplogger.1.gz'),
+
                  ('docs/man/ipython.1.gz',
                   ['docs/man/ipython.1'],
                   'cd docs/man && gzip -9c ipython.1 > ipython.1.gz'),
-
-                 ('docs/man/ipython-wx.1.gz',
-                  ['docs/man/ipython-wx.1'],
-                  'cd docs/man && gzip -9c ipython-wx.1 > ipython-wx.1.gz'),
-
-                 ('docs/man/ipythonx.1.gz',
-                  ['docs/man/ipythonx.1'],
-                  'cd docs/man && gzip -9c ipythonx.1 > ipythonx.1.gz'),
 
                  ('docs/man/irunner.1.gz',
                   ['docs/man/irunner.1'],
