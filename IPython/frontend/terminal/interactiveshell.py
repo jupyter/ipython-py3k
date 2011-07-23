@@ -237,7 +237,10 @@ class TerminalInteractiveShell(InteractiveShell):
 
         if display_banner is None:
             display_banner = self.display_banner
-        if display_banner:
+        
+        if isinstance(display_banner, str):
+            self.show_banner(display_banner)
+        elif display_banner:
             self.show_banner()
 
         more = False
@@ -584,6 +587,10 @@ class TerminalInteractiveShell(InteractiveShell):
             write("## -- End pasted text --\n")
             
         self._execute_block(block, par)
+    
+    def showindentationerror(self):
+        super(TerminalInteractiveShell, self).showindentationerror()
+        print("If you want to paste code into IPython, try the %paste magic function.")
 
 
 InteractiveShellABC.register(TerminalInteractiveShell)

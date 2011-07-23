@@ -1583,6 +1583,16 @@ class InteractiveShell(SingletonConfigurable, Magic):
             value.filename = filename
         stb = self.SyntaxTB.structured_traceback(etype, value, [])
         self._showtraceback(etype, value, stb)
+    
+    # This is overridden in TerminalInteractiveShell to show a message about
+    # the %paste magic.
+    def showindentationerror(self):
+        """Called by run_cell when there's an IndentationError in code entered
+        at the prompt.
+        
+        This is overridden in TerminalInteractiveShell to show a message about
+        the %paste magic."""
+        self.showsyntaxerror()
 
     #-------------------------------------------------------------------------
     # Things related to readline
@@ -2243,6 +2253,10 @@ class InteractiveShell(SingletonConfigurable, Magic):
                 with self.display_trap:
                     try:
                         code_ast = ast.parse(cell, filename=cell_name)
+                    except IndentationError:
+                        self.showindentationerror()
+                        self.execution_count += 1
+                        return None
                     except (OverflowError, SyntaxError, ValueError, TypeError,
                             MemoryError):
                         self.showsyntaxerror()

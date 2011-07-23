@@ -200,6 +200,21 @@ class InputSplitterTestCase(unittest.TestCase):
         isp.push("if 1:")
         isp.push("    x = (1+\n    2)")
         self.assertEqual(isp.indent_spaces, 4)
+    
+    def test_indent4(self):
+        # In cell mode, inputs must be fed in whole blocks, so skip this test
+        if self.isp.input_mode == 'cell': return
+
+        isp = self.isp
+        # whitespace after ':' should not screw up indent level
+        isp.push('if 1: \n    x=1')
+        self.assertEqual(isp.indent_spaces, 4)
+        isp.push('y=2\n')
+        self.assertEqual(isp.indent_spaces, 0)
+        isp.push('if 1:\t\n    x=1')
+        self.assertEqual(isp.indent_spaces, 4)
+        isp.push('y=2\n')
+        self.assertEqual(isp.indent_spaces, 0)
 
     def test_dedent_pass(self):
         isp = self.isp # shorthand
@@ -449,6 +464,7 @@ syntax = \
         ('a = abc?', 'get_ipython().magic("pinfo abc", next_input="a = abc")'),
         ('a = abc.qe??', 'get_ipython().magic("pinfo2 abc.qe", next_input="a = abc.qe")'),
         ('a = *.items?', 'get_ipython().magic("psearch *.items", next_input="a = *.items")'),
+        ('plot(a?', 'get_ipython().magic("pinfo a", next_input="plot(a")'),
         ('a*2 #comment?', 'a*2 #comment?'),
         ],
 

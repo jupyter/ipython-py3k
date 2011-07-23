@@ -16,7 +16,7 @@ simply run the module as a script:
 This is an extension of Ken Schutte <kschutte-AT-csail.mit.edu>'s script
 contributed on the ipython-user list:
 
-http://scipy.net/pipermail/ipython-user/2006-May/001705.html
+http://mail.scipy.org/pipermail/ipython-user/2006-May/003539.html
 
 
 NOTES:
@@ -307,10 +307,11 @@ class IPythonRunner(InteractiveRunner):
     
     def __init__(self,program = 'ipython3',args=None,out=sys.stdout,echo=True):
         """New runner, optionally passing the ipython command to use."""
-        
         args0 = ['--colors=NoColor',
                  '--no-term-title',
-                 '--no-autoindent']
+                 '--no-autoindent',
+                 # '--quick' is important, to prevent loading default config:
+                 '--quick']
         if args is None: args = args0
         else: args = args0 + args
         prompts = [r'In \[\d+\]: ',r'   \.*: ']
@@ -406,10 +407,6 @@ interact with IPython at the end of the script (instead of exiting).
 
 The already implemented runners are listed below; adding one for a new program
 is a trivial task, see the source for examples.
-
-WARNING: the SAGE runner only works if you manually configure your SAGE copy
-to use 'colors NoColor' in the ipythonrc config file, since currently the
-prompt matching regexp does not identify color sequences.
 """
 
 def main():
@@ -417,7 +414,6 @@ def main():
 
     parser = optparse.OptionParser(usage=MAIN_USAGE)
     newopt = parser.add_option
-    parser.set_defaults(mode='ipython')
     newopt('--ipython',action='store_const',dest='mode',const='ipython',
            help='IPython interactive runner (default).')
     newopt('--python',action='store_const',dest='mode',const='python',
@@ -437,7 +433,9 @@ def main():
     modes = {'.ipy':'ipython',
              '.py':'python',
              '.sage':'sage'}
-    mode = modes.get(ext,opts.mode)
+    mode = modes.get(ext,"ipython")
+    if opts.mode:
+        mode = opts.mode
     runners[mode]().main(args)
 
 if __name__ == '__main__':

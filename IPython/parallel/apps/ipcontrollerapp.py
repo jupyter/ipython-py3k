@@ -82,10 +82,13 @@ clients. The controller needs to be started before the engines and can be
 configured using command line options or using a cluster directory. Cluster
 directories contain config, log and security files and are usually located in
 your ipython directory and named as "profile_name". See the `profile`
-and `profile_dir` options for details.
+and `profile-dir` options for details.
 """
 
-
+_examples = """
+ipcontroller --ip=192.168.0.1 --port=1000  # listen on ip, port for engines
+ipcontroller --scheme=pure  # use the pure zeromq scheduler
+"""
 
 
 #-----------------------------------------------------------------------------
@@ -111,15 +114,13 @@ flags.update(boolean_flag('secure', 'IPControllerApp.secure',
     "Don't authenticate messages."
 ))
 aliases = dict(
-    reuse_files = 'IPControllerApp.reuse_files',
     secure = 'IPControllerApp.secure',
     ssh = 'IPControllerApp.ssh_server',
-    use_threads = 'IPControllerApp.use_threads',
     location = 'IPControllerApp.location',
 
     ident = 'Session.session',
     user = 'Session.username',
-    exec_key = 'Session.keyfile',
+    keyfile = 'Session.keyfile',
 
     url = 'HubFactory.url',
     ip = 'HubFactory.ip',
@@ -133,10 +134,12 @@ aliases = dict(
 )
 aliases.update(base_aliases)
 
+
 class IPControllerApp(BaseParallelApplication):
 
     name = 'ipcontroller'
     description = _description
+    examples = _examples
     config_file_name = Unicode(default_config_file_name)
     classes = [ProfileDir, Session, HubFactory, TaskScheduler, HeartMonitor, SQLiteDB] + maybe_mongo
     
@@ -189,7 +192,13 @@ class IPControllerApp(BaseParallelApplication):
             except AssertionError:
                 pass
             else:
-                location = socket.gethostbyname_ex(socket.gethostname())[2][-1]
+                try:
+                    location = socket.gethostbyname_ex(socket.gethostname())[2][-1]
+                except (socket.gaierror, IndexError):
+                    self.log.warn("Could not identify this machine's IP, assuming 127.0.0.1."
+                    " You may need to specify '--location=<external_ip_address>' to help"
+                    " IPython decide when to connect via loopback.")
+                    location = '127.0.0.1'
             cdict['location'] = location
         fname = os.path.join(self.profile_dir.security_dir, fname)
         with open(fname, 'wb') as f:
