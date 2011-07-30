@@ -26,7 +26,6 @@ Tools for Interactive Computing in Python
 
 
 Usage
------
 
     ipython3 [subcommand] [options] [files]
 
