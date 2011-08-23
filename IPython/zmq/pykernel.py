@@ -116,7 +116,7 @@ class Kernel(HasTraits):
             # Replace raw_input. Note that is not sufficient to replace 
             # raw_input in the user namespace.
             raw_input = lambda prompt='': self._raw_input(prompt, ident, parent)
-            builtins.raw_input = raw_input
+            builtins.input = raw_input
 
             # Set the parent message of the display hook and out streams.
             sys.displayhook.set_parent(parent)
