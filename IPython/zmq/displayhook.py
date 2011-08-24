@@ -30,7 +30,7 @@ class ZMQDisplayHook(object):
 def _encode_png(data):
     pngdata = data.get('image/png')
     if pngdata is not None:
-        data['image/png'] = encodestring(pngdata)
+        data['image/png'] = encodestring(pngdata).decode('utf8')
 
 class ZMQShellDisplayHook(DisplayHook):
     """A displayhook subclass that publishes data using ZeroMQ. This is intended
